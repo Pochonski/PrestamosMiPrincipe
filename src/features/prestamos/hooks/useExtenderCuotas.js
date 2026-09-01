@@ -87,11 +87,11 @@ export function useExtenderCuotas({ prestamo, defaultN = 2 }) {
     setNCuotas(formatMontoLive(value).slice(0, 3));
   }
 
-  function submit() {
+  async function submit() {
     if (error) return { ok: false, error };
     setSubmitting(true);
     try {
-      const updated = prestamosService.extenderCuotas(prestamo.id, n);
+      const updated = await prestamosService.extenderCuotas(prestamo.id, n);
       return { ok: true, prestamo: updated };
     } catch (err) {
       return { ok: false, error: err.message || 'Error al extender cuotas' };

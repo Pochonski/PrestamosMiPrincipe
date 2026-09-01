@@ -5,9 +5,7 @@ import { Sidebar } from './Sidebar';
 import { MobileBottomNav } from './MobileBottomNav';
 import { PlaceholderPage } from '../ui/PlaceholderPage';
 import { getTheme, setTheme } from '../../services/theme';
-import * as usuariosService from '../../services/usuarios';
 import * as notificacionesService from '../../services/notificaciones';
-import { seed } from '../../services/storage';
 
 const PAGE_META = {};
 
@@ -23,32 +21,17 @@ export function AppShell({ pages = {} }) {
   const [params, setParams] = useState({});
   const [theme, setThemeState] = useState(() => getTheme());
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [userTick, setUserTick] = useState(0);
   const [notifTick, setNotifTick] = useState(0);
 
   useEffect(() => {
-    seed();
-  }, []);
-
-  useEffect(() => {
-    function onUserChange() {
-      setUserTick((t) => t + 1);
-    }
     function onDataChange() {
       setNotifTick((t) => t + 1);
     }
-    window.addEventListener('pmp:user-changed', onUserChange);
     window.addEventListener('pmp:data-changed', onDataChange);
     return () => {
-      window.removeEventListener('pmp:user-changed', onUserChange);
       window.removeEventListener('pmp:data-changed', onDataChange);
     };
   }, []);
-
-  const actual = useMemo(() => {
-    void userTick;
-    return usuariosService.getActual();
-  }, [userTick]);
 
   const notificationCount = useMemo(() => {
     void notifTick;

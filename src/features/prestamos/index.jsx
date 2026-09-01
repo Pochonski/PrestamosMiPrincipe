@@ -8,7 +8,7 @@ import { Step3CuotasTasa } from './components/steps/Step3CuotasTasa';
 import { Step4Fechas } from './components/steps/Step4Fechas';
 import { Step5Resumen } from './components/steps/Step5Resumen';
 import { usePrestamoForm } from './hooks/usePrestamoForm';
-import * as usuariosService from '../../services/usuarios';
+import { useAuth } from '../auth/useAuth';
 import * as clientesService from '../../services/clientes';
 import { Avatar } from '../../components/ui/Avatar';
 
@@ -47,7 +47,14 @@ export function PrestamoCreatePage({ onNavigate, params }) {
 
 function ClientPicker({ onPick, onClose }) {
   const [query, setQuery] = useState('');
-  const clientes = clientesService.buscar(query);
+  const [clientes, setClientes] = useState([]);
+  useEffect(() => {
+    let cancelled = false;
+    clientesService.buscar(query).then((r) => {
+      if (!cancelled) setClientes(r);
+    });
+    return () => { cancelled = true; };
+  }, [query]);
   const inputBase = clsx(
     'w-full rounded-xl border bg-white px-3.5 py-2.5 text-sm outline-none transition-colors',
     'placeholder:text-slate-400 dark:placeholder:text-navy-300',
@@ -119,11 +126,11 @@ function ClientPicker({ onPick, onClose }) {
 
 function PrestamoForm({ clienteId, onNavigate }) {
   const form = usePrestamoForm({ clienteId });
-  const actual = usuariosService.getActual();
+  const { user } = useAuth();
   const cliente = clientesService.getById(clienteId);
 
   function handleSave() {
-    const res = form.submit(actual?.id);
+    const res = form.submit(user?.id);
     if (res.ok) {
       onNavigate?.('cliente-detalle', { clienteId });
     }

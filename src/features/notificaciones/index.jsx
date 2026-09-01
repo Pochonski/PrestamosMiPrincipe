@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Bell, CheckCheck } from 'lucide-react';
+import { Bell, CheckCheck, Loader2 } from 'lucide-react';
 import { SectionTitle } from '../../components/ui/SectionTitle';
 import { StatCard } from '../../components/ui/StatCard';
 import { showToast } from '../../components/ui/Toast';
@@ -15,8 +15,16 @@ export function NotificacionesPage({ onNavigate }) {
 
   const agrupadas = useMemo(
     () => data.getAgrupadas(filter),
-    [filter, data],
+    [filter, data.todas],
   );
+
+  if (data.loading) {
+    return (
+      <div className="mx-auto flex max-w-3xl items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
+      </div>
+    );
+  }
 
   function handleClick(item) {
     data.marcarLeida(item.id);

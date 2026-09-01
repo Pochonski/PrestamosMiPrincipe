@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ArrowLeft, Plus, MapPin, Phone, IdCard, Wallet, TrendingUp, AlertTriangle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowLeft, Plus, MapPin, Phone, IdCard, Wallet, TrendingUp, AlertTriangle, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { Card } from '../../../components/ui/Card';
 import { Avatar } from '../../../components/ui/Avatar';
@@ -13,10 +13,38 @@ import { statsCliente } from '../../../lib/resumen';
 
 export function ClienteDetalle({ onNavigate, params }) {
   const clienteId = params?.clienteId;
-  const [cliente, setCliente] = useState(() => clientesService.getById(clienteId));
+  const [cliente, setCliente] = useState(null);
+  const [loading, setLoading] = useState(true);
   const prestamos = usePrestamosCliente(clienteId);
 
-  useDataChange(() => setCliente(clientesService.getById(clienteId)));
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const c = await clientesService.getById(clienteId);
+        if (!cancelled) {
+          setCliente(c);
+          setLoading(false);
+        }
+      } catch {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [clienteId]);
+
+  useDataChange(() => {
+    clientesService.getById(clienteId).then(setCliente);
+  });
+
+  if (loading) {
+    return (
+      <div className="mx-auto flex max-w-2xl items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
+      </div>
+    );
+  }
 
   if (!cliente) {
     return (

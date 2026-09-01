@@ -1,4 +1,4 @@
-import { TrendingUp, Wallet, AlertTriangle, Banknote, Users, HandCoins, CheckCircle2, Calendar } from 'lucide-react';
+import { TrendingUp, Wallet, AlertTriangle, Banknote, Users, HandCoins, CheckCircle2, Calendar, Loader2 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { SectionTitle } from '../../components/ui/SectionTitle';
 import { StatCard } from '../../components/ui/StatCard';
@@ -8,7 +8,15 @@ import { formatCRC, formatDateTime } from '../../lib/format';
 import { useResumenData } from './selectors';
 
 export function ResumenPage() {
-  const data = useResumenData();
+  const { data, loading } = useResumenData();
+
+  if (loading) {
+    return (
+      <div className="mx-auto flex max-w-5xl items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-5 sm:gap-6">

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ArrowLeft, Plus, Wallet, TrendingUp, Banknote, Calendar, Receipt, ArrowDownCircle, AlertTriangle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowLeft, Plus, Wallet, TrendingUp, Banknote, Calendar, Receipt, ArrowDownCircle, AlertTriangle, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { Card } from '../../../components/ui/Card';
 import { Avatar } from '../../../components/ui/Avatar';
@@ -29,15 +29,50 @@ const COBRO_TIPO_META = {
 
 export function PrestamoDetalle({ onNavigate, params }) {
   const prestamoId = params?.prestamoId;
-  const [prestamo, setPrestamo] = useState(() => prestamosService.refreshPrestamo(prestamoId));
-  const [cobros, setCobros] = useState(() => cobrosService.delPrestamo(prestamoId));
+  const [prestamo, setPrestamo] = useState(null);
+  const [cobros, setCobros] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [extenderOpen, setExtenderOpen] = useState(false);
-  const cliente = prestamo ? clientesService.getById(prestamo.clienteId) : null;
 
-  useDataChange(() => {
-    setPrestamo(prestamosService.refreshPrestamo(prestamoId));
-    setCobros(cobrosService.delPrestamo(prestamoId));
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const [p, cs] = await Promise.all([
+          prestamosService.getById(prestamoId),
+          cobrosService.delPrestamo(prestamoId),
+        ]);
+        if (!cancelled) {
+          setPrestamo(p);
+          setCobros(cs);
+          setLoading(false);
+        }
+      } catch {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [prestamoId]);
+
+  useDataChange(async () => {
+    const [p, cs] = await Promise.all([
+      prestamosService.getById(prestamoId),
+      cobrosService.delPrestamo(prestamoId),
+    ]);
+    setPrestamo(p);
+    setCobros(cs);
   });
+
+  if (loading && !prestamo) {
+    return (
+      <div className="mx-auto flex max-w-2xl items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
+      </div>
+    );
+  }
+
+  const cliente = prestamo ? clientesService.getById(prestamo.clienteId) : null;
 
   if (!prestamo) {
     return (

@@ -1,20 +1,40 @@
-import { useState } from 'react';
-import { search } from '../selectors';
+import { useEffect, useState } from 'react';
+import * as clientesService from '../../../services/clientes';
 import { useDataChange } from '../../../lib/hooks/useDataChange';
 
 export function useClientes() {
-  const [clientes, setClientes] = useState(() => search(''));
+  const [tick, setTick] = useState(0);
   const [query, setQuery] = useState('');
+  const [clientes, setClientes] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  function recompute() {
-    setClientes(search(query));
-  }
+  useDataChange(() => setTick((t) => t + 1));
 
-  useDataChange(recompute);
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const result = await clientesService.buscar(query);
+        if (!cancelled) {
+          setClientes(result);
+          setLoading(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setClientes([]);
+          setLoading(false);
+        }
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [query, tick]);
 
-  function setQueryDebounced(value) {
-    setQuery(value);
-  }
-
-  return { clientes, query, setQuery: setQueryDebounced, refresh: recompute };
+  return {
+    clientes,
+    query,
+    setQuery,
+    loading,
+    refresh: () => setTick((t) => t + 1),
+  };
 }

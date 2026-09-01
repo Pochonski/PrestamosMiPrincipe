@@ -1,4 +1,4 @@
-import { AlertTriangle, Wallet, TrendingDown } from 'lucide-react';
+import { AlertTriangle, Wallet, TrendingDown, Loader2 } from 'lucide-react';
 import { SectionTitle } from '../../components/ui/SectionTitle';
 import { StatCard } from '../../components/ui/StatCard';
 import { useAtrasados } from './selectors';
@@ -6,7 +6,15 @@ import { Card } from '../../components/ui/Card';
 import { formatCRC, formatCRCCompact, formatDate } from '../../lib/format';
 
 export function AtrasadosPage({ onNavigate }) {
-  const { items, resumen } = useAtrasados();
+  const { items, resumen, loading } = useAtrasados();
+
+  if (loading) {
+    return (
+      <div className="mx-auto flex max-w-4xl items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
+      </div>
+    );
+  }
 
   function handleCobrar(item) {
     onNavigate?.('cobro', {

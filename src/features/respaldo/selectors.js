@@ -1,25 +1,27 @@
-import { get, set, remove as removeKey } from '../../services/storage';
+import { supabase } from '../../lib/supabase';
 import { emitDataChanged } from '../../lib/events';
 
 const KEY_PREFIX = 'pmp:v1:';
-const BACKUP_KEYS = [
-  'usuarios',
-  'clientes',
-  'prestamos',
-  'cobros',
-  'notificaciones',
-  'usuarioActual',
-  'theme',
-];
+const TABLES = ['clientes', 'prestamos', 'cobros', 'notificaciones'];
 
-function readKey(key) {
-  return get(KEY_PREFIX + key, null);
-}
+export async function buildBackup() {
+  const orgId = await supabase.auth.getSession().then(
+    (s) => s.data.session?.user?.id,
+  );
+  if (!orgId) throw new Error('No authenticated user');
+  const { data: userRow } = await supabase
+    .from('org_members')
+    .select('org_id')
+    .eq('user_id', orgId)
+    .single();
 
-export function buildBackup() {
   const data = {};
-  for (const k of BACKUP_KEYS) {
-    data[k] = readKey(k);
+  for (const table of TABLES) {
+    const { data: rows } = await supabase
+      .from(table)
+      .select('*')
+      .eq('org_id', userRow.org_id);
+    data[table] = rows ?? [];
   }
   return {
     app: 'pmp',
@@ -30,22 +32,19 @@ export function buildBackup() {
 }
 
 export function downloadBackup() {
-  const backup = buildBackup();
-  const json = JSON.stringify(backup, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `pmp-respaldo-${new Date().toISOString().slice(0, 10)}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  return backup;
-}
-
-function isArrayOfObjects(v) {
-  return Array.isArray(v) && v.every((x) => x && typeof x === 'object' && !Array.isArray(x));
+  return buildBackup().then((backup) => {
+    const json = JSON.stringify(backup, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pmp-respaldo-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    return backup;
+  });
 }
 
 function validateBackup(parsed) {
@@ -59,23 +58,16 @@ function validateBackup(parsed) {
     return 'El archivo no contiene datos.';
   }
   const d = parsed.data;
-  if (d.clientes != null && !isArrayOfObjects(d.clientes)) {
-    return 'El campo "clientes" del respaldo está corrupto.';
-  }
-  if (d.prestamos != null && !isArrayOfObjects(d.prestamos)) {
-    return 'El campo "préstamos" del respaldo está corrupto.';
-  }
-  if (d.prestamos) {
-    for (const p of d.prestamos) {
-      if (!Array.isArray(p.cuotas)) {
-        return 'Un préstamo del respaldo no tiene cuotas válidas.';
-      }
+  for (const t of ['clientes', 'prestamos', 'cuotas', 'cobros', 'notificaciones']) {
+    if (d[t] != null && !isArrayOfObjects(d[t])) {
+      return `El campo "${t}" del respaldo está corrupto.`;
     }
   }
-  if (d.cobros != null && !isArrayOfObjects(d.cobros)) {
-    return 'El campo "cobros" del respaldo está corrupto.';
-  }
   return null;
+}
+
+function isArrayOfObjects(v) {
+  return Array.isArray(v) && v.every((x) => x && typeof x === 'object' && !Array.isArray(x));
 }
 
 export function previewBackup(parsed) {
@@ -83,7 +75,6 @@ export function previewBackup(parsed) {
     exportedAt: parsed.exportedAt || null,
     version: parsed.version || 1,
     counts: {
-      usuarios: (parsed.data.usuarios || []).length,
       clientes: (parsed.data.clientes || []).length,
       prestamos: (parsed.data.prestamos || []).length,
       cobros: (parsed.data.cobros || []).length,
@@ -105,14 +96,15 @@ export async function parseBackupFile(file) {
   return parsed;
 }
 
-export function applyBackup(parsed) {
-  for (const key of BACKUP_KEYS) {
-    const value = parsed.data[key];
-    if (value == null) {
-      removeKey(KEY_PREFIX + key);
-    } else {
-      set(KEY_PREFIX + key, value);
-    }
+export async function applyBackup(parsed) {
+  const tables = ['clientes', 'prestamos', 'cobros', 'notificaciones'];
+  for (const table of tables) {
+    const value = parsed.data[table];
+    if (value == null) continue;
+    const rows = Array.isArray(value) ? value : [];
+    if (rows.length === 0) continue;
+    const { error } = await supabase.from(table).upsert(rows, { onConflict: 'id' });
+    if (error) throw error;
   }
   emitDataChanged();
 }

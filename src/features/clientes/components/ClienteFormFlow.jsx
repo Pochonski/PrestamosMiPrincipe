@@ -6,7 +6,7 @@ import { Step1Identidad } from './steps/Step1Identidad';
 import { Step2Contacto } from './steps/Step2Contacto';
 import { Step3Resumen } from './steps/Step3Resumen';
 import { useClienteForm } from '../hooks/useClienteForm';
-import * as usuariosService from '../../../services/usuarios';
+import { useAuth } from '../../auth/useAuth';
 
 const STEPS = [
   { num: 1, label: 'Identidad' },
@@ -16,7 +16,7 @@ const STEPS = [
 
 export function ClienteFormFlow({ cliente, onClose, onSaved }) {
   const form = useClienteForm({ cliente });
-  const actual = usuariosService.getActual();
+  const { user } = useAuth();
 
   useEffect(() => {
     function onKey(e) {
@@ -31,7 +31,7 @@ export function ClienteFormFlow({ cliente, onClose, onSaved }) {
   }, [onClose]);
 
   function handleSave() {
-    const res = form.submit(actual?.id);
+    const res = form.submit(user?.id);
     if (res.ok) {
       onSaved?.(res.cliente);
     }

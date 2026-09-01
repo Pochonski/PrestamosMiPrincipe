@@ -1,4 +1,4 @@
-import { CalendarClock, Wallet, CheckCircle2 } from 'lucide-react';
+import { CalendarClock, Wallet, CheckCircle2, Loader2 } from 'lucide-react';
 import { SectionTitle } from '../../components/ui/SectionTitle';
 import { StatCard } from '../../components/ui/StatCard';
 import { CuotaItem } from './components/CuotaItem';
@@ -6,7 +6,15 @@ import { useCobrarHoy } from './selectors';
 import { formatCRCCompact } from '../../lib/format';
 
 export function CobrarHoyPage({ onNavigate }) {
-  const { items, resumen } = useCobrarHoy();
+  const { items, resumen, loading } = useCobrarHoy();
+
+  if (loading) {
+    return (
+      <div className="mx-auto flex max-w-4xl items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
+      </div>
+    );
+  }
 
   function handleCobrar(item) {
     onNavigate?.('cobro', {

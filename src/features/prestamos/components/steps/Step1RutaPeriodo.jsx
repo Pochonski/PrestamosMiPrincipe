@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { MapPin, Calendar, X } from 'lucide-react';
 import clsx from 'clsx';
 import { PERIODOS, rutasUsadas } from '../../selectors';
@@ -15,7 +15,10 @@ const inputBase = clsx(
 export function Step1RutaPeriodo({ values, errors, showError, set, touch }) {
   const rutasId = useId();
   const [showCalendar, setShowCalendar] = useState(values.periodo?.tipo === 'dia_mes');
-  const rutas = rutasUsadas();
+  const [rutas, setRutas] = useState([]);
+  useEffect(() => {
+    rutasUsadas().then(setRutas);
+  }, []);
 
   function pickPeriodo(tipo) {
     if (tipo === 'dia_mes') {

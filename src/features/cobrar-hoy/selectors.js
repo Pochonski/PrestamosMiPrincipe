@@ -1,41 +1,56 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as prestamosService from '../../services/prestamos';
 import * as clientesService from '../../services/clientes';
 import { useDataChange } from '../../lib/hooks/useDataChange';
 
-function getCobrarHoyDetallado() {
-  const items = prestamosService.cobrarHoy();
-  return items
-    .map(({ prestamo, cuota }) => ({
-      prestamo,
-      cuota,
-      cliente: clientesService.getById(prestamo.clienteId),
-    }))
-    .filter((x) => x.cliente);
+export function getCobrarHoyDetalle() {
+  return prestamosService.cobrarHoy().then((items) =>
+    items.map((x) => ({
+      prestamoId: x.prestamo.id,
+      clienteId: x.prestamo.clienteId,
+      cuota: x.cuota,
+    })),
+  );
 }
 
 export function getResumenCobrarHoy() {
-  const items = prestamosService.cobrarHoy();
-  return {
+  return prestamosService.cobrarHoy().then((items) => ({
     cantidad: items.length,
     total: items.reduce((s, x) => s + x.cuota.monto, 0),
-  };
+  }));
 }
 
 export function useCobrarHoy() {
   const [tick, setTick] = useState(0);
+  const [state, setState] = useState({ items: [], resumen: null, loading: true });
+
   useDataChange(() => setTick((t) => t + 1));
 
-  const items = useMemo(() => {
-    void tick;
-    return getCobrarHoyDetallado();
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const [items, resumen] = await Promise.all([
+          getCobrarHoyDetalle(),
+          getResumenCobrarHoy(),
+        ]);
+        const enriched = await Promise.all(
+          items.map(async (x) => ({
+            ...x,
+            cliente: await clientesService.getById(x.clienteId),
+          })),
+        );
+        const filtered = enriched.filter((x) => x.cliente);
+        if (!cancelled) {
+          setState({ items: filtered, resumen, loading: false });
+        }
+      } catch {
+        if (!cancelled) setState({ items: [], resumen: null, loading: false });
+      }
+    }
+    load();
+    return () => { cancelled = true; };
   }, [tick]);
 
-  const resumen = useMemo(() => {
-    void tick;
-    return getResumenCobrarHoy();
-  }, [tick]);
-
-  return { items, resumen };
+  return state;
 }
-

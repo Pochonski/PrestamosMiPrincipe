@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Users } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { SectionTitle } from '../../components/ui/SectionTitle';
 import { StatCard } from '../../components/ui/StatCard';
 import { ClienteSearch } from './components/ClienteSearch';
@@ -15,17 +15,15 @@ import {
 } from '../../services/clientes';
 
 export function ClientesPage({ onNavigate, params }) {
-  const { clientes, query, setQuery } = useClientes();
+  const { clientes, query, setQuery, loading } = useClientes();
   const [formMode, setFormMode] = useState(null);
   const [toDelete, setToDelete] = useState(null);
 
   useEffect(() => {
     if (params?.autoCreate && formMode === null) {
-      // eslint-disable-next-line react/set-state-in-effect
       setFormMode('create');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params?.autoCreate]);
+  }, [params?.autoCreate, formMode]);
 
   function openCreate() {
     setFormMode('create');
@@ -39,7 +37,7 @@ export function ClientesPage({ onNavigate, params }) {
     setFormMode(null);
   }
 
-  function handleSaved() {
+  async function handleSaved() {
     const isEdit = formMode?.type === 'edit';
     showToast(
       isEdit ? 'Cambios guardados correctamente' : 'Cliente creado correctamente',
@@ -48,10 +46,10 @@ export function ClientesPage({ onNavigate, params }) {
     closeForm();
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!toDelete) return;
     try {
-      removeCliente(toDelete.id);
+      await removeCliente(toDelete.id);
       showToast('Cliente eliminado', 'success');
     } catch (err) {
       if (err instanceof ClienteTienePrestamosError) {
@@ -61,7 +59,7 @@ export function ClientesPage({ onNavigate, params }) {
         );
         return;
       }
-      showToast('Error al eliminar cliente', 'error');
+      showToast(err.message || 'Error al eliminar cliente', 'error');
     }
   }
 
@@ -69,13 +67,21 @@ export function ClientesPage({ onNavigate, params }) {
     setToDelete(cliente);
   }
 
-  function confirmDelete() {
-    handleDelete();
+  async function confirmDelete() {
+    await handleDelete();
     setToDelete(null);
   }
 
   function handleOpen(cliente) {
     onNavigate?.('cliente-detalle', { clienteId: cliente.id });
+  }
+
+  if (loading) {
+    return (
+      <div className="mx-auto flex max-w-6xl items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
+      </div>
+    );
   }
 
   return (

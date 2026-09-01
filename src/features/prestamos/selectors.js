@@ -40,9 +40,10 @@ export function proximoCobro(prestamo) {
 
 export { statsCliente } from '../../lib/resumen';
 
-export function rutasUsadas() {
+export async function rutasUsadas() {
+  const list = await prestamosService.list();
   const set = new Set();
-  for (const p of prestamosService.list()) {
+  for (const p of list) {
     if (p.ruta) set.add(p.ruta);
   }
   return Array.from(set).sort();

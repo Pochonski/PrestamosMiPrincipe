@@ -1,12 +1,15 @@
+import { supabase } from '../../lib/supabase';
 import * as prestamosService from '../../services/prestamos';
 import * as cobrosService from '../../services/cobros';
 import * as clientesService from '../../services/clientes';
-import * as usuariosService from '../../services/usuarios';
 import * as notificacionesService from '../../services/notificaciones';
 
-export function getKpis() {
-  const prestamos = prestamosService.resumen();
-  const cobros = cobrosService.resumen();
+export async function getKpis() {
+  const [prestamos, cobros, totalClientes] = await Promise.all([
+    prestamosService.resumen(),
+    cobrosService.resumen(),
+    clientesService.count(),
+  ]);
   return {
     carteraTotal: prestamos.carteraTotal,
     totalAtrasado: prestamos.totalAtrasado,
@@ -16,24 +19,42 @@ export function getKpis() {
     cantidadCobrarHoy: prestamos.cantidadCobrarHoy,
     totalCobradoHoy: cobros.totalDelDia,
     cantidadCobradoHoy: cobros.cantidadDelDia,
-    totalClientes: clientesService.count(),
+    totalClientes,
   };
 }
 
-export function getQuickBadges() {
+export async function getQuickBadges() {
+  const [notifs, atrasadas, hoy] = await Promise.all([
+    notificacionesService.countNoLeidas(),
+    prestamosService.cuotasAtrasadas(),
+    prestamosService.cobrarHoy(),
+  ]);
   return {
-    notificaciones: notificacionesService.countNoLeidas(),
-    atrasados: prestamosService.cuotasAtrasadas().length,
-    cobrarHoy: prestamosService.cobrarHoy().length,
+    notificaciones: notifs,
+    atrasados: atrasadas.length,
+    cobrarHoy: hoy.length,
   };
 }
 
-export function getRecentActivity(limit = 6) {
-  const cobros = cobrosService.recientes(limit);
-  const clientesById = new Map(clientesService.list().map((c) => [c.id, c]));
-  const usuariosById = new Map(usuariosService.list().map((u) => [u.id, u.nombre]));
-  return cobros.slice(0, limit).map((cobro) => {
-    const cobrador = cobro.cobradorId ? usuariosById.get(cobro.cobradorId) : null;
+export async function getRecentActivity(limit = 6) {
+  const cobros = await cobrosService.recientes(limit);
+  const clientes = await clientesService.list();
+  const clientesById = new Map(clientes.map((c) => [c.id, c]));
+  const cobrosWithProfile = await Promise.all(
+    cobros.slice(0, limit).map(async (cobro) => {
+      let cobrador = null;
+      if (cobro.cobradorId) {
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('user_id', cobro.cobradorId)
+          .maybeSingle();
+        cobrador = prof?.full_name || null;
+      }
+      return { cobro, cobrador };
+    }),
+  );
+  return cobrosWithProfile.map(({ cobro, cobrador }) => {
     const cobradorStr = cobrador ? ` · ${cobrador.split(' ')[0]}` : '';
     return {
       id: cobro.id,
@@ -46,8 +67,9 @@ export function getRecentActivity(limit = 6) {
   });
 }
 
-export function getCobrarHoyDetalle() {
-  return prestamosService.cobrarHoy().map((x) => ({
+export async function getCobrarHoyDetalle() {
+  const hoy = await prestamosService.cobrarHoy();
+  return hoy.map((x) => ({
     prestamoId: x.prestamo.id,
     clienteId: x.prestamo.clienteId,
     cuota: x.cuota,

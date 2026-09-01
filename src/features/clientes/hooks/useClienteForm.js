@@ -111,7 +111,7 @@ export function useClienteForm({ cliente = null } = {}) {
     return out;
   }
 
-  function submit(creadoPor) {
+  async function submit(userId) {
     if (!allValid) {
       setTouched({ nombre: true, direccion: true, telefono: true, cedula: true });
       for (let i = 1; i <= 2; i++) {
@@ -132,9 +132,9 @@ export function useClienteForm({ cliente = null } = {}) {
         cedula: values.cedula,
       };
       const result = isEdit
-        ? clientesService.update(cliente.id, payload)
-        : clientesService.create({ ...payload, creadoPor });
-      return { ok: true, cliente: result };
+        ? await clientesService.update(cliente.id, payload)
+        : await clientesService.create(payload);
+      return { ok: true, cliente: result, clienteId: result.id };
     } catch (err) {
       return { ok: false, error: err.message || 'Error al guardar' };
     } finally {

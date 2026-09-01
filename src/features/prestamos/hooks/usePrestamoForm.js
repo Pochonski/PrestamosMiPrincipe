@@ -106,7 +106,7 @@ export function usePrestamoForm({ clienteId } = {}) {
     setStep(target);
   }
 
-  function submit(creadoPor) {
+  async function submit(_creadoPor) {
     if (!allValid) {
       setTouched({
         ruta: true,
@@ -120,7 +120,7 @@ export function usePrestamoForm({ clienteId } = {}) {
     }
     setSubmitting(true);
     try {
-      const prestamo = prestamosService.create({
+      const prestamo = await prestamosService.create({
         clienteId,
         ruta: values.ruta,
         periodo: values.periodo,
@@ -128,9 +128,8 @@ export function usePrestamoForm({ clienteId } = {}) {
         tasa: Number(values.tasa),
         nCuotas: Number(values.nCuotas),
         fechaInicio: values.fechaInicio,
-        creadoPor,
       });
-      return { ok: true, prestamo };
+      return { ok: true, prestamo, prestamoId: prestamo.id };
     } catch (err) {
       return { ok: false, error: err.message || 'Error al guardar' };
     } finally {

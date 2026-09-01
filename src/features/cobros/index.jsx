@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { X, Save, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { CobroFormBody } from './components/CobroFormBody';
 import { useCobroForm } from './hooks/useCobroForm';
-import * as usuariosService from '../../services/usuarios';
+import { useAuth } from '../auth/useAuth';
 import * as clientesService from '../../services/clientes';
 import * as prestamosService from '../../services/prestamos';
 import { showToast } from '../../components/ui/Toast';
@@ -40,12 +40,12 @@ export function CobroPage({ onNavigate, params }) {
 
 function CobroForm({ prestamoId, onNavigate, clienteId }) {
   const form = useCobroForm({ prestamoId });
-  const actual = usuariosService.getActual();
+  const { user } = useAuth();
   const prestamo = form.prestamo;
   const cliente = prestamo ? clientesService.getById(prestamo.clienteId) : null;
 
   function handleSave() {
-    const res = form.submit({ cobradorId: actual?.id, cliente });
+    const res = form.submit({ cobradorId: user?.id, cliente });
     if (res.ok) {
       showToast('Cobro registrado correctamente', 'success');
       if (prestamoId) {
@@ -179,10 +179,16 @@ function PickerClientes({ onPick, onClose }) {
 }
 
 function PickerPrestamos({ clienteId, onPick, onBack }) {
-  const prestamos = prestamosService.delCliente(clienteId).filter(
-    (p) => p.estado === 'vigente' || p.estado === 'atrasado',
-  );
-  const cliente = clientesService.getById(clienteId);
+  const [prestamos, setPrestamos] = useState([]);
+  const cliente = useMemo(() => clientesService.getById(clienteId), [clienteId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    prestamosService.delCliente(clienteId).then((all) => {
+      if (!cancelled) setPrestamos(all.filter((p) => p.estado === 'vigente' || p.estado === 'atrasado'));
+    });
+    return () => { cancelled = true; };
+  }, [clienteId]);
   return (
     <PickerShell
       title={`Préstamos de ${cliente?.nombre?.split(' ')[0] || 'cliente'}`}

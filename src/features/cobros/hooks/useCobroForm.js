@@ -90,14 +90,14 @@ export function useCobroForm({ prestamoId }) {
     }
   }
 
-  function submit({ cobradorId, cliente }) {
+  async function submit({ cobradorId, cliente }) {
     if (error) return { ok: false, error };
     if (!prestamo) return { ok: false, error: 'Préstamo no encontrado' };
 
     setSubmitting(true);
     try {
       const n = Number(String(monto).replace(/\D/g, ''));
-      const cobro = cobrosService.create({
+      const cobro = await cobrosService.create({
         prestamoId,
         cuotaNumero,
         monto: n,
@@ -108,6 +108,17 @@ export function useCobroForm({ prestamoId }) {
       });
       return { ok: true, cobro, cliente, prestamoId };
     } catch (err) {
+      // Mapear errores tipados a mensajes más amigables
+      const msg = String(err.message || '').toLowerCase();
+      if (msg.includes('monto es menor')) {
+        return { ok: false, error: 'El monto no cubre el interés del período' };
+      }
+      if (msg.includes('not pending')) {
+        return { ok: false, error: 'La cuota ya fue cobrada o no existe' };
+      }
+      if (msg.includes('monto menor')) {
+        return { ok: false, error: 'El monto es menor que el interés del período' };
+      }
       return { ok: false, error: err.message || 'Error al registrar cobro' };
     } finally {
       setSubmitting(false);

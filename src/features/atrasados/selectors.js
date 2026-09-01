@@ -1,43 +1,52 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as prestamosService from '../../services/prestamos';
 import * as clientesService from '../../services/clientes';
-import { diffDays } from '../../lib/format';
 import { useDataChange } from '../../lib/hooks/useDataChange';
 
 export function getAtrasadosDetallado() {
-  const items = prestamosService.cuotasAtrasadas();
-  return items
-    .map(({ prestamo, cuota }) => ({
-      prestamo,
-      cuota,
-      cliente: clientesService.getById(prestamo.clienteId),
-      diasAtraso: Math.abs(diffDays(cuota.fecha, new Date())),
-    }))
-    .filter((x) => x.cliente)
-    .sort((a, b) => b.diasAtraso - a.diasAtraso);
+  return prestamosService.cuotasAtrasadas().then((items) =>
+    Promise.all(
+      items.map(async ({ prestamo, cuota }) => {
+        const cliente = await clientesService.getById(prestamo.clienteId);
+        const diffMs = Date.now() - new Date(cuota.fecha).getTime();
+        const diffDay = Math.floor(diffMs / 86400000);
+        return { prestamo, cuota, cliente, diasAtraso: diffDay };
+      }),
+    ).then((rows) =>
+      rows.filter((x) => x.cliente).sort((a, b) => b.diasAtraso - a.diasAtraso),
+    ),
+  );
 }
 
 export function getResumenAtrasados() {
-  const items = prestamosService.cuotasAtrasadas();
-  return {
+  return prestamosService.cuotasAtrasadas().then((items) => ({
     cantidad: items.length,
     total: items.reduce((s, x) => s + x.cuota.monto, 0),
-  };
+  }));
 }
 
 export function useAtrasados() {
   const [tick, setTick] = useState(0);
+  const [state, setState] = useState({ items: [], resumen: null, loading: true });
+
   useDataChange(() => setTick((t) => t + 1));
 
-  const items = useMemo(() => {
-    void tick;
-    return getAtrasadosDetallado();
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const [items, resumen] = await Promise.all([
+          getAtrasadosDetallado(),
+          getResumenAtrasados(),
+        ]);
+        if (!cancelled) setState({ items, resumen, loading: false });
+      } catch {
+        if (!cancelled) setState({ items: [], resumen: null, loading: false });
+      }
+    }
+    load();
+    return () => { cancelled = true; };
   }, [tick]);
 
-  const resumen = useMemo(() => {
-    void tick;
-    return getResumenAtrasados();
-  }, [tick]);
-
-  return { items, resumen };
+  return state;
 }
