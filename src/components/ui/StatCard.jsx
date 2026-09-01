@@ -9,7 +9,15 @@ export function StatCard({ label, value, sub, icon: Icon, tone = 'neutral', delt
     success: 'text-emerald-600 dark:text-emerald-400',
     danger: 'text-rose-600 dark:text-rose-400',
     info: 'text-sky-600 dark:text-sky-400',
+    navy: 'text-navy-700 dark:text-navy-100',
+    emerald: 'text-emerald-600 dark:text-emerald-400',
   };
+
+  const iconBg = {
+    navy: 'bg-navy-50 text-navy-700 dark:bg-navy-700/50 dark:text-navy-100',
+    emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300',
+  };
+  void iconBg;
   return (
     <Card className="p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3">

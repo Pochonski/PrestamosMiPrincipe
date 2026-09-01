@@ -79,9 +79,11 @@ export async function getById(id) {
 }
 
 export async function delCliente(clienteId) {
+  const orgId = await getOrgId();
   const { data, error } = await supabase
     .from('prestamos')
     .select('*')
+    .eq('org_id', orgId)
     .eq('cliente_id', clienteId);
   if (error) throw error;
   return data ?? [];
@@ -94,24 +96,24 @@ export function activos() {
 }
 
 export async function cuotasAtrasadas(prestamoId = null) {
+  const orgId = await getOrgId();
   const items = prestamoId
     ? [await getById(prestamoId)].filter(Boolean)
     : await list();
-  const out = [];
-  for (const p of items) {
-    const { data: cuotas } = await supabase
-      .from('cuotas')
-      .select('*')
-      .eq('prestamo_id', p.id);
-    if (!cuotas) continue;
-    for (const c of cuotas) {
-      if (c.estado === 'pagada' || c.estado === 'cancelada') continue;
-      if (new Date(c.fecha) < startOfDay(new Date())) {
-        out.push({ prestamo: p, cuota: c });
-      }
-    }
-  }
-  return out;
+  const prestamoIds = items.filter(Boolean).map((p) => p.id);
+  if (prestamoIds.length === 0) return [];
+  const { data: cuotas } = await supabase
+    .from('cuotas')
+    .select('*')
+    .eq('org_id', orgId)
+    .in('prestamo_id', prestamoIds);
+  if (!cuotas) return [];
+  const hoy = startOfDay(new Date());
+  const prestamoMap = new Map(items.filter(Boolean).map((p) => [p.id, p]));
+  return cuotas
+    .filter((c) => c.estado === 'pendiente')
+    .filter((c) => new Date(c.fecha) < hoy)
+    .map((c) => ({ prestamo: prestamoMap.get(c.prestamo_id), cuota: c }));
 }
 
 export async function totalAtrasado() {
@@ -138,22 +140,20 @@ export async function cobrarHoy() {
   const hoy = startOfDay(new Date());
   const manana = new Date(hoy);
   manana.setDate(manana.getDate() + 1);
+  const prestamoIds = items.map((p) => p.id);
+  if (prestamoIds.length === 0) return [];
 
-  const out = [];
-  for (const p of items) {
-    const { data: cuotas } = await supabase
-      .from('cuotas')
-      .select('*')
-      .eq('prestamo_id', p.id)
-      .eq('estado', 'pendiente')
-      .gte('fecha', hoy.toISOString().slice(0, 10))
-      .lt('fecha', manana.toISOString().slice(0, 10));
-    if (!cuotas) continue;
-    for (const c of cuotas) {
-      out.push({ prestamo: p, cuota: c });
-    }
-  }
-  return out;
+  const { data: cuotas } = await supabase
+    .from('cuotas')
+    .select('*')
+    .eq('org_id', orgId)
+    .in('prestamo_id', prestamoIds)
+    .eq('estado', 'pendiente')
+    .gte('fecha', hoy.toISOString().slice(0, 10))
+    .lt('fecha', manana.toISOString().slice(0, 10));
+  if (!cuotas) return [];
+  const prestamoMap = new Map(items.map((p) => [p.id, p]));
+  return cuotas.map((c) => ({ prestamo: prestamoMap.get(c.prestamo_id), cuota: c }));
 }
 
 export async function totalCobrarHoy() {
@@ -240,9 +240,9 @@ export function cuotasAgotadas(prestamo) {
   return getSaldoCapital(prestamo) > 0;
 }
 
-export async function create({ clienteId, ruta, periodo, monto, tasa, nCuotas, fechaInicio, createdBy }) {
-  const orgId = await getOrgId();
-  const { data: { user } } = await supabase.auth.getUser();
+export async function create({ clienteId, ruta, periodo, monto, tasa, nCuotas, fechaInicio }) {
+  const _orgId = await getOrgId();
+  const _user = (await supabase.auth.getUser()).data.user;
   const cuotaMonto = Math.round((Number(monto) * Number(tasa)) / 100);
   const cuotas = buildCuotasPayload({
     fechaInicio,

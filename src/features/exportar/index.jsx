@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { Download, FileText, Users, Wallet, HandCoins } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Download, FileText, Users, Wallet, HandCoins, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { Card } from '../../components/ui/Card';
 import { SectionTitle } from '../../components/ui/SectionTitle';
 import { showToast } from '../../components/ui/Toast';
-import { useDataChange } from '../../lib/hooks/useDataChange';
+import { onDataChanged } from '../../lib/events';
 import { exportCSV, getCounts } from './selectors';
 
 const OPCIONES = [
@@ -32,17 +32,41 @@ const OPCIONES = [
 ];
 
 export function ExportarPage() {
-  const [counts, setCounts] = useState(() => getCounts());
+  const [counts, setCounts] = useState(null);
+  const [exporting, setExporting] = useState(null);
 
-  useDataChange(() => setCounts(getCounts()));
-
-  function handleExport(tipo) {
+  async function refresh() {
     try {
-      const n = exportCSV(tipo);
+      const c = await getCounts();
+      setCounts(c);
+    } catch {
+      setCounts({ clientes: 0, prestamos: 0, cobros: 0 });
+    }
+  }
+
+  useEffect(() => {
+    refresh();
+    return onDataChanged(refresh);
+  }, []);
+
+  async function handleExport(tipo) {
+    setExporting(tipo);
+    try {
+      const n = await exportCSV(tipo);
       showToast(`${n} ${n === 1 ? 'registro exportado' : 'registros exportados'}`, 'success');
     } catch {
       showToast('Error al exportar', 'error');
+    } finally {
+      setExporting(null);
     }
+  }
+
+  if (!counts) {
+    return (
+      <div className="mx-auto flex max-w-3xl items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
+      </div>
+    );
   }
 
   return (
@@ -89,10 +113,10 @@ export function ExportarPage() {
             const disabled = count === 0;
             return (
               <li key={opt.id} className="animate-fade-in">
-                <button
-                  type="button"
-                  onClick={() => !disabled && handleExport(opt.id)}
-                  disabled={disabled}
+                  <button
+                    type="button"
+                    onClick={() => !disabled && handleExport(opt.id)}
+                    disabled={disabled || exporting !== null}
                   className={clsx(
                     'group flex w-full flex-col items-start gap-3 rounded-2xl border p-4 text-left transition-all',
                     disabled
@@ -129,8 +153,17 @@ export function ExportarPage() {
                             : 'text-gold-600 dark:text-gold-300 group-hover:underline',
                         )}
                       >
-                        <Download className="h-3.5 w-3.5" />
-                        Descargar CSV
+                        {exporting === opt.id ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            Exportando...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-3.5 w-3.5" />
+                            Descargar CSV
+                          </>
+                        )}
                       </span>
                     </div>
                   </div>

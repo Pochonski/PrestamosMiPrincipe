@@ -27,8 +27,8 @@ export function ExtenderCuotasModal({ prestamo, onClose, onSaved }) {
     };
   }, [onClose]);
 
-  function handleSave() {
-    const res = form.submit();
+  async function handleSave() {
+    const res = await form.submit();
     if (res.ok) {
       onSaved?.(res.prestamo);
     }

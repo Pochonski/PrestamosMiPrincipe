@@ -1,9 +1,9 @@
-import { useRef, useState } from 'react';
-import { Database, Upload, FileJson, AlertTriangle, CheckCircle2, Calendar } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Database, Upload, FileJson, AlertTriangle, CheckCircle2, Calendar, Loader2 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { SectionTitle } from '../../components/ui/SectionTitle';
 import { showToast } from '../../components/ui/Toast';
-import { useDataChange } from '../../lib/hooks/useDataChange';
+import { onDataChanged } from '../../lib/events';
 import * as notifService from '../../services/notificaciones';
 import { RestoreConfirm } from './components/RestoreConfirm';
 import {
@@ -19,30 +19,39 @@ export function RespaldoPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [fileName, setFileName] = useState(null);
   const [error, setError] = useState(null);
-  const [stats, setStats] = useState(() => {
-    const backup = buildBackup();
-    return {
-      clientes: (backup.data.clientes || []).length,
-      prestamos: (backup.data.prestamos || []).length,
-      cobros: (backup.data.cobros || []).length,
-      notificaciones: (backup.data.notificaciones || []).length,
-    };
+  const [stats, setStats] = useState({
+    clientes: 0,
+    prestamos: 0,
+    cobros: 0,
+    notificaciones: 0,
   });
+  const [loading, setLoading] = useState(true);
   const inputRef = useRef(null);
 
-  useDataChange(() => {
-    const backup = buildBackup();
-    setStats({
-      clientes: (backup.data.clientes || []).length,
-      prestamos: (backup.data.prestamos || []).length,
-      cobros: (backup.data.cobros || []).length,
-      notificaciones: (backup.data.notificaciones || []).length,
-    });
-  });
-
-  function handleDownload() {
+  async function refreshStats() {
     try {
-      downloadBackup();
+      const backup = await buildBackup();
+      setStats({
+        clientes: (backup.data.clientes || []).length,
+        prestamos: (backup.data.prestamos || []).length,
+        cobros: (backup.data.cobros || []).length,
+        notificaciones: (backup.data.notificaciones || []).length,
+      });
+    } catch {
+      setStats({ clientes: 0, prestamos: 0, cobros: 0, notificaciones: 0 });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    refreshStats();
+    return onDataChanged(refreshStats);
+  }, []);
+
+  async function handleDownload() {
+    try {
+      await downloadBackup();
       notifService.create({
         tipo: 'info',
         titulo: 'Respaldo descargado',
@@ -75,10 +84,10 @@ export function RespaldoPage() {
     setConfirmOpen(true);
   }
 
-  function doRestore() {
+  async function doRestore() {
     setConfirmOpen(false);
     try {
-      applyBackup(preview);
+      await applyBackup(preview);
       showToast('Datos restaurados. Recargando...', 'success');
       setTimeout(() => window.location.reload(), 800);
     } catch {
@@ -91,6 +100,14 @@ export function RespaldoPage() {
     setFileName(null);
     setError(null);
     if (inputRef.current) inputRef.current.value = '';
+  }
+
+  if (loading) {
+    return (
+      <div className="mx-auto flex max-w-3xl items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
+      </div>
+    );
   }
 
   return (

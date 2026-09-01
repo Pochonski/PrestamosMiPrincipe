@@ -1,3 +1,7 @@
+import * as clientesService from '../../services/clientes';
+import * as prestamosService from '../../services/prestamos';
+import * as cobrosService from '../../services/cobros';
+
 const COLUMNS = {
   clientes: [
     { key: 'id', label: 'ID' },
@@ -5,30 +9,32 @@ const COLUMNS = {
     { key: 'cedula', label: 'Cédula' },
     { key: 'telefono', label: 'Teléfono' },
     { key: 'direccion', label: 'Dirección' },
-    { key: 'creadoEn', label: 'Creado en' },
+    { key: 'created_at', label: 'Creado en' },
   ],
   prestamos: [
     { key: 'id', label: 'ID' },
-    { key: 'clienteId', label: 'Cliente ID' },
+    { key: 'cliente_id', label: 'Cliente ID' },
     { key: 'ruta', label: 'Ruta' },
     { key: 'monto', label: 'Capital original' },
-    { key: 'saldoCapital', label: 'Saldo actual' },
+    { key: 'saldo_capital', label: 'Saldo actual' },
     { key: 'tasa', label: 'Tasa %' },
-    { key: 'nCuotas', label: 'N° cuotas' },
-    { key: 'fechaInicio', label: 'Fecha inicio' },
+    { key: 'n_cuotas', label: 'N° cuotas' },
+    { key: 'fecha_inicio', label: 'Fecha inicio' },
     { key: 'estado', label: 'Estado' },
-    { key: 'creadoEn', label: 'Creado en' },
+    { key: 'created_at', label: 'Creado en' },
   ],
   cobros: [
     { key: 'id', label: 'ID' },
-    { key: 'prestamoId', label: 'Préstamo ID' },
-    { key: 'clienteId', label: 'Cliente ID' },
-    { key: 'cuotaNumero', label: 'Cuota #' },
+    { key: 'prestamo_id', label: 'Préstamo ID' },
+    { key: 'cliente_id', label: 'Cliente ID' },
+    { key: 'cuota_numero', label: 'Cuota #' },
     { key: 'monto', label: 'Monto' },
     { key: 'tipo', label: 'Tipo' },
-    { key: 'incluirInteres', label: 'Incluye interés' },
+    { key: 'incluir_interes', label: 'Incluye interés' },
+    { key: 'interes_pagado', label: 'Interés pagado' },
+    { key: 'capital_pagado', label: 'Capital pagado' },
     { key: 'fecha', label: 'Fecha' },
-    { key: 'cobradorId', label: 'Cobrador ID' },
+    { key: 'cobrador_id', label: 'Cobrador ID' },
     { key: 'nota', label: 'Nota' },
   ],
 };
@@ -65,13 +71,19 @@ export function getColumns(tipo) {
   return COLUMNS[tipo] || [];
 }
 
-export function getDataFor(tipo) {
-  const raw = localStorage.getItem(`pmp:v1:${tipo}`);
-  return raw ? JSON.parse(raw) : [];
+async function fetchForTipo(tipo) {
+  if (tipo === 'clientes') return clientesService.list();
+  if (tipo === 'prestamos') return prestamosService.list();
+  if (tipo === 'cobros') return cobrosService.list();
+  return [];
 }
 
-export function exportCSV(tipo) {
-  const items = getDataFor(tipo);
+export async function getDataFor(tipo) {
+  return fetchForTipo(tipo);
+}
+
+export async function exportCSV(tipo) {
+  const items = await fetchForTipo(tipo);
   const columns = getColumns(tipo);
   const csv = generateCSV(items, columns);
   const fecha = new Date().toISOString().slice(0, 10);
@@ -79,10 +91,15 @@ export function exportCSV(tipo) {
   return items.length;
 }
 
-export function getCounts() {
+export async function getCounts() {
+  const [clientes, prestamos, cobros] = await Promise.all([
+    clientesService.list(),
+    prestamosService.list(),
+    cobrosService.list(),
+  ]);
   return {
-    clientes: getDataFor('clientes').length,
-    prestamos: getDataFor('prestamos').length,
-    cobros: getDataFor('cobros').length,
+    clientes: clientes.length,
+    prestamos: prestamos.length,
+    cobros: cobros.length,
   };
 }

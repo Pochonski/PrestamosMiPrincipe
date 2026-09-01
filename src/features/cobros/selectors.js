@@ -16,14 +16,14 @@ export const COBRO_TIPOS = [
   },
 ];
 
-export function getCuotasPendientes(prestamoId) {
-  const prestamo = prestamosService.getById(prestamoId);
+export async function getCuotasPendientes(prestamoId) {
+  const prestamo = await prestamosService.getById(prestamoId);
   if (!prestamo) return [];
   return prestamo.cuotas.filter((c) => c.estado === 'pendiente');
 }
 
-export function getCuotaActual(prestamoId) {
-  const pendientes = getCuotasPendientes(prestamoId);
+export async function getCuotaActual(prestamoId) {
+  const pendientes = await getCuotasPendientes(prestamoId);
   return pendientes[0] || null;
 }
 
@@ -49,7 +49,7 @@ export function getResumenPrestamo(prestamo) {
   };
 }
 
-export function getCobrosDelPrestamo(prestamoId) {
+export async function getCobrosDelPrestamo(prestamoId) {
   return cobrosService.delPrestamo(prestamoId);
 }
 

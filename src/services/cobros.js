@@ -110,7 +110,7 @@ export class CuotasAgotadasError extends Error {
   }
 }
 
-export async function create({ prestamoId, cuotaNumero, monto, tipo, incluirInteres = false, cobradorId, nota }) {
+export async function create({ prestamoId, cuotaNumero, monto, tipo, incluirInteres = false, cobradorId: _cobradorId, nota }) {
   const { data, error } = await supabase.rpc('create_cobro_with_updates', {
     p_prestamo_id: prestamoId,
     p_cuota_numero: Number(cuotaNumero),
@@ -126,6 +126,13 @@ export async function create({ prestamoId, cuotaNumero, monto, tipo, incluirInte
     }
     if (msg.includes('cuota') && msg.includes('not pending')) {
       throw new CuotaInvalidaError(cuotaNumero, 'no está pendiente');
+    }
+    if (msg.includes('intereses atrasados') || msg.includes('atrasado')) {
+      const match = msg.match(/(\d+)/);
+      throw new InteresesAtrasadosError(match ? Number(match[1]) : 1);
+    }
+    if (msg.includes('cuotas agotadas') || msg.includes('agotad')) {
+      throw new CuotasAgotadasError(0);
     }
     throw error;
   }

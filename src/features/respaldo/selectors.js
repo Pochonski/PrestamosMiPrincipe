@@ -1,7 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import { emitDataChanged } from '../../lib/events';
 
-const KEY_PREFIX = 'pmp:v1:';
 const TABLES = ['clientes', 'prestamos', 'cobros', 'notificaciones'];
 
 export async function buildBackup() {

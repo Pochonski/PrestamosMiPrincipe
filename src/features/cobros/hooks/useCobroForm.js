@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   buildResumenCobro,
   validateMontoCobro,
@@ -9,7 +9,7 @@ import {
 } from '../selectors';
 import * as cobrosService from '../../../services/cobros';
 import * as prestamosService from '../../../services/prestamos';
-import { useDataChange } from '../../../lib/hooks/useDataChange';
+import { onDataChanged } from '../../../lib/events';
 
 function suggestedMonto(prestamo, cuota, tipo, incluirInteres) {
   if (!prestamo) return 0;
@@ -23,15 +23,34 @@ function suggestedMonto(prestamo, cuota, tipo, incluirInteres) {
 }
 
 export function useCobroForm({ prestamoId }) {
-  const [prestamo, setPrestamo] = useState(() => prestamosService.refreshPrestamo(prestamoId));
+  const [prestamo, setPrestamo] = useState(null);
+  const [cuotaNumero, setCuotaNumero] = useState(1);
   const [tipo, setTipo] = useState('interes');
   const [monto, setMontoState] = useState('');
   const [incluirInteres, setIncluirInteres] = useState(true);
   const [nota, setNota] = useState('');
-  const [cuotaNumero, setCuotaNumero] = useState(() => getCuotaActual(prestamoId)?.numero || 1);
   const [submitting, setSubmitting] = useState(false);
+  const [loadingPrestamo, setLoadingPrestamo] = useState(true);
 
-  useDataChange(() => setPrestamo(prestamosService.refreshPrestamo(prestamoId)));
+  async function load() {
+    try {
+      const [p, qa] = await Promise.all([
+        prestamosService.refreshPrestamo(prestamoId),
+        getCuotaActual(prestamoId),
+      ]);
+      setPrestamo(p);
+      setCuotaNumero(qa?.numero || 1);
+    } catch {
+      setPrestamo(null);
+    } finally {
+      setLoadingPrestamo(false);
+    }
+  }
+
+  useEffect(() => {
+    load();
+    return onDataChanged(load);
+  }, [prestamoId]);
 
   const cuotaActual = useMemo(() => {
     if (!prestamo) return null;
@@ -43,15 +62,18 @@ export function useCobroForm({ prestamoId }) {
     [prestamo, cuotaActual, tipo, incluirInteres],
   );
 
-  const atrasadas = useMemo(() => getCuotasAtrasadas(prestamo), [prestamo]);
+  const atrasadas = useMemo(
+    () => (prestamo ? getCuotasAtrasadas(prestamo) : []),
+    [prestamo],
+  );
 
   const cuotasQueImpidenCapital = useMemo(
-    () => getCuotasQueImpidenCapital(prestamo, { cuotaNumero, incluirInteres }),
+    () => (prestamo ? getCuotasQueImpidenCapital(prestamo, { cuotaNumero, incluirInteres }) : []),
     [prestamo, cuotaNumero, incluirInteres],
   );
 
   const error = useMemo(() => {
-    if (!prestamo) return 'Préstamo no encontrado';
+    if (!prestamo) return 'Préstamo no disponible';
     return validateMontoCobro({
       monto,
       tipo,
@@ -80,7 +102,9 @@ export function useCobroForm({ prestamoId }) {
 
   function setTipoValue(t) {
     setTipo(t);
-    setMontoState(formatMontoLive(String(suggestedMonto(prestamo, cuotaActual, t, incluirInteres))));
+    setMontoState(
+      formatMontoLive(String(suggestedMonto(prestamo, cuotaActual, t, incluirInteres))),
+    );
   }
 
   function setIncluirInteresValue(b) {
@@ -93,7 +117,6 @@ export function useCobroForm({ prestamoId }) {
   async function submit({ cobradorId, cliente }) {
     if (error) return { ok: false, error };
     if (!prestamo) return { ok: false, error: 'Préstamo no encontrado' };
-
     setSubmitting(true);
     try {
       const n = Number(String(monto).replace(/\D/g, ''));
@@ -108,7 +131,6 @@ export function useCobroForm({ prestamoId }) {
       });
       return { ok: true, cobro, cliente, prestamoId };
     } catch (err) {
-      // Mapear errores tipados a mensajes más amigables
       const msg = String(err.message || '').toLowerCase();
       if (msg.includes('monto es menor')) {
         return { ok: false, error: 'El monto no cubre el interés del período' };
@@ -116,27 +138,28 @@ export function useCobroForm({ prestamoId }) {
       if (msg.includes('not pending')) {
         return { ok: false, error: 'La cuota ya fue cobrada o no existe' };
       }
-      if (msg.includes('monto menor')) {
-        return { ok: false, error: 'El monto es menor que el interés del período' };
-      }
       return { ok: false, error: err.message || 'Error al registrar cobro' };
     } finally {
       setSubmitting(false);
     }
   }
 
+  const showError = (field) => Boolean(touched[field] && errors[field]);
+
   return {
+    loadingPrestamo,
     prestamo,
+    cuotaNumero,
+    setCuotaNumero,
     tipo,
     setTipo: setTipoValue,
     monto,
     setMonto,
     incluirInteres,
     setIncluirInteres: setIncluirInteresValue,
-    cuotaNumero,
-    setCuotaNumero,
     nota,
     setNota,
+    showError,
     cuotaActual,
     montoSugerido,
     atrasadas,

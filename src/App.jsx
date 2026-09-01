@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell';
 import { DashboardPage } from './features/dashboard';
 import { ClientesPage } from './features/clientes';
@@ -74,7 +74,6 @@ export default function App() {
           </AuthGuard>
         }
       />
-      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

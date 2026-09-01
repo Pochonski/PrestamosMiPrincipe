@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Save, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { CobroFormBody } from './components/CobroFormBody';
@@ -13,14 +13,15 @@ export function CobroPage({ onNavigate, params }) {
 
   useEffect(() => {
     function onKey(e) {
-      if (e.key === 'Escape') {
-        if (params?.clienteId) {
-          onNavigate?.('cliente-detalle', { clienteId: params.clienteId });
-        } else if (prestamoId) {
-          onNavigate?.('prestamo-detalle', { prestamoId, clienteId: prestamosService.getById(prestamoId)?.clienteId });
-        } else {
-          onNavigate?.('clientes', {});
-        }
+      if (e.key !== 'Escape') return;
+      if (params?.clienteId) {
+        onNavigate?.('cliente-detalle', { clienteId: params.clienteId });
+      } else if (prestamoId) {
+        prestamosService.getById(prestamoId).then((p) => {
+          onNavigate?.('prestamo-detalle', { prestamoId, clienteId: p?.clienteId });
+        });
+      } else {
+        onNavigate?.('clientes', {});
       }
     }
     document.addEventListener('keydown', onKey);
@@ -42,10 +43,22 @@ function CobroForm({ prestamoId, onNavigate, clienteId }) {
   const form = useCobroForm({ prestamoId });
   const { user } = useAuth();
   const prestamo = form.prestamo;
-  const cliente = prestamo ? clientesService.getById(prestamo.clienteId) : null;
+  const [cliente, setCliente] = useState(null);
 
-  function handleSave() {
-    const res = form.submit({ cobradorId: user?.id, cliente });
+  useEffect(() => {
+    if (!prestamo) {
+      setCliente(null);
+      return;
+    }
+    let cancelled = false;
+    clientesService.getById(prestamo.clienteId).then((c) => {
+      if (!cancelled) setCliente(c);
+    });
+    return () => { cancelled = true; };
+  }, [prestamo]);
+
+  async function handleSave() {
+    const res = await form.submit({ cobradorId: user?.id, cliente });
     if (res.ok) {
       showToast('Cobro registrado correctamente', 'success');
       if (prestamoId) {
@@ -150,7 +163,14 @@ function PrestamoPickerFlow({ onNavigate }) {
 
 function PickerClientes({ onPick, onClose }) {
   const [query, setQuery] = useState('');
-  const clientes = clientesService.buscar(query);
+  const [clientes, setClientes] = useState([]);
+  useEffect(() => {
+    let cancelled = false;
+    clientesService.buscar(query).then((r) => {
+      if (!cancelled) setClientes(r);
+    });
+    return () => { cancelled = true; };
+  }, [query]);
   return (
     <PickerShell title="Elegí un cliente" onClose={onClose} query={query} setQuery={setQuery}>
       {clientes.length === 0 ? (
@@ -180,12 +200,17 @@ function PickerClientes({ onPick, onClose }) {
 
 function PickerPrestamos({ clienteId, onPick, onBack }) {
   const [prestamos, setPrestamos] = useState([]);
-  const cliente = useMemo(() => clientesService.getById(clienteId), [clienteId]);
+  const [cliente, setCliente] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
-    prestamosService.delCliente(clienteId).then((all) => {
-      if (!cancelled) setPrestamos(all.filter((p) => p.estado === 'vigente' || p.estado === 'atrasado'));
+    Promise.all([
+      clientesService.getById(clienteId),
+      prestamosService.delCliente(clienteId),
+    ]).then(([c, all]) => {
+      if (cancelled) return;
+      setCliente(c);
+      setPrestamos((all || []).filter((p) => p.estado === 'vigente' || p.estado === 'atrasado'));
     });
     return () => { cancelled = true; };
   }, [clienteId]);

@@ -70,10 +70,10 @@ Cliente abona 50.000 → saldo = 0 → préstamo LIQUIDADO
 
 | Capa | Tecnología | Rol |
 |---|---|---|
-| Build | Vite 5 | Bundler y dev server |
+| Build | Vite 8 | Bundler y dev server |
 | UI | React 19 | Componentes, hooks, context |
 | Styling | Tailwind CSS 3 | Utility-first con paleta gold/navy |
-| Routing | React Router 6 | Client-side SPA |
+| Routing | React Router 7 | Client-side SPA |
 | Auth + DB | Supabase | Auth, RLS, Postgres, Realtime-ready |
 | State | localStorage (theme) | Persistencia liviana de UI |
 

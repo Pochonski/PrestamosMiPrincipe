@@ -33,6 +33,7 @@ export function PrestamoDetalle({ onNavigate, params }) {
   const [cobros, setCobros] = useState([]);
   const [loading, setLoading] = useState(true);
   const [extenderOpen, setExtenderOpen] = useState(false);
+  const [cliente, setCliente] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -55,6 +56,18 @@ export function PrestamoDetalle({ onNavigate, params }) {
     return () => { cancelled = true; };
   }, [prestamoId]);
 
+  useEffect(() => {
+    if (!prestamo) {
+      setCliente(null);
+      return;
+    }
+    let cancelled = false;
+    clientesService.getById(prestamo.clienteId).then((c) => {
+      if (!cancelled) setCliente(c);
+    });
+    return () => { cancelled = true; };
+  }, [prestamo]);
+
   useDataChange(async () => {
     const [p, cs] = await Promise.all([
       prestamosService.getById(prestamoId),
@@ -71,8 +84,6 @@ export function PrestamoDetalle({ onNavigate, params }) {
       </div>
     );
   }
-
-  const cliente = prestamo ? clientesService.getById(prestamo.clienteId) : null;
 
   if (!prestamo) {
     return (

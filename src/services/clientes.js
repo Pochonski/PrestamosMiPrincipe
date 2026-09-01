@@ -62,6 +62,7 @@ export async function create({ nombre, cedula, telefono, direccion }) {
 }
 
 export async function update(id, patch) {
+  const orgId = await getOrgId();
   const { data, error } = await supabase
     .from('clientes')
     .update({
@@ -72,6 +73,7 @@ export async function update(id, patch) {
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
+    .eq('org_id', orgId)
     .select()
     .single();
   if (error) throw error;
@@ -79,15 +81,22 @@ export async function update(id, patch) {
 }
 
 export async function remove(id) {
-  const { error } = await supabase.from('clientes').delete().eq('id', id);
+  const activos = await prestamosActivosDelCliente(id);
+  if (activos.length > 0) {
+    throw new ClienteTienePrestamosError(id, activos.length);
+  }
+  const orgId = await getOrgId();
+  const { error } = await supabase.from('clientes').delete().eq('id', id).eq('org_id', orgId);
   if (error) throw error;
   return true;
 }
 
 export async function prestamosDelCliente(clienteId) {
+  const orgId = await getOrgId();
   const { data, error } = await supabase
     .from('prestamos')
     .select('*')
+    .eq('org_id', orgId)
     .eq('cliente_id', clienteId);
   if (error) throw error;
   return data ?? [];

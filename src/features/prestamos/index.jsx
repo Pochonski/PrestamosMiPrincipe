@@ -127,10 +127,18 @@ function ClientPicker({ onPick, onClose }) {
 function PrestamoForm({ clienteId, onNavigate }) {
   const form = usePrestamoForm({ clienteId });
   const { user } = useAuth();
-  const cliente = clientesService.getById(clienteId);
+  const [cliente, setCliente] = useState(null);
 
-  function handleSave() {
-    const res = form.submit(user?.id);
+  useEffect(() => {
+    let cancelled = false;
+    clientesService.getById(clienteId).then((c) => {
+      if (!cancelled) setCliente(c);
+    });
+    return () => { cancelled = true; };
+  }, [clienteId]);
+
+  async function handleSave() {
+    const res = await form.submit(user?.id);
     if (res.ok) {
       onNavigate?.('cliente-detalle', { clienteId });
     }

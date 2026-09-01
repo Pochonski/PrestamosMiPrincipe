@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { TopBar } from './TopBar';
 import { Sidebar } from './Sidebar';
@@ -6,6 +6,8 @@ import { MobileBottomNav } from './MobileBottomNav';
 import { PlaceholderPage } from '../ui/PlaceholderPage';
 import { getTheme, setTheme } from '../../services/theme';
 import * as notificacionesService from '../../services/notificaciones';
+import { onDataChanged } from '../../lib/events';
+import { useAuth } from '../../features/auth/useAuth';
 
 const PAGE_META = {};
 
@@ -21,22 +23,22 @@ export function AppShell({ pages = {} }) {
   const [params, setParams] = useState({});
   const [theme, setThemeState] = useState(() => getTheme());
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [notifTick, setNotifTick] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const { profile, currentOrg } = useAuth();
+
+  async function refreshNotifCount() {
+    try {
+      const n = await notificacionesService.countNoLeidas();
+      setNotificationCount(n);
+    } catch {
+      setNotificationCount(0);
+    }
+  }
 
   useEffect(() => {
-    function onDataChange() {
-      setNotifTick((t) => t + 1);
-    }
-    window.addEventListener('pmp:data-changed', onDataChange);
-    return () => {
-      window.removeEventListener('pmp:data-changed', onDataChange);
-    };
+    refreshNotifCount();
+    return onDataChanged(refreshNotifCount);
   }, []);
-
-  const notificationCount = useMemo(() => {
-    void notifTick;
-    return notificacionesService.countNoLeidas();
-  }, [notifTick]);
 
   function handleToggleTheme(next) {
     setThemeState(next);
@@ -88,7 +90,7 @@ export function AppShell({ pages = {} }) {
         >
           <div className="mx-auto flex max-w-6xl items-center justify-between">
             <span>
-              Sesión activa: <strong className="text-navy-700 dark:text-navy-100">{actual?.nombre}</strong> · {actual?.rol}
+              Sesión activa: <strong className="text-navy-700 dark:text-navy-100">{profile?.full_name || '—'}</strong> · {currentOrg?.rol || 'miembro'}
             </span>
             <span>Préstamos Mi Príncipe · v1.0.0</span>
           </div>
