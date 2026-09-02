@@ -1,25 +1,28 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell';
-import { DashboardPage } from './features/dashboard';
-import { ClientesPage } from './features/clientes';
-import { ClienteDetalle } from './features/clientes/components/ClienteDetalle';
-import { PrestamoCreatePage } from './features/prestamos';
-import { PrestamoDetalle } from './features/prestamos/components/PrestamoDetalle';
-import { CobroPage } from './features/cobros';
-import { CobrarHoyPage } from './features/cobrar-hoy';
-import { AtrasadosPage } from './features/atrasados';
-import { NotificacionesPage } from './features/notificaciones';
-import { ExportarPage } from './features/exportar';
-import { RespaldoPage } from './features/respaldo';
-import { ResumenPage } from './features/resumen';
-import { ReportesPage } from './features/reportes';
-import { LoginPage } from './features/auth/LoginPage';
-import { SignupPage } from './features/auth/SignupPage';
-import { ForgotPasswordPage } from './features/auth/ForgotPasswordPage';
-import { OnboardingPage } from './features/auth/OnboardingPage';
-import { AuthGuard } from './features/auth/AuthGuard';
 import { useNotificacionesAuto } from './features/notificaciones/hooks/useNotificacionesAuto';
+import { Loader2 } from 'lucide-react';
+import { AuthGuard } from './features/auth/AuthGuard';
+
+const LoginPage = lazy(() => import('./features/auth/LoginPage').then((m) => ({ default: m.LoginPage })));
+const SignupPage = lazy(() => import('./features/auth/SignupPage').then((m) => ({ default: m.SignupPage })));
+const ForgotPasswordPage = lazy(() => import('./features/auth/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage })));
+const OnboardingPage = lazy(() => import('./features/auth/OnboardingPage').then((m) => ({ default: m.OnboardingPage })));
+
+const DashboardPage = lazy(() => import('./features/dashboard').then((m) => ({ default: m.DashboardPage })));
+const ClientesPage = lazy(() => import('./features/clientes').then((m) => ({ default: m.ClientesPage })));
+const ClienteDetalle = lazy(() => import('./features/clientes/components/ClienteDetalle').then((m) => ({ default: m.ClienteDetalle })));
+const PrestamoCreatePage = lazy(() => import('./features/prestamos').then((m) => ({ default: m.PrestamoCreatePage })));
+const PrestamoDetalle = lazy(() => import('./features/prestamos/components/PrestamoDetalle').then((m) => ({ default: m.PrestamoDetalle })));
+const CobroPage = lazy(() => import('./features/cobros').then((m) => ({ default: m.CobroPage })));
+const CobrarHoyPage = lazy(() => import('./features/cobrar-hoy').then((m) => ({ default: m.CobrarHoyPage })));
+const AtrasadosPage = lazy(() => import('./features/atrasados').then((m) => ({ default: m.AtrasadosPage })));
+const NotificacionesPage = lazy(() => import('./features/notificaciones').then((m) => ({ default: m.NotificacionesPage })));
+const ExportarPage = lazy(() => import('./features/exportar').then((m) => ({ default: m.ExportarPage })));
+const RespaldoPage = lazy(() => import('./features/respaldo').then((m) => ({ default: m.RespaldoPage })));
+const ResumenPage = lazy(() => import('./features/resumen').then((m) => ({ default: m.ResumenPage })));
+const ReportesPage = lazy(() => import('./features/reportes').then((m) => ({ default: m.ReportesPage })));
 
 const pages = {
   dashboard: DashboardPage,
@@ -37,6 +40,14 @@ const pages = {
   reportes: ReportesPage,
 };
 
+function PageFallback() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
+    </div>
+  );
+}
+
 function AppShellRoute() {
   useNotificacionesAuto();
   const [page, setPage] = useState('dashboard');
@@ -52,17 +63,40 @@ function AppShellRoute() {
   );
 }
 
-export default function App() {
+function App() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/forgot" element={<ForgotPasswordPage />} />
+      <Route
+        path="/login"
+        element={
+          <Suspense fallback={<PageFallback />}>
+            <LoginPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/signup"
+        element={
+          <Suspense fallback={<PageFallback />}>
+            <SignupPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/forgot"
+        element={
+          <Suspense fallback={<PageFallback />}>
+            <ForgotPasswordPage />
+          </Suspense>
+        }
+      />
       <Route
         path="/onboarding"
         element={
           <AuthGuard requireOrg={false}>
-            <OnboardingPage />
+            <Suspense fallback={<PageFallback />}>
+              <OnboardingPage />
+            </Suspense>
           </AuthGuard>
         }
       />
@@ -70,10 +104,14 @@ export default function App() {
         path="*"
         element={
           <AuthGuard>
-            <AppShellRoute />
+            <Suspense fallback={<PageFallback />}>
+              <AppShellRoute />
+            </Suspense>
           </AuthGuard>
         }
       />
     </Routes>
   );
 }
+
+export default App;
