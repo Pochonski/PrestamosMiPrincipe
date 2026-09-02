@@ -48,9 +48,26 @@ export function ClientesPage({ onNavigate, params }) {
 
   async function handleDelete() {
     if (!toDelete) return;
+    const backup = { ...toDelete };
     try {
-      await removeCliente(toDelete.id);
-      showToast('Cliente eliminado', 'success');
+      await removeCliente(backup.id);
+      showToast('Cliente eliminado', 'success', {
+        label: 'Deshacer',
+        duration: 8000,
+        onClick: async () => {
+          try {
+            await clientesService.create({
+              nombre: backup.nombre,
+              cedula: backup.cedula,
+              telefono: backup.telefono,
+              direccion: backup.direccion,
+            });
+            showToast('Cliente restaurado', 'success');
+          } catch (err) {
+            showToast(err.message || 'Error al restaurar', 'error');
+          }
+        },
+      });
     } catch (err) {
       if (err instanceof ClienteTienePrestamosError) {
         showToast(

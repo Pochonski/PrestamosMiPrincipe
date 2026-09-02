@@ -1,19 +1,21 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Loader2, ArrowLeft, Mail, CheckCircle2 } from 'lucide-react';
+import { Loader2, ArrowLeft, Mail, CheckCircle2, AlertTriangle } from 'lucide-react';
+import clsx from 'clsx';
 import { supabase } from '../../lib/supabase';
+import { describeAuthError } from './errors';
 import { Input } from './components/Input';
 
 export function ForgotPasswordForm({ redirectTo = '/login' }) {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
+  const [errorMeta, setErrorMeta] = useState(null);
   const [sent, setSent] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setError(null);
+    setErrorMeta(null);
     setSubmitting(true);
     try {
       const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
@@ -22,7 +24,7 @@ export function ForgotPasswordForm({ redirectTo = '/login' }) {
       if (resetErr) throw resetErr;
       setSent(true);
     } catch (err) {
-      setError(err.message || 'Error al enviar el email');
+      setErrorMeta(describeAuthError(err));
     } finally {
       setSubmitting(false);
     }
@@ -52,10 +54,23 @@ export function ForgotPasswordForm({ redirectTo = '/login' }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <p className="rounded-2xl border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-300">
-          {error}
-        </p>
+      {errorMeta && (
+        <div
+          className={clsx(
+            'flex items-start gap-2 rounded-2xl border p-3 text-sm',
+            errorMeta.variant === 'warning'
+              ? 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300'
+              : 'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-300',
+          )}
+        >
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider opacity-80">
+              {errorMeta.title}
+            </p>
+            <p>{errorMeta.message}</p>
+          </div>
+        </div>
       )}
       <Input
         type="email"
@@ -71,7 +86,7 @@ export function ForgotPasswordForm({ redirectTo = '/login' }) {
       <button
         type="submit"
         disabled={submitting}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gold-gradient px-5 py-3.5 text-base font-bold text-navy-900 shadow-glow transition-all hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gold-gradient px-5 py-3.5 text-base font-bold text-navy-900 shadow-glow transition-all hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
       >
         {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
         Enviar link de recuperación

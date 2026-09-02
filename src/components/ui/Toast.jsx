@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { CheckCircle2, AlertCircle, Info } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Info, Undo2 } from 'lucide-react';
 import clsx from 'clsx';
 
 let externalShow = null;
@@ -10,15 +10,37 @@ function emit(toast) {
   subscribers.forEach((fn) => fn(toast));
 }
 
-export function showToast(message, tone = 'success') {
-  emit({ id: Math.random().toString(36).slice(2), message, tone });
+export function showToast(message, tone = 'success', options = {}) {
+  const { action, duration = 6000 } = options;
+  emit({
+    id: Math.random().toString(36).slice(2),
+    message,
+    tone,
+    action,
+    duration,
+  });
 }
 
 function ToastItem({ toast, onDone }) {
+  const [dismissed, setDismissed] = useState(false);
+  const duration = toast.action ? toast.duration || 8000 : 2600;
+
   useEffect(() => {
-    const t = setTimeout(onDone, 2600);
+    if (dismissed) return;
+    const t = setTimeout(onDone, duration);
     return () => clearTimeout(t);
-  }, [onDone]);
+  }, [onDone, dismissed, duration]);
+
+  if (dismissed) return null;
+
+  const handleAction = () => {
+    setDismissed(true);
+    try {
+      toast.action?.onClick?.();
+    } finally {
+      onDone();
+    }
+  };
 
   const icons = {
     success: <CheckCircle2 className="h-4 w-4" />,
@@ -29,7 +51,7 @@ function ToastItem({ toast, onDone }) {
   return (
     <div
       className={clsx(
-        'flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium shadow-cardHover animate-slide-up',
+        'flex items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium shadow-cardHover animate-slide-up',
         toast.tone === 'success' && 'bg-emerald-600 text-white',
         toast.tone === 'error' && 'bg-rose-600 text-white',
         toast.tone === 'info' && 'bg-navy-800 text-white',
@@ -38,6 +60,16 @@ function ToastItem({ toast, onDone }) {
     >
       {icons[toast.tone] || icons.info}
       <span>{toast.message}</span>
+      {toast.action && (
+        <button
+          type="button"
+          onClick={handleAction}
+          className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-1 text-xs font-bold uppercase tracking-wide transition-colors hover:bg-white/30"
+        >
+          {toast.action.icon ?? <Undo2 className="h-3 w-3" />}
+          {toast.action.label}
+        </button>
+      )}
     </div>
   );
 }

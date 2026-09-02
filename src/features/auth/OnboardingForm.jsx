@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Building2, CheckCircle2 } from 'lucide-react';
+import { Loader2, Building2, CheckCircle2, AlertTriangle } from 'lucide-react';
+import clsx from 'clsx';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from './useAuth';
+import { describeAuthError } from './errors';
 import { Input } from './components/Input';
 
 export function OnboardingForm() {
@@ -10,8 +12,13 @@ export function OnboardingForm() {
   const { user, refreshProfile } = useAuth();
   const [nombre, setNombre] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
+  const [errorMeta, setErrorMeta] = useState(null);
   const [done, setDone] = useState(false);
+  const redirectTimer = useRef(null);
+
+  useEffect(() => () => {
+    if (redirectTimer.current) clearTimeout(redirectTimer.current);
+  }, []);
 
   function makeSlug(v) {
     return v
@@ -25,7 +32,7 @@ export function OnboardingForm() {
   async function handleSubmit(e) {
     e.preventDefault();
     if (!nombre.trim() || !user) return;
-    setError(null);
+    setErrorMeta(null);
     setSubmitting(true);
     try {
       const slug = makeSlug(nombre) || 'org';
@@ -38,9 +45,9 @@ export function OnboardingForm() {
 
       await refreshProfile();
       setDone(true);
-      setTimeout(() => navigate('/', { replace: true }), 800);
+      redirectTimer.current = setTimeout(() => navigate('/', { replace: true }), 800);
     } catch (err) {
-      setError(err.message || 'Error al crear la organización');
+      setErrorMeta(describeAuthError(err));
     } finally {
       setSubmitting(false);
     }
@@ -62,10 +69,23 @@ export function OnboardingForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <p className="rounded-2xl border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-300">
-          {error}
-        </p>
+      {errorMeta && (
+        <div
+          className={clsx(
+            'flex items-start gap-2 rounded-2xl border p-3 text-sm',
+            errorMeta.variant === 'warning'
+              ? 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300'
+              : 'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-300',
+          )}
+        >
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider opacity-80">
+              {errorMeta.title}
+            </p>
+            <p>{errorMeta.message}</p>
+          </div>
+        </div>
       )}
       <Input
         type="text"
