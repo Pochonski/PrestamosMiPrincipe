@@ -295,6 +295,70 @@ export async function extenderCuotas(prestamoId, nCuotas) {
   return await getById(prestamoId);
 }
 
+export async function update(id, patch) {
+  const orgId = await getOrgId();
+  const updateObj = {};
+  if (patch.ruta !== undefined) updateObj.ruta = String(patch.ruta).trim();
+  if (patch.periodo !== undefined) updateObj.periodo = patch.periodo;
+  if (patch.monto !== undefined) updateObj.monto = Number(patch.monto);
+  if (patch.tasa !== undefined) updateObj.tasa = Number(patch.tasa);
+  if (patch.fecha_inicio !== undefined) updateObj.fecha_inicio = patch.fecha_inicio;
+  updateObj.updated_at = new Date().toISOString();
+
+  if (Object.keys(updateObj).length === 1) {
+    return getById(id);
+  }
+
+  const { data, error } = await supabase
+    .from('prestamos')
+    .update(updateObj)
+    .eq('id', id)
+    .eq('org_id', orgId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function remove(id) {
+  const orgId = await getOrgId();
+  const { data: prestamo, error: e1 } = await supabase
+    .from('prestamos')
+    .select('id, n_cuotas')
+    .eq('id', id)
+    .eq('org_id', orgId)
+    .single();
+  if (e1) throw e1;
+  if (!prestamo) throw new PrestamoNoEncontradoError(id);
+
+  const { data: cobros, error: e2 } = await supabase
+    .from('cobros')
+    .select('id')
+    .eq('org_id', orgId)
+    .eq('prestamo_id', id);
+  if (e2) throw e2;
+  if (cobros && cobros.length > 0) {
+    throw new Error(
+      'No se puede eliminar un préstamo con cobros registrados. Si necesitas borrarlo, eliminá los cobros primero.',
+    );
+  }
+
+  const { error: e3 } = await supabase
+    .from('cuotas')
+    .delete()
+    .eq('org_id', orgId)
+    .eq('prestamo_id', id);
+  if (e3) throw e3;
+
+  const { error } = await supabase
+    .from('prestamos')
+    .delete()
+    .eq('id', id)
+    .eq('org_id', orgId);
+  if (error) throw error;
+  return true;
+}
+
 export class PrestamoNoEncontradoError extends Error {
   constructor(id) {
     super(`Préstamo ${id} no encontrado`);

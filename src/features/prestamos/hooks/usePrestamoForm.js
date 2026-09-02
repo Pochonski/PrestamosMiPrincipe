@@ -19,11 +19,26 @@ const STEP_FIELDS = {
   5: [],
 };
 
-export function usePrestamoForm({ clienteId } = {}) {
+function buildFromInitial(prestamo) {
+  if (!prestamo) return null;
+  return {
+    ruta: prestamo.ruta || '',
+    periodo: prestamo.periodo || null,
+    monto: prestamo.monto != null ? String(prestamo.monto) : '',
+    nCuotas: prestamo.n_cuotas != null ? String(prestamo.n_cuotas) : '',
+    tasa: prestamo.tasa != null ? String(prestamo.tasa) : '',
+    fechaInicio: prestamo.fecha_inicio || '',
+  };
+}
+
+export function usePrestamoForm({ clienteId, initialPrestamo } = {}) {
   const [step, setStep] = useState(1);
-  const [values, setValues] = useState(() => buildInitialPrestamo(clienteId));
+  const [values, setValues] = useState(() =>
+    buildFromInitial(initialPrestamo) || buildInitialPrestamo(clienteId),
+  );
   const [touched, setTouched] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const isEdit = Boolean(initialPrestamo);
 
   const errors = useMemo(() => {
     const ruta = validateRuta(values.ruta);
@@ -106,7 +121,7 @@ export function usePrestamoForm({ clienteId } = {}) {
     setStep(target);
   }
 
-  async function submit(_creadoPor) {
+  async function submit(_userId) {
     if (!allValid) {
       setTouched({
         ruta: true,
@@ -120,6 +135,16 @@ export function usePrestamoForm({ clienteId } = {}) {
     }
     setSubmitting(true);
     try {
+      if (isEdit) {
+        const prestamo = await prestamosService.update(initialPrestamo.id, {
+          ruta: values.ruta,
+          periodo: values.periodo,
+          monto: Number(String(values.monto).replace(/\D/g, '')),
+          tasa: Number(values.tasa),
+          fecha_inicio: values.fechaInicio,
+        });
+        return { ok: true, prestamo, prestamoId: prestamo.id };
+      }
       const prestamo = await prestamosService.create({
         clienteId,
         ruta: values.ruta,
@@ -138,6 +163,7 @@ export function usePrestamoForm({ clienteId } = {}) {
   }
 
   return {
+    isEdit,
     step,
     values,
     errors,

@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import * as prestamosService from '../../../services/prestamos';
-import { useDataChange } from '../../../lib/hooks/useDataChange';
+import { onDataChanged } from '../../../lib/events';
 
 export function usePrestamosCliente(clienteId) {
   const [tick, setTick] = useState(0);
   const [prestamos, setPrestamos] = useState([]);
-
-  useDataChange(() => setTick((t) => t + 1));
 
   useEffect(() => {
     let cancelled = false;
@@ -16,8 +14,8 @@ export function usePrestamosCliente(clienteId) {
         return;
       }
       try {
-        const result = await prestamosService.delCliente(clienteId);
-        if (!cancelled) setPrestamos(result);
+        const data = await prestamosService.delCliente(clienteId);
+        if (!cancelled) setPrestamos(data);
       } catch {
         if (!cancelled) setPrestamos([]);
       }
@@ -25,6 +23,11 @@ export function usePrestamosCliente(clienteId) {
     load();
     return () => { cancelled = true; };
   }, [clienteId, tick]);
+
+  useEffect(() => {
+    const handler = () => setTick((t) => t + 1);
+    return onDataChanged(handler);
+  }, []);
 
   return prestamos;
 }

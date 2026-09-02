@@ -6,8 +6,12 @@ import { Avatar } from '../../../components/ui/Avatar';
 import { formatPhoneCR } from '../../../lib/format';
 import { colorFor } from '../../../lib/color';
 import { useDataChange } from '../../../lib/hooks/useDataChange';
+import { showToast } from '../../../components/ui/Toast';
 import * as clientesService from '../../../services/clientes';
+import * as prestamosService from '../../../services/prestamos';
 import { PrestamoCard } from '../../prestamos/components/PrestamoCard';
+import { PrestamoEditModal } from '../../prestamos/components/PrestamoEditModal';
+import { DeletePrestamoConfirm } from '../../prestamos/components/DeletePrestamoConfirm';
 import { usePrestamosCliente } from '../../prestamos/hooks/usePrestamosCliente';
 import { statsCliente } from '../../../lib/resumen';
 
@@ -16,6 +20,9 @@ export function ClienteDetalle({ onNavigate, params }) {
   const [cliente, setCliente] = useState(null);
   const [loading, setLoading] = useState(true);
   const prestamos = usePrestamosCliente(clienteId);
+  const [editTarget, setEditTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -69,6 +76,28 @@ export function ClienteDetalle({ onNavigate, params }) {
     onNavigate?.('prestamo-detalle', { prestamoId: p.id, clienteId });
   }
 
+  function handleEditPrestamo(p) {
+    setEditTarget(p);
+  }
+
+  function handleDeletePrestamo(p) {
+    setDeleteTarget(p);
+  }
+
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await prestamosService.remove(deleteTarget.id);
+      setDeleteTarget(null);
+      showToast('Préstamo eliminado', 'success');
+    } catch (err) {
+      showToast(err.message || 'Error al eliminar el préstamo', 'error');
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-5 sm:gap-6">
       <button
@@ -86,37 +115,46 @@ export function ClienteDetalle({ onNavigate, params }) {
 
       <Card className="relative overflow-hidden p-5 sm:p-6">
         <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-gold-200/40 blur-3xl dark:bg-gold-500/10" />
-        <div className="relative flex items-start gap-4">
-          <Avatar nombre={cliente.nombre} color={colorFor(cliente.id)} size="lg" />
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-bold text-navy-900 sm:text-2xl dark:text-white">
-              {cliente.nombre}
-            </h1>
-            <div className="mt-2 flex flex-col gap-1.5 text-sm text-slate-600 dark:text-navy-300">
-              <p className="flex items-center gap-2">
-                <IdCard className="h-4 w-4 shrink-0 text-slate-400 dark:text-navy-300" />
-                {cliente.cedula}
-              </p>
-              <p className="flex items-center gap-2">
-                <Phone className="h-4 w-4 shrink-0 text-slate-400 dark:text-navy-300" />
-                {formatPhoneCR(cliente.telefono)}
-              </p>
-              <p className="flex items-start gap-2">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-400 dark:text-navy-300" />
-                <span>{cliente.direccion}</span>
-              </p>
+        <div className="relative">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div
+                className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                style={{ backgroundColor: colorFor(clienteId), color: '#fff' }}
+              >
+                <span className="text-base font-bold">
+                  {cliente.nombre
+                    .split(' ')
+                    .map((s) => s[0])
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .join('')
+                    .toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-navy-900 sm:text-2xl dark:text-white">
+                  {cliente.nombre}
+                </h1>
+                <p className="text-sm text-slate-600 dark:text-navy-300">{cliente.cedula}</p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 dark:bg-navy-700/50">
+              <Phone className="h-4 w-4 shrink-0 text-slate-400 dark:text-navy-300" />
+              <span className="text-sm text-navy-900 dark:text-white">{formatPhoneCR(cliente.telefono)}</span>
+            </div>
+            <div className="flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2 dark:bg-navy-700/50">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-400 dark:text-navy-300" />
+              <span className="text-sm text-navy-900 dark:text-white">{cliente.direccion}</span>
             </div>
           </div>
         </div>
       </Card>
 
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
-        <StatTile
-          icon={Wallet}
-          label="Préstamos"
-          value={stats.total}
-          tone="navy"
-        />
+        <StatTile icon={Wallet} label="Préstamos" value={stats.total} tone="navy" />
         <StatTile
           icon={TrendingUp}
           label="Vigentes"
@@ -146,26 +184,46 @@ export function ClienteDetalle({ onNavigate, params }) {
         </h2>
         {prestamos.length === 0 ? (
           <Card className="flex flex-col items-center gap-3 p-8 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-navy-700 dark:text-navy-300">
-              <Wallet className="h-5 w-5" />
-            </div>
+            <Wallet className="h-6 w-6 text-slate-400 dark:text-navy-300" />
             <p className="text-sm font-medium text-navy-700 dark:text-navy-100">
               Este cliente aún no tiene préstamos
             </p>
             <p className="text-xs text-slate-500 dark:text-navy-300">
-              Toca "Registrar préstamo" para crear el primero.
+              Tocá "Registrar préstamo" para crear el primero.
             </p>
           </Card>
         ) : (
-          <ul className="flex flex-col gap-3">
+          <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {prestamos.map((p) => (
               <li key={p.id} className="animate-fade-in">
-                <PrestamoCard prestamo={p} onOpen={handleOpenPrestamo} />
+                <PrestamoCard
+                  prestamo={p}
+                  onOpen={handleOpenPrestamo}
+                  onEdit={handleEditPrestamo}
+                  onDelete={handleDeletePrestamo}
+                />
               </li>
             ))}
           </ul>
         )}
       </section>
+
+      {editTarget && (
+        <PrestamoEditModal
+          prestamo={editTarget}
+          onClose={() => setEditTarget(null)}
+          onSaved={() => setEditTarget(null)}
+        />
+      )}
+
+      {deleteTarget && (
+        <DeletePrestamoConfirm
+          prestamo={{ ...deleteTarget, nombre_cliente: cliente.nombre.split(' ')[0] || 'cliente' }}
+          loading={deleting}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
     </div>
   );
 }
@@ -173,8 +231,8 @@ export function ClienteDetalle({ onNavigate, params }) {
 function StatTile({ icon: Icon, label, value, tone }) {
   const tones = {
     navy: 'bg-navy-50 text-navy-700 dark:bg-navy-700/50 dark:text-navy-100',
-    emerald: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300',
-    rose: 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300',
+    emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300',
+    rose: 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300',
     slate: 'bg-slate-100 text-slate-500 dark:bg-navy-700 dark:text-navy-300',
   };
   return (

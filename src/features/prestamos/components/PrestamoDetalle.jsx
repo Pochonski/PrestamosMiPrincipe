@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Plus, Wallet, TrendingUp, Banknote, Calendar, Receipt, ArrowDownCircle, AlertTriangle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Wallet, TrendingUp, Banknote, Calendar, Receipt, ArrowDownCircle, AlertTriangle, Loader2, Pencil, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
 import { Card } from '../../../components/ui/Card';
 import { Avatar } from '../../../components/ui/Avatar';
@@ -14,6 +14,8 @@ import { getResumenPrestamo } from '../../../lib/resumen';
 import { labelPeriodo } from '../selectors';
 import { PrestamoCalendar } from './PrestamoCalendar';
 import { ExtenderCuotasModal } from './ExtenderCuotasModal';
+import { DeletePrestamoConfirm } from './DeletePrestamoConfirm';
+import { PrestamoEditModal } from './PrestamoEditModal';
 import { Badge } from '../../../components/ui/Badge';
 
 const STATUS_META = {
@@ -33,6 +35,9 @@ export function PrestamoDetalle({ onNavigate, params }) {
   const [cobros, setCobros] = useState([]);
   const [loading, setLoading] = useState(true);
   const [extenderOpen, setExtenderOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [cliente, setCliente] = useState(null);
 
   useEffect(() => {
@@ -104,6 +109,26 @@ export function PrestamoDetalle({ onNavigate, params }) {
   const meta = STATUS_META[status];
   const resumen = getResumenPrestamo(prestamo);
   const labelPeriodoValue = labelPeriodo(prestamo.periodo);
+  const clienteNombre = cliente?.nombre?.split(' ')[0] || 'cliente';
+
+  async function handleEditSaved(updated) {
+    setEditOpen(false);
+    setPrestamo(updated);
+    showToast('Préstamo actualizado', 'success');
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await prestamosService.remove(prestamo.id);
+      setDeleteOpen(false);
+      showToast('Préstamo eliminado', 'success');
+      onNavigate?.('cliente-detalle', { clienteId: prestamo.clienteId });
+    } catch (err) {
+      setDeleting(false);
+      showToast(err.message || 'Error al eliminar', 'error');
+    }
+  }
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-5 sm:gap-6">
@@ -136,6 +161,26 @@ export function PrestamoDetalle({ onNavigate, params }) {
                 </p>
               </div>
             </div>
+            {prestamo.estado !== 'cancelado' && (
+              <div className="flex shrink-0 flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-navy-700 transition-colors hover:border-gold-400 hover:bg-gold-50 dark:border-navy-700 dark:bg-navy-800 dark:text-navy-100 dark:hover:border-gold-400 dark:hover:bg-navy-700"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeleteOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-600 transition-colors hover:border-rose-300 hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-300 dark:hover:bg-rose-500/20"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Eliminar
+                </button>
+              </div>
+            )}
           </div>
           {cliente && (
             <button
@@ -249,42 +294,39 @@ export function PrestamoDetalle({ onNavigate, params }) {
           </Card>
         ) : (
           <Card className="divide-y divide-slate-100 p-0 dark:divide-navy-700/60">
-            {cobros
-              .slice()
-              .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
-              .map((c) => {
-                const tipoMeta = COBRO_TIPO_META[c.tipo] || COBRO_TIPO_META.interes;
-                return (
-                  <div key={c.id} className="flex items-center gap-3 p-4">
-                    <div
-                      className={clsx(
-                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl',
-                        c.tipo === 'capital'
-                          ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300'
-                          : 'bg-gold-50 text-gold-600 dark:bg-gold-500/10 dark:text-gold-300',
-                      )}
-                    >
-                      <ArrowDownCircle className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold text-navy-900 dark:text-white">
-                          {formatCRC(c.monto)}
-                        </p>
-                        <Badge tone={tipoMeta.tone}>{tipoMeta.label}</Badge>
-                      </div>
-                      <p className="text-xs text-slate-500 dark:text-navy-300">
-                        Cuota #{c.cuotaNumero} · {formatDateTime(c.fecha)}
-                      </p>
-                      {c.nota && (
-                        <p className="mt-1 text-xs text-slate-600 dark:text-navy-300">
-                          "{c.nota}"
-                        </p>
-                      )}
-                    </div>
+            {cobros.map((c) => {
+              const tipoMeta = COBRO_TIPO_META[c.tipo] || COBRO_TIPO_META.interes;
+              return (
+                <div key={c.id} className="flex items-center gap-3 p-4">
+                  <div
+                    className={clsx(
+                      'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl',
+                      c.tipo === 'capital'
+                        ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300'
+                        : 'bg-gold-50 text-gold-600 dark:bg-gold-500/10 dark:text-gold-300',
+                    )}
+                  >
+                    <ArrowDownCircle className="h-4 w-4" />
                   </div>
-                );
-              })}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-navy-900 dark:text-white">
+                        {formatCRC(c.monto)}
+                      </p>
+                      <Badge tone={tipoMeta.tone}>{tipoMeta.label}</Badge>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-navy-300">
+                      Cuota #{c.cuota_numero} · {formatDateTime(c.fecha)}
+                    </p>
+                    {c.nota && (
+                      <p className="mt-1 text-xs text-slate-600 dark:text-navy-300">
+                        "{c.nota}"
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </Card>
         )}
       </section>
@@ -293,10 +335,24 @@ export function PrestamoDetalle({ onNavigate, params }) {
         <ExtenderCuotasModal
           prestamo={prestamo}
           onClose={() => setExtenderOpen(false)}
-          onSaved={() => {
-            setExtenderOpen(false);
-            showToast(`Cuotas extendidas`, 'success');
-          }}
+          onSaved={() => setExtenderOpen(false)}
+        />
+      )}
+
+      {editOpen && (
+        <PrestamoEditModal
+          prestamo={prestamo}
+          onClose={() => setEditOpen(false)}
+          onSaved={handleEditSaved}
+        />
+      )}
+
+      {deleteOpen && (
+        <DeletePrestamoConfirm
+          prestamo={{ ...prestamo, nombre_cliente: clienteNombre }}
+          loading={deleting}
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteOpen(false)}
         />
       )}
     </div>
@@ -307,26 +363,24 @@ function KpiTile({ icon: Icon, label, value, sub, tone }) {
   const tones = {
     navy: 'bg-navy-50 text-navy-700 dark:bg-navy-700/50 dark:text-navy-100',
     gold: 'bg-gold-50 text-gold-600 dark:bg-gold-500/10 dark:text-gold-300',
-    emerald: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300',
-    sky: 'bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300',
-    rose: 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300',
+    emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300',
+    sky: 'bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300',
+    rose: 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300',
   };
   return (
     <Card className="p-3 sm:p-4">
       <div className="flex items-start gap-3">
-        <div className={clsx('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', tones[tone])}>
+        <div className={clsx('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', tones[tone] || tones.gold)}>
           <Icon className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-navy-300">
             {label}
           </p>
-          <p className="mt-0.5 truncate text-base font-bold tabular-nums text-navy-900 dark:text-white sm:text-lg">
+          <p className="mt-0.5 text-base font-bold tabular-nums text-navy-900 dark:text-white sm:text-lg">
             {value}
           </p>
-          {sub && (
-            <p className="mt-0.5 text-[10px] text-slate-500 dark:text-navy-300">{sub}</p>
-          )}
+          {sub && <p className="mt-0.5 text-[10px] text-slate-500 dark:text-navy-300">{sub}</p>}
         </div>
       </div>
     </Card>
