@@ -22,8 +22,9 @@ export function ClientesPage({ onNavigate, params }) {
   useEffect(() => {
     if (params?.autoCreate && formMode === null) {
       setFormMode('create');
+      onNavigate?.('clientes', {});
     }
-  }, [params?.autoCreate, formMode]);
+  }, [params?.autoCreate, formMode, onNavigate]);
 
   function openCreate() {
     setFormMode('create');
