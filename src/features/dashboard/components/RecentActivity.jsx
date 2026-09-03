@@ -15,7 +15,7 @@ export function RecentActivity({ items }) {
           <h3 className="text-sm font-bold text-navy-900 dark:text-white">Actividad reciente</h3>
           <p className="text-xs text-neutral-500 dark:text-navy-300">Últimos movimientos registrados</p>
         </div>
-        <Badge tone="gold">{list.length}</Badge>
+        <Badge tone="neutral">{list.length}</Badge>
       </div>
 
       {list.length === 0 ? (

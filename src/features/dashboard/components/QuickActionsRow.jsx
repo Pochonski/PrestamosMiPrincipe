@@ -8,43 +8,35 @@ import {
 } from 'lucide-react';
 import { QuickChip } from '../../../components/ui/QuickChip';
 
+const QUICK_ACTIONS = [
+  { icon: FileBarChart, label: 'Reportes', to: 'reportes', badgeKey: null },
+  { icon: Bell, label: 'Notificaciones', to: 'notificaciones', badgeKey: 'notificaciones' },
+  { icon: CalendarClock, label: 'Cobrar hoy', to: 'cobrar-hoy', badgeKey: 'cobrarHoy' },
+  { icon: AlertTriangle, label: 'Atrasados', to: 'atrasados', badgeKey: 'atrasados' },
+  { icon: Download, label: 'Exportar Excel', to: 'exportar', badgeKey: null },
+];
+
+const toneFor = (badgeKey, badges) => {
+  if (badgeKey === 'notificaciones' && badges.notificaciones > 0) return 'gold';
+  if (badgeKey === 'cobrarHoy' && badges.cobrarHoy > 0) return 'info';
+  if (badgeKey === 'atrasados' && badges.atrasados > 0) return 'danger';
+  return 'neutral';
+};
+
 export function QuickActionsRow({ badges, onNavigate }) {
   return (
-    <div className="-mx-3 overflow-x-auto px-3 sm:-mx-5 sm:px-5 scrollbar-hide">
-      <div className="flex min-w-max gap-2 pb-1">
-        <QuickChip
-          icon={FileBarChart}
-          label="Reportes"
-          tone="neutral"
-          onClick={() => onNavigate('reportes')}
-        />
-        <QuickChip
-          icon={Bell}
-          label="Notificaciones"
-          badge={badges.notificaciones}
-          tone={badges.notificaciones > 0 ? 'gold' : 'neutral'}
-          onClick={() => onNavigate('notificaciones')}
-        />
-        <QuickChip
-          icon={CalendarClock}
-          label="Cobrar hoy"
-          badge={badges.cobrarHoy}
-          tone={badges.cobrarHoy > 0 ? 'info' : 'neutral'}
-          onClick={() => onNavigate('cobrar-hoy')}
-        />
-        <QuickChip
-          icon={AlertTriangle}
-          label="Atrasados"
-          badge={badges.atrasados}
-          tone={badges.atrasados > 0 ? 'danger' : 'neutral'}
-          onClick={() => onNavigate('atrasados')}
-        />
-        <QuickChip
-          icon={Download}
-          label="Exportar Excel"
-          tone="neutral"
-          onClick={() => onNavigate('exportar')}
-        />
+    <div className="-mx-3 overflow-x-auto px-3 sm:mx-0 sm:px-0 scrollbar-hide">
+      <div className="flex min-w-max flex-wrap gap-2 sm:min-w-0 sm:-mx-0">
+        {QUICK_ACTIONS.map(({ icon, label, to, badgeKey }) => (
+          <QuickChip
+            key={label}
+            icon={icon}
+            label={label}
+            badge={badgeKey ? badges[badgeKey] : undefined}
+            tone={toneFor(badgeKey, badges)}
+            onClick={() => onNavigate(to)}
+          />
+        ))}
       </div>
     </div>
   );

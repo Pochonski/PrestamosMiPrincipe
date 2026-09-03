@@ -90,6 +90,8 @@ export default {
         'gold-shine': 'linear-gradient(110deg, transparent 33%, rgb(255 255 255 / 0.25) 50%, transparent 67%)',
         'navy-gradient': 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)',
         'navy-radial': 'radial-gradient(ellipse at top, #1E293B 0%, #020617 100%)',
+        'hero-surface':
+          'radial-gradient(60rem 14rem at 100% 0%, rgb(212 175 55 / 0.10), transparent 70%), radial-gradient(40rem 20rem at -5% 100%, rgb(30 41 59 / 0.08), transparent 70%)',
       },
       keyframes: {
         'fade-in': {
