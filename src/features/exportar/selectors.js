@@ -39,7 +39,7 @@ const COLUMNS = {
   ],
 };
 
-function escapeCSV(value) {
+export function escapeCSV(value) {
   const str = value == null ? '' : String(value);
   if (/[",\n]/.test(str)) {
     return `"${str.replace(/"/g, '""')}"`;
@@ -47,7 +47,7 @@ function escapeCSV(value) {
   return str;
 }
 
-function generateCSV(items, columns) {
+export function generateCSV(items, columns) {
   const header = columns.map((c) => escapeCSV(c.label)).join(',');
   const rows = items.map((item) =>
     columns.map((c) => escapeCSV(item[c.key])).join(','),
@@ -55,16 +55,68 @@ function generateCSV(items, columns) {
   return [header, ...rows].join('\n');
 }
 
+function idleCallback(timeout = 1000) {
+  if (typeof window === 'undefined') return (fn) => setTimeout(fn, 0);
+  if (typeof window.requestIdleCallback === 'function') {
+    return (fn) => window.requestIdleCallback(fn, { timeout });
+  }
+  return (fn) => setTimeout(fn, 0);
+}
+
 export function downloadCSV(filename, content) {
-  const blob = new Blob(['\uFEFF' + content], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  idleCallback()(() => {
+    const blob = new Blob(['\uFEFF' + content], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+}
+
+export async function downloadCSVChunked(filename, items, columns) {
+  const BOM = '\uFEFF';
+  const header = columns.map((c) => escapeCSV(c.label)).join(',') + '\n';
+  const BATCH = 200;
+
+  return new Promise((resolve, reject) => {
+    const parts = [BOM + header];
+    let i = 0;
+
+    const writeNext = (deadline) => {
+      try {
+        const until = (deadline?.timeRemaining?.() ?? 50) > 0 ? deadline.timeRemaining() : 0;
+        const start = performance.now();
+        while (i < items.length && (performance.now() - start < until || i % BATCH === 0)) {
+          const row = items[i].map((c) => escapeCSV(items[i][c.key])).join(',');
+          parts.push(row + '\n');
+          i++;
+          if (i % BATCH === 0) break;
+        }
+        if (i < items.length) {
+          idleCallback()(writeNext);
+          return;
+        }
+        const blob = new Blob(parts, { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        resolve(items.length);
+      } catch (e) {
+        reject(e);
+      }
+    };
+
+    idleCallback()(writeNext);
+  });
 }
 
 export function getColumns(tipo) {
@@ -85,9 +137,15 @@ export async function getDataFor(tipo) {
 export async function exportCSV(tipo) {
   const items = await fetchForTipo(tipo);
   const columns = getColumns(tipo);
-  const csv = generateCSV(items, columns);
   const fecha = new Date().toISOString().slice(0, 10);
-  downloadCSV(`pmp-${tipo}-${fecha}.csv`, csv);
+  const filename = `pmp-${tipo}-${fecha}.csv`;
+  if (items.length > 500) {
+    return downloadCSVChunked(filename, items.map((item) =>
+      Object.fromEntries(columns.map((c) => [c.key, item[c.key]])),
+    ), columns).then(() => items.length);
+  }
+  const csv = generateCSV(items, columns);
+  downloadCSV(filename, csv);
   return items.length;
 }
 
