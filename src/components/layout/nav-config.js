@@ -41,14 +41,42 @@ export const NAV_ITEMS = [
 const BY_ID = new Map(NAV_ITEMS.map((n) => [n.id, n]));
 const BY_PATH = new Map(NAV_ITEMS.map((n) => [n.path, n]));
 
+export const RESERVED_SLUGS = new Set(['login', 'signup', 'forgot', 'onboarding', 'invite', 'api', 'assets']);
+
+const NAV_TOP_SEGMENTS = new Set(
+  NAV_ITEMS.map((n) => n.path.split('/').filter(Boolean)[0]).filter(Boolean),
+);
+
+export function parseOrgSlug(path) {
+  const parts = String(path || '/').split('/').filter(Boolean);
+  if (parts.length < 2) return null;
+  const seg = parts[0] || null;
+  if (!seg || RESERVED_SLUGS.has(seg) || NAV_TOP_SEGMENTS.has(seg)) return null;
+  return seg;
+}
+
+export function stripOrgPrefix(path) {
+  const slug = parseOrgSlug(path);
+  if (!slug) return path;
+  const stripped = path.replace(new RegExp(`^/${slug}`), '') || '/';
+  return stripped.startsWith('/') ? stripped : `/${stripped}`;
+}
+
+export function withOrgPrefix(slug, path) {
+  if (!slug) return path;
+  if (path === '/') return `/${slug}`;
+  return `/${slug}${path}`;
+}
+
 export function findItemById(id) {
   return BY_ID.get(id) || null;
 }
 
 export function findItemByPath(path) {
-  if (BY_PATH.has(path)) return BY_PATH.get(path);
+  const stripped = stripOrgPrefix(path);
+  if (BY_PATH.has(stripped)) return BY_PATH.get(stripped);
   for (const item of NAV_ITEMS) {
-    if (item.path !== '/' && path.startsWith(item.path)) return item;
+    if (item.path !== '/' && stripped.startsWith(item.path)) return item;
   }
   return null;
 }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Building2, Users, Mail, Crown, Save, UserPlus, Link2, Clock, Trash2 } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
@@ -18,6 +19,8 @@ import { InviteModal } from '../components/InviteModal';
 
 export function SettingsPage() {
   const { currentOrg, isOwner, isAdmin, canInvite, refreshProfile } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [org, setOrg] = useState(null);
   const [loadingOrg, setLoadingOrg] = useState(true);
   const [members, setMembers] = useState([]);
@@ -69,9 +72,14 @@ export function SettingsPage() {
     try {
       const updated = await orgService.updateOrganization({ nombre: editNombre, slug: editSlug });
       setOrg(updated);
+      const oldSlug = currentOrg?.slug;
       await refreshProfile();
       setSaveMsg('Cambios guardados');
       setTimeout(() => setSaveMsg(null), 2000);
+      if (updated?.slug && oldSlug && updated.slug !== oldSlug) {
+        const newPath = location.pathname.replace(`/${oldSlug}`, `/${updated.slug}`);
+        navigate(newPath, { replace: true });
+      }
     } catch (err) {
       setErrorMeta(describeAuthError(err));
     } finally {
@@ -242,7 +250,7 @@ export function SettingsPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => navigator.clipboard.writeText(invitesService.buildInviteLink(iv.token))}
+                            onClick={() => navigator.clipboard.writeText(invitesService.buildInviteLink(iv.token, currentOrg?.slug))}
                           >
                             Copiar link
                           </Button>

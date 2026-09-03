@@ -10,7 +10,7 @@ import { describeAuthError } from '../../auth/errors';
 import * as invitesService from '../../../services/invites';
 
 export function InviteModal({ open, onClose, onCreated }) {
-  const { rol } = useAuth();
+  const { rol, currentOrg } = useAuth();
   const [email, setEmail] = useState('');
   const [inviteRol, setInviteRol] = useState(rol === 'cobrador' ? 'viewer' : 'cobrador');
   const [submitting, setSubmitting] = useState(false);
@@ -54,13 +54,13 @@ export function InviteModal({ open, onClose, onCreated }) {
             <div className="mt-1 flex items-center gap-2">
               <input
                 readOnly
-                value={invitesService.buildInviteLink(created.token)}
+                value={invitesService.buildInviteLink(created.token, currentOrg?.slug)}
                 className="flex-1 rounded-input border border-slate-200 bg-white px-3 py-2 text-xs dark:border-navy-700 dark:bg-navy-800"
               />
               <Button
                 size="sm"
                 onClick={() => {
-                  navigator.clipboard.writeText(invitesService.buildInviteLink(created.token));
+                  navigator.clipboard.writeText(invitesService.buildInviteLink(created.token, currentOrg?.slug));
                 }}
               >
                 Copiar

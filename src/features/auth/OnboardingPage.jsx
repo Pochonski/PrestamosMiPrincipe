@@ -13,7 +13,7 @@ export function OnboardingPage() {
   const name = profile?.full_name || user?.email?.split('@')[0] || 'Ahí';
 
   if (!loading && currentOrg) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={`/${currentOrg.slug}`} replace />;
   }
 
   return (

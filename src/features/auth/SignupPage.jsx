@@ -23,7 +23,7 @@ export function SignupPage() {
         navigate(`/invite/${inviteToken}`, { replace: true });
         return;
       }
-      if (currentOrg) navigate('/', { replace: true });
+      if (currentOrg) navigate(`/${currentOrg.slug}`, { replace: true });
       else navigate('/onboarding', { replace: true });
     }
   }, [loading, session, currentOrg, navigate]);

@@ -12,7 +12,7 @@ import { IconBox } from '../../components/ui/IconBox';
 
 export function OnboardingForm() {
   const navigate = useNavigate();
-  const { user, refreshProfile } = useAuth();
+  const { user, currentOrg, refreshProfile } = useAuth();
   const [nombre, setNombre] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errorMeta, setErrorMeta] = useState(null);
@@ -44,7 +44,7 @@ export function OnboardingForm() {
         org_nombre: nombre.trim(),
         org_slug: slug,
       });
-      if (!rpcErr) return orgId;
+      if (!rpcErr) return { orgId, slug };
       const msg = String(rpcErr.message || '').toLowerCase();
       const isDuplicate = rpcErr.code === '23505' || msg.includes('duplicate') || msg.includes('slug');
       if (isDuplicate && attempt < 4) {
@@ -63,12 +63,12 @@ export function OnboardingForm() {
     setSubmitting(true);
     try {
       const slugBase = makeSlug(nombre) || 'org';
-      const orgId = await tryCreate(slugBase);
+      const { orgId, slug } = await tryCreate(slugBase);
       if (!orgId) throw new Error('No se creó la organización');
 
       await refreshProfile();
       setDone(true);
-      redirectTimer.current = setTimeout(() => navigate('/', { replace: true }), 800);
+      redirectTimer.current = setTimeout(() => navigate(`/${slug}`, { replace: true }), 800);
     } catch (err) {
       const raw = String(err?.message || '').toLowerCase();
       if (raw.includes('already in organization')) {
@@ -77,7 +77,8 @@ export function OnboardingForm() {
           message: 'Cada usuario solo puede pertenecer a una organización. Redirigiendo al dashboard...',
           variant: 'warning',
         });
-        setTimeout(() => navigate('/', { replace: true }), 1200);
+        const fallback = currentOrg?.slug ? `/${currentOrg.slug}` : '/';
+        setTimeout(() => navigate(fallback, { replace: true }), 1200);
         return;
       }
       setErrorMeta(describeAuthError(err));

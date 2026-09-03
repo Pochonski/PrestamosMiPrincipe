@@ -6,7 +6,9 @@ import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { Spinner } from './components/ui/Spinner';
 import { useNotificacionesAuto } from './features/notificaciones/hooks/useNotificacionesAuto';
 import { AuthGuard } from './features/auth/AuthGuard';
-import { NAV_ITEMS, resolveActiveId } from './components/layout/nav-config';
+import { OrgSlugGuard, LegacyRedirect } from './features/auth/OrgSlugGuard';
+import { NAV_ITEMS, resolveActiveId, withOrgPrefix } from './components/layout/nav-config';
+import { useAuth } from './features/auth/useAuth';
 
 const LoginPage = lazy(() => import('./features/auth/LoginPage').then((m) => ({ default: m.LoginPage })));
 const SignupPage = lazy(() => import('./features/auth/SignupPage').then((m) => ({ default: m.SignupPage })));
@@ -58,6 +60,7 @@ function AppShellRoute() {
   useNotificacionesAuto();
   const navigate = useNavigate();
   const location = useLocation();
+  const { currentOrg } = useAuth();
   const [params, setParams] = useState({});
   const [resetKey, setResetKey] = useState(0);
 
@@ -66,7 +69,9 @@ function AppShellRoute() {
   function handleNavigate(id, newParams = {}) {
     setParams(newParams);
     const item = NAV_ITEMS.find((n) => n.id === id);
-    const path = item?.path ?? '/';
+    const basePath = item?.path ?? '/';
+    const slug = currentOrg?.slug;
+    const path = slug ? withOrgPrefix(slug, basePath) : basePath;
     const search = Object.keys(newParams).length
       ? '?' + new URLSearchParams(newParams).toString()
       : '';
@@ -126,10 +131,28 @@ function App() {
         }
       />
       <Route
+        path="/:orgSlug/invite/:token"
+        element={
+          <Suspense fallback={<PageFallback />}>
+            <InviteAcceptPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/:orgSlug/*"
+        element={
+          <AuthGuard>
+            <OrgSlugGuard>
+              <AppShellRoute />
+            </OrgSlugGuard>
+          </AuthGuard>
+        }
+      />
+      <Route
         path="*"
         element={
           <AuthGuard>
-            <AppShellRoute />
+            <LegacyRedirect />
           </AuthGuard>
         }
       />

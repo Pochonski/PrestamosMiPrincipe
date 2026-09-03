@@ -38,7 +38,8 @@ export async function removeMember(targetUserId) {
   return true;
 }
 
-export function buildInviteLink(token) {
+export function buildInviteLink(token, slug) {
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  if (slug) return `${origin}/${slug}/invite/${token}`;
   return `${origin}/invite/${token}`;
 }

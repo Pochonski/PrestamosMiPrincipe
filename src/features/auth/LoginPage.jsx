@@ -13,7 +13,7 @@ export function LoginPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { session, loading, currentOrg } = useAuth();
-  const from = location.state?.from || '/';
+  const from = location.state?.from || (currentOrg?.slug ? `/${currentOrg.slug}` : '/');
 
   useEffect(() => {
     if (loading) return;
@@ -26,10 +26,13 @@ export function LoginPage() {
         navigate(`/invite/${inviteToken}`, { replace: true });
         return;
       }
-      if (currentOrg) navigate(from, { replace: true });
-      else navigate('/onboarding', { replace: true });
+      if (currentOrg) {
+        const dashboard = `/${currentOrg.slug}`;
+        const target = location.state?.from && location.state.from !== '/' ? location.state.from : dashboard;
+        navigate(target, { replace: true });
+      } else navigate('/onboarding', { replace: true });
     }
-  }, [loading, session, currentOrg, navigate, from]);
+  }, [loading, session, currentOrg, navigate, location]);
 
   return (
     <div className="grid min-h-screen grid-cols-1 bg-neutral-50 dark:bg-navy-900 lg:grid-cols-2">
