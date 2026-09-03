@@ -2,6 +2,17 @@ import { Component } from 'react';
 import { AlertTriangle, RotateCw } from 'lucide-react';
 import { Card } from './Card';
 
+function isChunkLoadError(err) {
+  if (!err) return false;
+  const msg = String(err.message || '');
+  return (
+    msg.includes('Failed to fetch dynamically imported module') ||
+    msg.includes('Importing a module script failed') ||
+    msg.includes('Loading chunk') ||
+    msg.includes('Loading CSS chunk')
+  );
+}
+
 export class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -15,6 +26,15 @@ export class ErrorBoundary extends Component {
   componentDidCatch(error, info) {
     if (typeof console !== 'undefined') {
       console.error('[ErrorBoundary]', error, info?.componentStack);
+    }
+    if (isChunkLoadError(error) && typeof window !== 'undefined') {
+      const key = `pmp:chunk-retry-${Date.now()}`;
+      try {
+        sessionStorage.setItem(key, '1');
+      } catch {
+        // ignore storage errors (private mode, quota, etc.)
+      }
+      window.location.reload();
     }
   }
 
@@ -31,6 +51,7 @@ export class ErrorBoundary extends Component {
     if (!this.state.error) return this.props.children;
 
     const { fallbackTitle = 'Algo salió mal', fallbackMessage } = this.props;
+    const chunk = isChunkLoadError(this.state.error);
 
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-4">
@@ -39,10 +60,12 @@ export class ErrorBoundary extends Component {
             <AlertTriangle className="h-6 w-6" />
           </div>
           <h2 className="text-lg font-bold text-navy-900 dark:text-white">
-            {fallbackTitle}
+            {chunk ? 'Nueva versión disponible' : fallbackTitle}
           </h2>
           <p className="mt-2 text-sm text-slate-600 dark:text-navy-300">
-            {fallbackMessage || 'Ocurrió un error inesperado al mostrar esta sección.'}
+            {chunk
+              ? 'Hay una actualización de la app. Estamos recargando automáticamente…'
+              : fallbackMessage || 'Ocurrió un error inesperado al mostrar esta sección.'}
           </p>
           {this.state.error?.message && (
             <pre className="mt-3 max-h-32 overflow-auto rounded-xl bg-slate-100 p-3 text-left text-xs text-slate-700 dark:bg-navy-800 dark:text-navy-200">
