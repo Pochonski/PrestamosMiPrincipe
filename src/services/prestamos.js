@@ -18,14 +18,13 @@ function normalizePrestamo(p) {
 
 async function hydratePrestamos(prestamos) {
   if (!prestamos || prestamos.length === 0) return prestamos;
-  const orgId = await getOrgId();
   const ids = prestamos.map((p) => p.id);
-  const { data: cuotas } = await supabase
+  const { data: cuotas, error } = await supabase
     .from('cuotas')
     .select('*')
-    .eq('org_id', orgId)
     .in('prestamo_id', ids)
     .order('numero', { ascending: true });
+  throwIfError(error, 'prestamos.hydrate', { ids });
   const byPrestamo = new Map();
   for (const c of cuotas ?? []) {
     if (!byPrestamo.has(c.prestamo_id)) byPrestamo.set(c.prestamo_id, []);
