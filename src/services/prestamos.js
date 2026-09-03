@@ -16,6 +16,33 @@ function normalizePrestamo(p) {
   return { clienteId: cliente_id, ...rest };
 }
 
+async function hydratePrestamos(prestamos) {
+  if (!prestamos || prestamos.length === 0) return prestamos;
+  const orgId = await getOrgId();
+  const ids = prestamos.map((p) => p.id);
+  const { data: cuotas } = await supabase
+    .from('cuotas')
+    .select('*')
+    .eq('org_id', orgId)
+    .in('prestamo_id', ids)
+    .order('numero', { ascending: true });
+  const byPrestamo = new Map();
+  for (const c of cuotas ?? []) {
+    if (!byPrestamo.has(c.prestamo_id)) byPrestamo.set(c.prestamo_id, []);
+    byPrestamo.get(c.prestamo_id).push(c);
+  }
+  return prestamos.map((p) => ({
+    ...p,
+    cuotas: byPrestamo.get(p.id) || [],
+  }));
+}
+
+async function hydrateOne(prestamo) {
+  if (!prestamo) return prestamo;
+  const hydrated = await hydratePrestamos([prestamo]);
+  return hydrated[0] || prestamo;
+}
+
 function buildCuotasPayload({ fechaInicio, periodo, nCuotas, montoPorCuota }) {
   const out = [];
   let cursor = firstCuotaDate(fechaInicio, periodo);
@@ -38,7 +65,8 @@ export async function list() {
     .eq('org_id', orgId)
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return (data ?? []).map(normalizePrestamo);
+  const normalized = (data ?? []).map(normalizePrestamo);
+  return hydratePrestamos(normalized);
 }
 
 export async function getById(id) {
@@ -50,7 +78,9 @@ export async function getById(id) {
     .eq('id', id)
     .maybeSingle();
   if (error) throw error;
-  return normalizePrestamo(data);
+  const normalized = normalizePrestamo(data);
+  if (!normalized) return normalized;
+  return hydrateOne(normalized);
 }
 
 export async function delCliente(clienteId) {
@@ -61,7 +91,8 @@ export async function delCliente(clienteId) {
     .eq('org_id', orgId)
     .eq('cliente_id', clienteId);
   if (error) throw error;
-  return (data ?? []).map(normalizePrestamo);
+  const normalized = (data ?? []).map(normalizePrestamo);
+  return hydratePrestamos(normalized);
 }
 
 export function activos() {
@@ -71,17 +102,16 @@ export function activos() {
 }
 
 export async function cuotasAtrasadas(prestamoId = null) {
-  const orgId = await getOrgId();
   const items = prestamoId
     ? [await getById(prestamoId)].filter(Boolean)
     : await list();
   const prestamoIds = items.filter(Boolean).map((p) => p.id);
   if (prestamoIds.length === 0) return [];
-  const { data: cuotas } = await supabase
+  const { data: cuotas, error } = await supabase
     .from('cuotas')
     .select('*')
-    .eq('org_id', orgId)
     .in('prestamo_id', prestamoIds);
+  throwIfError(error, 'prestamos.cuotasAtrasadas', { prestamoIds });
   if (!cuotas) return [];
   const hoy = startOfDay(new Date());
   const prestamoMap = new Map(items.filter(Boolean).map((p) => [p.id, p]));
@@ -110,21 +140,20 @@ export async function cantidadActivos() {
 
 export async function cobrarHoy() {
   const items = await list();
-  const orgId = await getOrgId();
   const hoy = startOfDay(new Date());
   const manana = new Date(hoy);
   manana.setDate(manana.getDate() + 1);
   const prestamoIds = items.map((p) => p.id);
   if (prestamoIds.length === 0) return [];
 
-  const { data: cuotas } = await supabase
+  const { data: cuotas, error } = await supabase
     .from('cuotas')
     .select('*')
-    .eq('org_id', orgId)
     .in('prestamo_id', prestamoIds)
     .eq('estado', 'pendiente')
     .gte('fecha', hoy.toISOString().slice(0, 10))
     .lt('fecha', manana.toISOString().slice(0, 10));
+  throwIfError(error, 'prestamos.cobrarHoy', { prestamoIds });
   if (!cuotas) return [];
   const prestamoMap = new Map(items.map((p) => [p.id, p]));
   return cuotas.map((c) => ({ prestamo: prestamoMap.get(c.prestamo_id), cuota: c }));
@@ -307,7 +336,8 @@ export async function update(id, patch) {
     .single();
   throwIfError(error, 'prestamos.update', { id, patch: updateObj });
   emitDataChanged();
-  return normalizePrestamo(data);
+  const normalized = normalizePrestamo(data);
+  return hydrateOne(normalized);
 }
 
 export async function remove(id) {
@@ -336,7 +366,6 @@ export async function remove(id) {
   const { error: e3 } = await supabase
     .from('cuotas')
     .delete()
-    .eq('org_id', orgId)
     .eq('prestamo_id', id);
   throwIfError(e3, 'prestamos.remove.deleteCuotas', { id });
 
