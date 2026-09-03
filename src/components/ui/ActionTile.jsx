@@ -15,7 +15,7 @@ export function ActionTile({ icon: Icon, title, description, tone = 'gold', onCl
       type="button"
       onClick={onClick}
       className={clsx(
-        'group relative overflow-hidden rounded-card text-left transition-all duration-200 ease-out',
+        'group relative flex min-h-[92px] overflow-hidden rounded-card text-left transition-all duration-200 ease-out sm:min-h-[104px]',
         'shadow-card hover:shadow-cardHover hover:-translate-y-0.5 active:translate-y-0',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-navy-900',
         'disabled:opacity-50 disabled:cursor-not-allowed',
@@ -34,9 +34,9 @@ export function ActionTile({ icon: Icon, title, description, tone = 'gold', onCl
           {Icon && <Icon className={clsx('h-5 w-5 sm:h-6 sm:w-6', textTone)} />}
         </div>
         <div className="min-w-0 flex-1">
-          <p className={clsx('text-base font-bold sm:text-lg', textTone)}>{title}</p>
+          <p className={clsx('truncate text-base font-bold sm:text-lg', textTone)}>{title}</p>
           {description && (
-            <p className={clsx('mt-0.5 text-xs opacity-90 sm:text-sm', textTone)}>{description}</p>
+            <p className={clsx('mt-0.5 line-clamp-1 text-xs opacity-90 sm:text-sm', textTone)}>{description}</p>
           )}
         </div>
       </div>

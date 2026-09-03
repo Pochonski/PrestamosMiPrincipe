@@ -64,13 +64,6 @@ export function DashboardPage({ onNavigate }) {
       <KpiRow kpis={data.kpis} deltas={data.deltas} metrics={data.metrics} />
 
       <section className="space-y-2">
-        <h2 className="section-label">Cobros últimos 6 meses</h2>
-        <Card className="p-4 sm:p-5">
-          <CobrosChart data={data.metrics?.cobros6m} />
-        </Card>
-      </section>
-
-      <section className="space-y-2">
         <h2 className="section-label">Accesos rápidos</h2>
         <QuickActionsRow badges={data.badges} onNavigate={onNavigate} />
       </section>
@@ -78,6 +71,13 @@ export function DashboardPage({ onNavigate }) {
       <section className="space-y-2">
         <h2 className="section-label">Acciones principales</h2>
         <PrimaryActions onNavigate={onNavigate} />
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="section-label">Cobros últimos 6 meses</h2>
+        <Card className="p-4 sm:p-5">
+          <CobrosChart data={data.metrics?.cobros6m} />
+        </Card>
       </section>
 
       <RecentActivity items={data.recent} />
