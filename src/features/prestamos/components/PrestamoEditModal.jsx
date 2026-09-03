@@ -67,7 +67,7 @@ export function PrestamoEditModal({ prestamo, onClose, onSaved }) {
       open
       onClose={onClose}
       title="Editar préstamo"
-      description="Modificá los datos del préstamo. Los cambios impactan las cuotas futuras."
+      description="Modificá los datos del préstamo. Se recalculan las cuotas pendientes y se preservan las ya pagadas."
       size="lg"
       footer={footer}
     >

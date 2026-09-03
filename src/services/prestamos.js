@@ -311,42 +311,88 @@ export async function extenderCuotas(prestamoId, nCuotas) {
 }
 
 export async function update(id, patch) {
-  const orgId = await getOrgId();
   const prestamo = await getById(id);
   if (!prestamo) throw new PrestamoNoEncontradoError(id);
 
-  const updateObj = {};
-  if (patch.ruta !== undefined) updateObj.ruta = String(patch.ruta).trim();
-  if (patch.periodo !== undefined) updateObj.periodo = patch.periodo;
-  if (patch.tasa !== undefined) updateObj.tasa = Number(patch.tasa);
-  if (patch.fecha_inicio !== undefined) updateObj.fecha_inicio = patch.fecha_inicio;
+  // Resolver valores finales (patch o actual) con fallback seguro
+  const p_ruta = patch.ruta !== undefined ? String(patch.ruta).trim() : prestamo.ruta;
+  const p_periodo = patch.periodo !== undefined ? patch.periodo : prestamo.periodo || { tipo: 'mensual' };
+  const p_monto = patch.monto !== undefined ? Number(patch.monto) : Number(prestamo.monto);
+  const p_tasa = patch.tasa !== undefined ? Number(patch.tasa) : Number(prestamo.tasa ?? 0);
+  const p_n_cuotas = patch.n_cuotas !== undefined ? Number(patch.n_cuotas) : Number(prestamo.n_cuotas);
+  const p_fecha_inicio = patch.fecha_inicio !== undefined ? patch.fecha_inicio : prestamo.fecha_inicio || new Date().toISOString().slice(0, 10);
 
-  const montoChanged = patch.monto !== undefined && Number(patch.monto) !== Number(prestamo.monto);
-  if (montoChanged) {
-    updateObj.monto = Number(patch.monto);
-    // Mantener el saldo_capital coherente con el nuevo monto.
-    updateObj.saldo_capital = Number(patch.monto);
-  }
-  if (patch.n_cuotas !== undefined) {
-    const nc = Number(patch.n_cuotas);
-    if (nc !== Number(prestamo.n_cuotas)) updateObj.n_cuotas = nc;
-  }
-  updateObj.updated_at = new Date().toISOString();
+  const rutaChanged = patch.ruta !== undefined && p_ruta !== prestamo.ruta;
+  const periodoChanged = patch.periodo !== undefined && JSON.stringify(p_periodo) !== JSON.stringify(prestamo.periodo);
+  const montoChanged = patch.monto !== undefined && p_monto !== Number(prestamo.monto);
+  const tasaChanged = patch.tasa !== undefined && p_tasa !== Number(prestamo.tasa ?? 0);
+  const nCuotasChanged = patch.n_cuotas !== undefined && p_n_cuotas !== Number(prestamo.n_cuotas);
+  const fechaChanged = patch.fecha_inicio !== undefined && p_fecha_inicio !== prestamo.fecha_inicio;
 
-  if (Object.keys(updateObj).length === 1) {
+  const cuotasAfectadas = montoChanged || tasaChanged || nCuotasChanged || periodoChanged || fechaChanged;
+
+  // Nada que actualizar
+  if (!cuotasAfectadas && !rutaChanged) {
     return prestamo;
   }
 
-  const { data, error } = await supabase
-    .from('prestamos')
-    .update(updateObj)
-    .eq('id', id)
-    .eq('org_id', orgId)
-    .select()
-    .single();
-  throwIfError(error, 'prestamos.update', { id, patch: updateObj });
+  // Solo ruta: update simple, sin tocar cuotas
+  if (!cuotasAfectadas && rutaChanged) {
+    const orgId = await getOrgId();
+    const { data, error } = await supabase
+      .from('prestamos')
+      .update({ ruta: p_ruta, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('org_id', orgId)
+      .select()
+      .single();
+    throwIfError(error, 'prestamos.update.ruta', { id });
+    emitDataChanged('prestamos');
+    return hydrateOne(normalizePrestamo(data));
+  }
+
+  // Recalcular cuotas pendientes preservando pagadas/canceladas
+  const pagadas = (prestamo.cuotas || []).filter((c) => c.estado === 'pagada' || c.estado === 'cancelada');
+  if (p_n_cuotas < pagadas.length) {
+    throw new Error(`No se puede reducir a ${p_n_cuotas} cuotas: ya hay ${pagadas.length} cuotas pagadas/canceladas`);
+  }
+  const lastPagada = pagadas.length > 0
+    ? pagadas.reduce((max, c) => (Number(c.numero) > Number(max.numero) ? c : max), pagadas[0])
+    : null;
+  const pendingCount = Math.max(0, p_n_cuotas - pagadas.length);
+  const montoPorCuota = Math.round((p_monto * p_tasa) / 100);
+  const pendingCuotas = [];
+  if (pendingCount > 0) {
+    const cursor = lastPagada
+      ? nextCuotaDate(parseLocalDate(lastPagada.fecha), p_periodo)
+      : firstCuotaDate(p_fecha_inicio, p_periodo);
+    const startNumero = lastPagada ? Number(lastPagada.numero) + 1 : 1;
+    let c = cursor;
+    for (let i = 0; i < pendingCount; i++) {
+      pendingCuotas.push({
+        numero: startNumero + i,
+        fecha: c.toISOString().slice(0, 10),
+        monto: montoPorCuota,
+      });
+      c = nextCuotaDate(c, p_periodo);
+    }
+  }
+
+  const { data: updatedId, error } = await supabase.rpc('update_prestamo_with_cuotas', {
+    p_prestamo_id: id,
+    p_ruta: p_ruta,
+    p_periodo: p_periodo,
+    p_monto: p_monto,
+    p_tasa: p_tasa,
+    p_n_cuotas: p_n_cuotas,
+    p_fecha_inicio: p_fecha_inicio,
+    p_cuotas: pendingCuotas,
+  });
+  throwIfError(error, 'prestamos.update.rpc', { id, patch });
+  if (!updatedId) throw new Error('No se actualizó el préstamo');
   emitDataChanged('prestamos');
-  return normalizePrestamo(data);
+  emitDataChanged('cuotas');
+  return await getById(id);
 }
 
 export async function remove(id) {

@@ -62,7 +62,7 @@ describe('prestamos calc puros', () => {
 
 describe('prestamos.update', () => {
   it('early return si solo updated_at', async () => {
-    const prestamo = { id: 'p1', cliente_id: 'c1', monto: 1000, n_cuotas: 10, periodo: { tipo: 'diario' }, saldo_capital: 1000 };
+    const prestamo = { id: 'p1', cliente_id: 'c1', monto: 1000, n_cuotas: 10, periodo: { tipo: 'diario' }, saldo_capital: 1000, tasa: 10, fecha_inicio: '2024-01-01', cuotas: [] };
     const maybeSingle = vi.fn().mockResolvedValue({ data: prestamo, error: null });
     const getChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle };
     getChain.select.mockReturnValue(getChain); getChain.eq.mockReturnValue(getChain);
@@ -74,10 +74,11 @@ describe('prestamos.update', () => {
     vi.mocked(supabase.from).mockImplementation((t) => t === 'cuotas' ? cuotasChain : getChain);
     const r = await prestamosService.update('p1', {});
     expect(r.clienteId).toBe('c1');
+    expect(supabase.rpc).not.toHaveBeenCalled();
   });
   it('update monto cambia saldo_capital', async () => {
-    const prestamo = { id: 'p1', cliente_id: 'c1', monto: 1000, n_cuotas: 10, saldo_capital: 1000, cuotas: [] };
-    const prestamoUpdated = { id: 'p1', cliente_id: 'c1', monto: 2000, saldo_capital: 2000, cuotas: [] };
+    const prestamo = { id: 'p1', cliente_id: 'c1', monto: 1000, n_cuotas: 10, saldo_capital: 1000, cuotas: [], periodo: { tipo: 'mensual' }, fecha_inicio: '2024-01-01', tasa: 10, ruta: 'A' };
+    const prestamoUpdated = { id: 'p1', cliente_id: 'c1', monto: 2000, n_cuotas: 10, saldo_capital: 2000, cuotas: [], periodo: { tipo: 'mensual' }, fecha_inicio: '2024-01-01', tasa: 10, ruta: 'A' };
     let getCall = 0;
     const maybeSingle = vi.fn().mockImplementation(() => {
       getCall++;
@@ -91,35 +92,16 @@ describe('prestamos.update', () => {
     cuotasChain.select.mockReturnValue(cuotasChain); cuotasChain.in.mockReturnValue(cuotasChain); cuotasChain.order.mockReturnValue(cuotasChain);
     cuotasChain.range = cuotasChain.range || require("vitest").vi.fn().mockReturnThis();
     cuotasChain.range.mockReturnValue(cuotasChain);
-    const updateChain = {
-      update: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      select: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({ data: { id: 'p1', saldo_capital: 2000, monto: 2000, cliente_id: 'c1' }, error: null }),
-    };
-    updateChain.update.mockReturnValue(updateChain);
-    updateChain.eq.mockReturnValue(updateChain);
-    updateChain.select.mockReturnValue(updateChain);
-    // Mock from: need to handle multiple calls: getById select -> getChain, hydrate cuotas -> cuotasChain, update -> updateChain, hydrate after update -> cuotasChain
+    vi.mocked(supabase.rpc).mockResolvedValue({ data: 'p1', error: null });
     vi.mocked(supabase.from).mockImplementation((t) => {
       if (t === 'cuotas') return cuotasChain;
-      // for prestamos, need to differentiate select vs update
-      // we return an object that has both select/eq/maybeSingle and update
-      const combined = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        maybeSingle,
-        update: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({ data: { id: 'p1', saldo_capital: 2000, monto: 2000, cliente_id: 'c1' }, error: null }),
-      };
-      combined.select.mockReturnValue(combined);
-      combined.eq.mockReturnValue(combined);
-      combined.update.mockReturnValue(combined);
-      // For initial getById, maybeSingle will be called; for update, single will be called
+      const combined = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle };
+      combined.select.mockReturnValue(combined); combined.eq.mockReturnValue(combined);
       return combined;
     });
     const r = await prestamosService.update('p1', { monto: 2000 });
     expect(r.saldo_capital).toBe(2000);
+    expect(supabase.rpc).toHaveBeenCalledWith('update_prestamo_with_cuotas', expect.objectContaining({ p_monto: 2000 }));
   });
 });
 

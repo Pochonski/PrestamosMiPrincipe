@@ -141,6 +141,7 @@ export function usePrestamoForm({ clienteId, initialPrestamo } = {}) {
           periodo: values.periodo,
           monto: Number(String(values.monto).replace(/\D/g, '')),
           tasa: Number(values.tasa),
+          n_cuotas: Number(values.nCuotas),
           fecha_inicio: values.fechaInicio,
         });
         return { ok: true, prestamo, prestamoId: prestamo.id };

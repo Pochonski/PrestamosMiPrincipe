@@ -141,23 +141,27 @@ describe('prestamos coverage boost', () => {
     expect(Array.isArray(r)).toBe(true);
   });
   it('update n_cuotas', async () => {
-    const prestamoRaw = { id: 'p1', estado: 'vigente', monto: 1000, n_cuotas: 5, tasa: 10, ruta: 'A', periodo: 'semanal', fecha_inicio: '2024-01-01', saldo_capital: 1000, cliente_id: 'c1', org_id: 'org-1', created_at: new Date().toISOString() };
+    const prestamoRaw = { id: 'p1', estado: 'vigente', monto: 1000, n_cuotas: 5, tasa: 10, ruta: 'A', periodo: { tipo: 'semanal' }, fecha_inicio: '2024-01-01', saldo_capital: 1000, cliente_id: 'c1', org_id: 'org-1', created_at: new Date().toISOString(), cuotas: [] };
     const cuotasHydrate = { select: vi.fn().mockReturnThis(), in: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis() };
     cuotasHydrate.select.mockReturnValue(cuotasHydrate); cuotasHydrate.in.mockReturnValue(cuotasHydrate); cuotasHydrate.order.mockReturnValue(cuotasHydrate);
     cuotasHydrate.then = (res) => Promise.resolve({ data: [], error: null }).then(res);
     const getChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle: vi.fn().mockResolvedValue({ data: prestamoRaw, error: null }) };
     getChain.select.mockReturnValue(getChain); getChain.eq.mockReturnValue(getChain);
-    const updateChain = { update: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), select: vi.fn().mockReturnThis(), single: vi.fn().mockResolvedValue({ data: { id: 'p1', estado: 'vigente', monto: 1000, n_cuotas: 10 }, error: null }) };
-    updateChain.update.mockReturnValue(updateChain); updateChain.eq.mockReturnValue(updateChain); updateChain.select.mockReturnValue(updateChain);
+    const prestamoUpdated = { ...prestamoRaw, n_cuotas: 10 };
+    const getChain2 = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle: vi.fn().mockResolvedValue({ data: prestamoUpdated, error: null }) };
+    getChain2.select.mockReturnValue(getChain2); getChain2.eq.mockReturnValue(getChain2);
+    vi.mocked(supabase.rpc).mockResolvedValue({ data: 'p1', error: null });
     let call = 0;
-    vi.mocked(supabase.from).mockImplementation((t) => {
+    vi.mocked(supabase.from).mockImplementation(() => {
       call++;
-      if (call === 1) return getChain; // getById select
-      if (call === 2) return cuotasHydrate; // hydrate for getById
-      if (call === 3) return updateChain; // update
+      if (call === 1) return getChain; // first getById
+      if (call === 2) return cuotasHydrate; // hydrate first
+      if (call === 3) return getChain2; // second getById after rpc
+      if (call === 4) return cuotasHydrate; // hydrate second
       return cuotasHydrate;
     });
     const r = await prestamosService.update('p1', { n_cuotas: 10 });
     expect(r.n_cuotas).toBe(10);
+    expect(supabase.rpc).toHaveBeenCalledWith('update_prestamo_with_cuotas', expect.objectContaining({ p_n_cuotas: 10 }));
   });
 });
