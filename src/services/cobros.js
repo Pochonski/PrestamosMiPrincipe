@@ -136,6 +136,13 @@ export async function create({ prestamoId, cuotaNumero, monto, tipo, incluirInte
     if (msg.includes('cuotas agotadas') || msg.includes('agotad')) {
       throw new CuotasAgotadasError(0);
     }
+    if (error.code === '42703' || msg.includes('does not exist')) {
+      throw new Error(
+        'El RPC create_cobro_with_updates en el servidor referencia columnas inexistentes. ' +
+        'Aplicá la migración src/features/auth/sql/migrations/2026-09-03-fix-create_cobro_with_updates.sql ' +
+        'en Supabase SQL Editor.',
+      );
+    }
     throwIfError(error, 'cobros.create', { prestamoId, cuotaNumero, monto, tipo });
   }
   if (!data) throw new Error('No se creó el cobro');
