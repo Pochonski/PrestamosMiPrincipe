@@ -1,6 +1,7 @@
+import { memo } from 'react';
 import clsx from 'clsx';
 
-export function Card({ as: Tag = 'div', className, children, ...rest }) {
+export const Card = memo(function Card({ as: Tag = 'div', className, children, ...rest }) {
   return (
     <Tag
       className={clsx(
@@ -12,4 +13,4 @@ export function Card({ as: Tag = 'div', className, children, ...rest }) {
       {children}
     </Tag>
   );
-}
+});

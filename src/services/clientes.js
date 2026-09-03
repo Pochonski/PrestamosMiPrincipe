@@ -2,14 +2,17 @@ import { supabase, getOrgId } from '../lib/supabase';
 import { throwIfError } from '../lib/supabase-errors';
 import { emitDataChanged } from '../lib/events';
 
-export async function list() {
+const DEFAULT_LIMIT = 50;
+
+export async function list({ limit = DEFAULT_LIMIT, offset = 0 } = {}) {
   const orgId = await getOrgId();
   const { data, error } = await supabase
     .from('clientes')
     .select('*')
     .eq('org_id', orgId)
-    .order('nombre');
-  if (error) throw error;
+    .order('nombre')
+    .range(offset, offset + limit - 1);
+  throwIfError(error, 'clientes.list', { limit, offset });
   return data ?? [];
 }
 
@@ -34,7 +37,7 @@ export async function count() {
   return total ?? 0;
 }
 
-export async function buscar(query) {
+export async function buscar(query, { limit = DEFAULT_LIMIT, offset = 0 } = {}) {
   const orgId = await getOrgId();
   const raw = String(query || '').trim();
   let qb = supabase
@@ -45,8 +48,10 @@ export async function buscar(query) {
     const safe = raw.replace(/[%_,\\]/g, '');
     qb = qb.or(`nombre.ilike.%${safe}%,cedula.ilike.%${safe}%,telefono.ilike.%${safe}%,direccion.ilike.%${safe}%`);
   }
-  const { data, error } = await qb.order('nombre');
-  if (error) throw error;
+  const { data, error } = await qb
+    .order('nombre')
+    .range(offset, offset + limit - 1);
+  throwIfError(error, 'clientes.buscar', { query: raw, limit, offset });
   return data ?? [];
 }
 

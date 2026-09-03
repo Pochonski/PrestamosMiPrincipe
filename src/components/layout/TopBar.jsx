@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { Bell, Menu } from 'lucide-react';
 import clsx from 'clsx';
 import { Logo } from '../ui/Logo';
@@ -6,7 +6,7 @@ import { UserMenu } from './UserMenu';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { findItemById, NAV_ITEMS } from './nav-config';
 
-export function TopBar({ page, onNavigate, onOpenSidebar, theme, onToggleTheme, notificationCount }) {
+export const TopBar = memo(function TopBar({ page, onNavigate, onOpenSidebar, theme, onToggleTheme, notificationCount }) {
   const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
@@ -77,4 +77,4 @@ export function TopBar({ page, onNavigate, onOpenSidebar, theme, onToggleTheme, 
       </div>
     </header>
   );
-}
+});

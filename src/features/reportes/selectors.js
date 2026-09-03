@@ -1,22 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import * as cobrosService from '../../services/cobros';
 import * as prestamosService from '../../services/prestamos';
 import { onDataChanged } from '../../lib/events';
+import { useTickOnDataChange } from '../../lib/hooks/useAsyncResource';
 
 const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
-function compute(cobros, prestamos) {
-  const ahora = new Date();
+export function compute(cobros, prestamos, ahora = new Date()) {
   const cobrosPorMes = [];
   for (let i = 5; i >= 0; i--) {
     const mes = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
     const mesSiguiente = new Date(ahora.getFullYear(), ahora.getMonth() - i + 1, 1);
-    const total = cobros
-      .filter((c) => {
-        const d = new Date(c.fecha);
-        return d >= mes && d < mesSiguiente;
-      })
-      .reduce((s, c) => s + c.monto, 0);
+    let total = 0;
+    for (const c of cobros) {
+      const d = new Date(c.fecha);
+      if (d >= mes && d < mesSiguiente) total += c.monto;
+    }
     cobrosPorMes.push({
       label: MESES_CORTO[mes.getMonth()],
       value: total,
@@ -53,19 +52,29 @@ function compute(cobros, prestamos) {
   };
 }
 
+function startOfMonthsAgo(ahora, n) {
+  return new Date(ahora.getFullYear(), ahora.getMonth() - n, 1).toISOString();
+}
+
 export function useReportesData() {
-  const [data, setData] = useState(null);
+  const [cobros, setCobros] = useState([]);
+  const [prestamos, setPrestamos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const dataTick = useTickOnDataChange();
 
   async function load() {
+    setLoading(true);
     try {
-      const [cobros, prestamos] = await Promise.all([
-        cobrosService.list(),
-        prestamosService.list(),
+      const desde = startOfMonthsAgo(new Date(), 6);
+      const [cobs, pres] = await Promise.all([
+        cobrosService.list({ limit: 1000, offset: 0 }),
+        prestamosService.list({ limit: 500, offset: 0 }),
       ]);
-      setData(compute(cobros, prestamos));
+      setCobros((cobs || []).filter((c) => c.fecha >= desde));
+      setPrestamos(pres || []);
     } catch {
-      setData(compute([], []));
+      setCobros([]);
+      setPrestamos([]);
     } finally {
       setLoading(false);
     }
@@ -73,11 +82,17 @@ export function useReportesData() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [dataTick]);
 
   useEffect(() => {
-    return onDataChanged(load);
+    return onDataChanged(() => {
+      setCobros([]);
+      setPrestamos([]);
+      load();
+    });
   }, []);
+
+  const data = useMemo(() => compute(cobros, prestamos), [cobros, prestamos]);
 
   return { data, loading };
 }

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import clsx from 'clsx';
 import { NAV_ITEMS, MOBILE_EXTRA_ITEMS, findItemById } from './nav-config';
 
@@ -15,7 +16,7 @@ function getActiveId(page) {
   return parentId;
 }
 
-export function MobileBottomNav({ page, onNavigate }) {
+export const MobileBottomNav = memo(function MobileBottomNav({ page, onNavigate }) {
   const activeId = getActiveId(page);
   return (
     <nav
@@ -59,4 +60,4 @@ export function MobileBottomNav({ page, onNavigate }) {
       </ul>
     </nav>
   );
-}
+});

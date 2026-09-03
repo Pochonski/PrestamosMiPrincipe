@@ -1,3 +1,4 @@
+import React from 'react';
 import { lazy, Suspense, useState } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell';
@@ -117,9 +118,7 @@ function App() {
         path="*"
         element={
           <AuthGuard>
-            <Suspense fallback={<PageFallback />}>
-              <AppShellRoute />
-            </Suspense>
+            <AppShellRoute />
           </AuthGuard>
         }
       />

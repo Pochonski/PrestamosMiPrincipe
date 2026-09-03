@@ -36,21 +36,9 @@ export async function getQuickBadges() {
   };
 }
 
-export async function getRecentActivity(limit = 6) {
-  const cobros = await cobrosService.recientes(limit);
-  const clientes = await clientesService.list();
+export function buildRecentActivity({ cobros, clientes, profiles = [], limit = 6 }) {
   const clientesById = new Map(clientes.map((c) => [c.id, c]));
-
-  const cobradorIds = [...new Set(cobros.map((c) => c.cobradorId).filter(Boolean))];
-  let profilesById = new Map();
-  if (cobradorIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('user_id, full_name')
-      .in('user_id', cobradorIds);
-    profilesById = new Map((profiles ?? []).map((p) => [p.user_id, p]));
-  }
-
+  const profilesById = new Map((profiles ?? []).map((p) => [p.user_id, p]));
   return cobros.slice(0, limit).map((cobro) => {
     const profile = profilesById.get(cobro.cobradorId);
     const cobradorStr = profile?.full_name ? ` · ${profile.full_name.split(' ')[0]}` : '';
@@ -63,6 +51,22 @@ export async function getRecentActivity(limit = 6) {
       fecha: cobro.fecha,
     };
   });
+}
+
+export async function getRecentActivity(limit = 6) {
+  const cobros = await cobrosService.recientes(limit);
+  const cobradorIds = [...new Set(cobros.map((c) => c.cobradorId).filter(Boolean))];
+  const [clientes, profilesRows] = await Promise.all([
+    clientesService.list({ limit: 200, offset: 0 }),
+    cobradorIds.length > 0
+      ? supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .in('user_id', cobradorIds)
+          .then(({ data }) => data ?? [])
+      : Promise.resolve([]),
+  ]);
+  return buildRecentActivity({ cobros, clientes, profiles: profilesRows, limit });
 }
 
 export async function getCobrarHoyDetalle() {

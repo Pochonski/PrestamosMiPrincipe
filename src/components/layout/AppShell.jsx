@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import React from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { TopBar } from './TopBar';
 import { Sidebar } from './Sidebar';
@@ -9,6 +11,14 @@ import * as notificacionesService from '../../services/notificaciones';
 import { onDataChanged } from '../../lib/events';
 import { useAuth } from '../../features/auth/useAuth';
 
+function PageSkeleton() {
+  return (
+    <div className="flex min-h-[40vh] items-center justify-center">
+      <Loader2 className="h-6 w-6 animate-spin text-gold-500" />
+    </div>
+  );
+}
+
 export function AppShell({ pages = {} }) {
   const [page, setPage] = useState('dashboard');
   const [params, setParams] = useState({});
@@ -17,30 +27,33 @@ export function AppShell({ pages = {} }) {
   const [notificationCount, setNotificationCount] = useState(0);
   const { profile, currentOrg } = useAuth();
 
-  async function refreshNotifCount() {
+  const refreshNotifCount = useCallback(async () => {
     try {
       const n = await notificacionesService.countNoLeidas();
       setNotificationCount(n);
     } catch {
       setNotificationCount(0);
     }
-  }
+  }, []);
 
   useEffect(() => {
     refreshNotifCount();
     return onDataChanged(refreshNotifCount);
-  }, []);
+  }, [refreshNotifCount]);
 
-  function handleToggleTheme(next) {
+  const handleToggleTheme = useCallback((next) => {
     setThemeState(next);
     setTheme(next);
-  }
+  }, []);
 
-  function handleNavigate(id, newParams = {}) {
+  const handleNavigate = useCallback((id, newParams = {}) => {
     setPage(id);
     setParams(newParams);
     setSidebarOpen(false);
-  }
+  }, []);
+
+  const handleCloseSidebar = useCallback(() => setSidebarOpen(false), []);
+  const handleOpenSidebar = useCallback(() => setSidebarOpen(true), []);
 
   const PageComponent = pages[page];
 
@@ -50,14 +63,14 @@ export function AppShell({ pages = {} }) {
         open={sidebarOpen}
         page={page}
         onNavigate={handleNavigate}
-        onClose={() => setSidebarOpen(false)}
+        onClose={handleCloseSidebar}
       />
 
       <div className="flex min-w-0 flex-1 flex-col lg:pl-72">
         <TopBar
           page={page}
           onNavigate={handleNavigate}
-          onOpenSidebar={() => setSidebarOpen(true)}
+          onOpenSidebar={handleOpenSidebar}
           theme={theme}
           onToggleTheme={handleToggleTheme}
           notificationCount={notificationCount}
@@ -65,7 +78,9 @@ export function AppShell({ pages = {} }) {
 
         <main className={clsx('flex-1 px-3 pb-28 pt-4 sm:px-5 sm:pt-6 lg:pb-10')}>
           {PageComponent ? (
-            <PageComponent onNavigate={handleNavigate} params={params} />
+            <Suspense fallback={<PageSkeleton />}>
+              <PageComponent onNavigate={handleNavigate} params={params} />
+            </Suspense>
           ) : (
             <PlaceholderPage titulo="Página no encontrada" descripcion="La sección solicitada no existe." />
           )}

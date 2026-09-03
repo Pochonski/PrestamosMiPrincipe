@@ -1,3 +1,4 @@
+import React from 'react';
 import { useEffect, useState } from 'react';
 import { Loader2, Users } from 'lucide-react';
 import { SectionTitle } from '../../components/ui/SectionTitle';
@@ -15,7 +16,7 @@ import {
 } from '../../services/clientes';
 
 export function ClientesPage({ onNavigate, params }) {
-  const { clientes, query, setQuery, loading } = useClientes();
+  const { clientes, query, setQuery, loading, hasMore, loadingMore, loadMore, PAGE_SIZE } = useClientes();
   const [formMode, setFormMode] = useState(null);
   const [toDelete, setToDelete] = useState(null);
 
@@ -134,6 +135,10 @@ export function ClientesPage({ onNavigate, params }) {
         onEdit={openEdit}
         onDelete={requestDelete}
         onCreate={openCreate}
+        hasMore={hasMore}
+        loadingMore={loadingMore}
+        loadMore={loadMore}
+        PAGE_SIZE={PAGE_SIZE}
       />
 
       <ClienteFAB onClick={openCreate} />

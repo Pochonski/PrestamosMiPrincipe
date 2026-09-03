@@ -1,9 +1,10 @@
+import { memo } from 'react';
 import clsx from 'clsx';
 import { X } from 'lucide-react';
 import { Logo } from '../ui/Logo';
 import { NAV_ITEMS, findItemById } from './nav-config';
 
-export function Sidebar({ open, page, onNavigate, onClose }) {
+export const Sidebar = memo(function Sidebar({ open, page, onNavigate, onClose }) {
   const current = findItemById(page);
   const activeId = current?.parent ?? current?.id ?? 'dashboard';
   const principal = NAV_ITEMS.filter((n) => n.section === 'principal');
@@ -80,15 +81,32 @@ export function Sidebar({ open, page, onNavigate, onClose }) {
       </aside>
     </>
   );
-}
+});
+
+const PREFETCH_MAP = {
+  reportes: () => import('../../features/reportes'),
+  resumen: () => import('../../features/resumen'),
+  'cobrar-hoy': () => import('../../features/cobrar-hoy'),
+  atrasados: () => import('../../features/atrasados'),
+  clientes: () => import('../../features/clientes'),
+  notificaciones: () => import('../../features/notificaciones'),
+  exportar: () => import('../../features/exportar'),
+  respaldar: () => import('../../features/respaldo'),
+};
 
 function NavLink({ item, active, onClick }) {
   const Icon = item.icon;
+  const prefetch = PREFETCH_MAP[item.id];
+  const handleEnter = () => {
+    if (prefetch) prefetch();
+  };
   return (
     <li>
       <button
         type="button"
         onClick={onClick}
+        onMouseEnter={handleEnter}
+        onFocus={handleEnter}
         aria-current={active ? 'page' : undefined}
         className={clsx(
           'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',

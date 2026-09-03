@@ -56,14 +56,17 @@ function buildCuotasPayload({ fechaInicio, periodo, nCuotas, montoPorCuota }) {
   return out;
 }
 
-export async function list() {
+const DEFAULT_LIMIT = 50;
+
+export async function list({ limit = DEFAULT_LIMIT, offset = 0 } = {}) {
   const orgId = await getOrgId();
   const { data, error } = await supabase
     .from('prestamos')
     .select('*')
     .eq('org_id', orgId)
-    .order('created_at', { ascending: false });
-  if (error) throw error;
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+  throwIfError(error, 'prestamos.list', { limit, offset });
   const normalized = (data ?? []).map(normalizePrestamo);
   return hydratePrestamos(normalized);
 }
@@ -120,16 +123,25 @@ export async function cuotasAtrasadas(prestamoId = null) {
     .map((c) => ({ prestamo: prestamoMap.get(c.prestamo_id), cuota: c }));
 }
 
+export function calcCarteraTotal(items) {
+  return (items || [])
+    .filter((p) => p.estado !== 'cancelado')
+    .reduce((sum, p) => sum + Number(p.saldo_capital ?? 0), 0);
+}
+export function calcTotalAtrasado(items) {
+  return (items || []).reduce((sum, x) => sum + (x.cuota?.monto ?? x.monto ?? 0), 0);
+}
+export function calcTotalCobrarHoy(items) {
+  return (items || []).reduce((sum, x) => sum + (x.cuota?.monto ?? 0), 0);
+}
 export async function totalAtrasado() {
   const items = await cuotasAtrasadas();
-  return items.reduce((sum, x) => sum + x.cuota.monto, 0);
+  return calcTotalAtrasado(items);
 }
 
 export async function carteraTotal() {
   const items = await list();
-  return items
-    .filter((p) => p.estado !== 'cancelado')
-    .reduce((sum, p) => sum + Number(p.saldo_capital ?? 0), 0);
+  return calcCarteraTotal(items);
 }
 
 export async function cantidadActivos() {
@@ -160,7 +172,7 @@ export async function cobrarHoy() {
 
 export async function totalCobrarHoy() {
   const items = await cobrarHoy();
-  return items.reduce((sum, x) => sum + x.cuota.monto, 0);
+  return calcTotalCobrarHoy(items);
 }
 
 export async function resumen() {
@@ -170,8 +182,7 @@ export async function resumen() {
     totalCobrarHoy(),
     cantidadActivos(),
   ]);
-  const atrasadosList = await cuotasAtrasadas();
-  const cobrarHoyList = await cobrarHoy();
+  const [atrasadosList, cobrarHoyList] = await Promise.all([cuotasAtrasadas(), cobrarHoy()]);
   return {
     carteraTotal: carteraTotalV,
     totalAtrasado: totalAtrasadoV,

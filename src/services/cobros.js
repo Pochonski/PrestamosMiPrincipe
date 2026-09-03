@@ -3,14 +3,17 @@ import { throwIfError } from '../lib/supabase-errors';
 import { startOfDay, endOfDay } from '../lib/format';
 import { emitDataChanged } from '../lib/events';
 
-export async function list() {
+const DEFAULT_LIMIT = 50;
+
+export async function list({ limit = DEFAULT_LIMIT, offset = 0 } = {}) {
   const orgId = await getOrgId();
   const { data, error } = await supabase
     .from('cobros')
     .select('*')
     .eq('org_id', orgId)
-    .order('fecha', { ascending: false });
-  if (error) throw error;
+    .order('fecha', { ascending: false })
+    .range(offset, offset + limit - 1);
+  throwIfError(error, 'cobros.list', { limit, offset });
   return data ?? [];
 }
 
@@ -45,8 +48,15 @@ export async function totalDelDia() {
 }
 
 export async function recientes(limit = 8) {
-  const all = await list();
-  return all.slice(0, limit);
+  const orgId = await getOrgId();
+  const { data, error } = await supabase
+    .from('cobros')
+    .select('*')
+    .eq('org_id', orgId)
+    .order('fecha', { ascending: false })
+    .limit(limit);
+  throwIfError(error, 'cobros.recientes', { limit });
+  return data ?? [];
 }
 
 export async function delPrestamo(prestamoId) {
@@ -62,9 +72,20 @@ export async function delPrestamo(prestamoId) {
 }
 
 export async function resumen() {
-  const [all, hoy] = await Promise.all([list(), delDia()]);
+  const [all, hoy, count] = await Promise.all([
+    list({ limit: 500, offset: 0 }),
+    delDia(),
+    (async () => {
+      const orgId = await getOrgId();
+      const { count: total } = await supabase
+        .from('cobros')
+        .select('id', { count: 'exact', head: true })
+        .eq('org_id', orgId);
+      return total ?? 0;
+    })(),
+  ]);
   return {
-    cantidad: all.length,
+    cantidad: count,
     totalCobrado: all.reduce((s, c) => s + c.monto, 0),
     totalDelDia: hoy.reduce((s, c) => s + c.monto, 0),
     cantidadDelDia: hoy.length,

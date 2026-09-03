@@ -1,8 +1,9 @@
+import { memo } from 'react';
 import clsx from 'clsx';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { Card } from './Card';
 
-export function StatCard({ label, value, sub, icon: Icon, tone = 'neutral', delta }) {
+export const StatCard = memo(function StatCard({ label, value, sub, icon: Icon, tone = 'neutral', delta }) {
   const tones = {
     neutral: 'text-navy-700 dark:text-navy-100',
     gold: 'text-gold-500',
@@ -60,4 +61,4 @@ export function StatCard({ label, value, sub, icon: Icon, tone = 'neutral', delt
       </div>
     </Card>
   );
-}
+});
