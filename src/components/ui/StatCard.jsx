@@ -66,7 +66,7 @@ export const StatCard = memo(function StatCard({ label, value, sub, icon: Icon, 
           <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-navy-300">
             {label}
           </p>
-          <p className={clsx('mt-1.5 text-2xl font-bold tabular-nums sm:text-3xl', valueTone[tone] || valueTone.neutral)}>
+          <p className={clsx('mt-1.5 text-xl font-bold tabular-nums sm:text-2xl lg:text-3xl', valueTone[tone] || valueTone.neutral)}>
             {value}
           </p>
           {sub && (

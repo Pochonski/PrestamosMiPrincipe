@@ -63,7 +63,7 @@ const SPARK_BY_KEY = {
 
 export function KpiRow({ kpis, deltas = {}, metrics }) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
       {KPI_ITEMS.map(({ label, icon, tone, value, sub, deltaKey, sparkKey }) => {
         const delta = typeof deltas?.[deltaKey] === 'number' ? deltas[deltaKey] : undefined;
         const spark = metrics?.[SPARK_BY_KEY[sparkKey]];

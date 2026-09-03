@@ -13,7 +13,7 @@ const QUICK_ACTIONS = [
   { icon: Bell, label: 'Notificaciones', to: 'notificaciones', tone: 'gold', badgeKey: 'notificaciones' },
   { icon: CalendarClock, label: 'Cobrar hoy', to: 'cobrar-hoy', tone: 'emerald', badgeKey: 'cobrarHoy' },
   { icon: AlertTriangle, label: 'Atrasados', to: 'atrasados', tone: 'rose', badgeKey: 'atrasados' },
-  { icon: Download, label: 'Exportar Excel', to: 'exportar', tone: 'navy', badgeKey: null },
+  { icon: Download, label: 'Exportar', to: 'exportar', tone: 'navy', badgeKey: null },
 ];
 
 export function QuickActionsRow({ badges, onNavigate }) {

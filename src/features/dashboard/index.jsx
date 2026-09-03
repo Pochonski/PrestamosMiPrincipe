@@ -26,7 +26,7 @@ export function DashboardPage({ onNavigate }) {
     return (
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
         <Skeleton className="h-28 w-full rounded-card sm:h-32" />
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
           {[0, 1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-24 w-full sm:h-28" />
           ))}

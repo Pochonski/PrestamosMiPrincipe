@@ -36,7 +36,7 @@ export function CobrosChart({ data }) {
   }
 
   return (
-    <div className="h-64 w-full" role="img" aria-label="Cobros por mes, últimos 6 meses">
+    <div className="h-48 w-full sm:h-64" role="img" aria-label="Cobros por mes, últimos 6 meses">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={rows} margin={{ top: 10, right: 12, bottom: 0, left: 0 }}>
           <defs>
@@ -50,14 +50,16 @@ export function CobrosChart({ data }) {
             dataKey="label"
             tickLine={false}
             axisLine={false}
+            interval="preserveStartEnd"
+            minTickGap={8}
             tick={{ fontSize: 12 }}
             className="fill-slate-500 dark:fill-navy-300"
           />
           <YAxis
             tickLine={false}
             axisLine={false}
-            width={56}
-            tick={{ fontSize: 12 }}
+            width={52}
+            tick={{ fontSize: 11 }}
             tickFormatter={(v) => formatCRCCompact(v)}
             className="fill-slate-500 dark:fill-navy-300"
           />
