@@ -2,6 +2,8 @@ import { useQueries } from '@tanstack/react-query';
 import * as prestamosService from '../../services/prestamos';
 import * as clientesService from '../../services/clientes';
 
+const EMPTY_RESUMEN = { cantidad: 0, total: 0 };
+
 export async function getAtrasadosDetallado() {
   const [items, clientes] = await Promise.all([
     prestamosService.cuotasAtrasadas(),
@@ -37,8 +39,8 @@ export function useAtrasados() {
   const [itemsQ, resumenQ] = results;
   const loading = results.some((r) => r.isLoading) && !itemsQ.data;
   return {
-    items: itemsQ.data || [],
-    resumen: resumenQ.data || null,
+    items: itemsQ.data ?? [],
+    resumen: resumenQ.data ?? EMPTY_RESUMEN,
     loading,
   };
 }

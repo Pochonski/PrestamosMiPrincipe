@@ -93,6 +93,23 @@ export function computeResumen({ clientes, prestamos, cobros, hoy = new Date() }
   };
 }
 
+export const EMPTY_RESUMEN = {
+  kpis: {
+    totalClientes: 0,
+    prestamosActivos: 0,
+    totalCobradoHoy: 0,
+    cobrosHoyCount: 0,
+    totalAtrasado: 0,
+    carteraActiva: 0,
+    cobrosMes: 0,
+    cancelados30: 0,
+    cantidadCobrarHoy: 0,
+  },
+  topClientes: [],
+  ultimosCobros: [],
+  cobros30Count: 0,
+};
+
 export function useResumenData() {
   const results = useQueries({
     queries: [
@@ -102,12 +119,12 @@ export function useResumenData() {
     ],
   });
   const [clientesQ, prestamosQ, cobrosQ] = results;
-  const clientes = clientesQ.data || [];
-  const prestamos = prestamosQ.data || [];
-  const cobros = cobrosQ.data || [];
+  const clientes = clientesQ.data ?? [];
+  const prestamos = prestamosQ.data ?? [];
+  const cobros = cobrosQ.data ?? [];
   const loading = results.some((r) => r.isLoading) && !clientesQ.data;
   const data = useMemo(
-    () => (clientesQ.data ? computeResumen({ clientes, prestamos, cobros }) : null),
+    () => (clientesQ.data ? computeResumen({ clientes, prestamos, cobros }) : EMPTY_RESUMEN),
     [clientes, prestamos, cobros, clientesQ.data],
   );
   return { data, loading };

@@ -2,6 +2,8 @@ import { useQueries } from '@tanstack/react-query';
 import * as prestamosService from '../../services/prestamos';
 import * as clientesService from '../../services/clientes';
 
+const EMPTY_RESUMEN = { cantidad: 0, total: 0 };
+
 export function getCobrarHoyDetalle() {
   return prestamosService.cobrarHoy().then((items) =>
     items.map((x) => ({
@@ -36,7 +38,7 @@ export function useCobrarHoy() {
   const loading = results.some((r) => r.isLoading) && !itemsQ.data;
   return {
     items: enriched,
-    resumen: resumenQ.data || null,
+    resumen: resumenQ.data ?? EMPTY_RESUMEN,
     loading,
   };
 }
