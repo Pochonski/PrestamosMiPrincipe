@@ -13,13 +13,15 @@
 export function throwIfError(error, context, extra = {}) {
   if (!error) return;
   if (typeof console !== 'undefined') {
-    console.error(`[supabase:${context}]`, {
+    const detail = {
       message: error.message,
       code: error.code,
       details: error.details,
       hint: error.hint,
       ...extra,
-    });
+    };
+    console.error(`[supabase:${context}] ${error.message || 'Supabase error'}`);
+    console.error('[supabase:detail]', JSON.stringify(detail, null, 2));
   }
   const err = new Error(error.message || 'Supabase error');
   err.name = 'SupabaseError';

@@ -13,10 +13,12 @@ import { onDataChanged } from '../../../lib/events';
 
 function suggestedMonto(prestamo, cuota, tipo, incluirInteres) {
   if (!prestamo) return 0;
-  if (tipo === 'interes') return cuota?.monto || 0;
+  if (tipo === 'interes') {
+    return prestamosService.cuotaDelPeriodo(prestamo) || 0;
+  }
   if (tipo === 'capital') {
     const saldo = prestamosService.getSaldoCapital(prestamo);
-    const interes = cuota?.monto || 0;
+    const interes = prestamosService.cuotaDelPeriodo(prestamo);
     return incluirInteres ? saldo + interes : saldo;
   }
   return 0;
