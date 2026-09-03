@@ -1,4 +1,5 @@
 import { supabase, getOrgId } from '../lib/supabase';
+import { throwIfError } from '../lib/supabase-errors';
 import { emitDataChanged } from '../lib/events';
 import { parseLocalDate } from '../lib/format';
 import { firstCuotaDate, nextCuotaDate } from '../lib/dates';
@@ -304,7 +305,7 @@ export async function update(id, patch) {
     .eq('org_id', orgId)
     .select()
     .single();
-  if (error) throw error;
+  throwIfError(error, 'prestamos.update', { id, patch: updateObj });
   emitDataChanged();
   return normalizePrestamo(data);
 }
@@ -317,7 +318,7 @@ export async function remove(id) {
     .eq('id', id)
     .eq('org_id', orgId)
     .single();
-  if (e1) throw e1;
+  throwIfError(e1, 'prestamos.remove.load', { id });
   if (!prestamo) throw new PrestamoNoEncontradoError(id);
 
   const { data: cobros, error: e2 } = await supabase
@@ -325,7 +326,7 @@ export async function remove(id) {
     .select('id')
     .eq('org_id', orgId)
     .eq('prestamo_id', id);
-  if (e2) throw e2;
+  throwIfError(e2, 'prestamos.remove.checkCobros', { id });
   if (cobros && cobros.length > 0) {
     throw new Error(
       'No se puede eliminar un préstamo con cobros registrados. Si necesitas borrarlo, eliminá los cobros primero.',
@@ -337,14 +338,14 @@ export async function remove(id) {
     .delete()
     .eq('org_id', orgId)
     .eq('prestamo_id', id);
-  if (e3) throw e3;
+  throwIfError(e3, 'prestamos.remove.deleteCuotas', { id });
 
   const { error } = await supabase
     .from('prestamos')
     .delete()
     .eq('id', id)
     .eq('org_id', orgId);
-  if (error) throw error;
+  throwIfError(error, 'prestamos.remove', { id });
   emitDataChanged();
   return true;
 }

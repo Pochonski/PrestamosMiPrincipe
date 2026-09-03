@@ -1,4 +1,5 @@
 import { supabase, getOrgId } from '../lib/supabase';
+import { throwIfError } from '../lib/supabase-errors';
 import { emitDataChanged } from '../lib/events';
 
 export async function list() {
@@ -52,39 +53,41 @@ export async function buscar(query) {
 export async function create({ nombre, cedula, telefono, direccion }) {
   const orgId = await getOrgId();
   const { data: { user } } = await supabase.auth.getUser();
+  const payload = {
+    org_id: orgId,
+    nombre: String(nombre || '').trim(),
+    cedula: String(cedula || '').trim(),
+    telefono: String(telefono || '').trim(),
+    direccion: String(direccion || '').trim(),
+    created_by: user?.id,
+  };
   const { data, error } = await supabase
     .from('clientes')
-    .insert({
-      org_id: orgId,
-      nombre: String(nombre || '').trim(),
-      cedula: String(cedula || '').trim(),
-      telefono: String(telefono || '').trim(),
-      direccion: String(direccion || '').trim(),
-      created_by: user.id,
-    })
+    .insert(payload)
     .select()
     .single();
-  if (error) throw error;
+  throwIfError(error, 'clientes.create', { payload });
   emitDataChanged();
   return data;
 }
 
 export async function update(id, patch) {
   const orgId = await getOrgId();
+  const payload = {
+    ...(patch.nombre !== undefined ? { nombre: String(patch.nombre).trim() } : {}),
+    ...(patch.cedula !== undefined ? { cedula: String(patch.cedula).trim() } : {}),
+    ...(patch.telefono !== undefined ? { telefono: String(patch.telefono).trim() } : {}),
+    ...(patch.direccion !== undefined ? { direccion: String(patch.direccion).trim() } : {}),
+    updated_at: new Date().toISOString(),
+  };
   const { data, error } = await supabase
     .from('clientes')
-    .update({
-      ...(patch.nombre !== undefined ? { nombre: String(patch.nombre).trim() } : {}),
-      ...(patch.cedula !== undefined ? { cedula: String(patch.cedula).trim() } : {}),
-      ...(patch.telefono !== undefined ? { telefono: String(patch.telefono).trim() } : {}),
-      ...(patch.direccion !== undefined ? { direccion: String(patch.direccion).trim() } : {}),
-      updated_at: new Date().toISOString(),
-    })
+    .update(payload)
     .eq('id', id)
     .eq('org_id', orgId)
     .select()
     .single();
-  if (error) throw error;
+  throwIfError(error, 'clientes.update', { id, payload });
   emitDataChanged();
   return data;
 }
@@ -96,7 +99,7 @@ export async function remove(id) {
   }
   const orgId = await getOrgId();
   const { error } = await supabase.from('clientes').delete().eq('id', id).eq('org_id', orgId);
-  if (error) throw error;
+  throwIfError(error, 'clientes.remove', { id });
   emitDataChanged();
   return true;
 }

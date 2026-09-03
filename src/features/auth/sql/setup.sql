@@ -49,6 +49,7 @@ create table if not exists public.clientes (
   cedula text not null,
   telefono text not null,
   direccion text not null,
+  created_by uuid references auth.users,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

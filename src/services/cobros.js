@@ -1,4 +1,5 @@
 import { supabase, getOrgId } from '../lib/supabase';
+import { throwIfError } from '../lib/supabase-errors';
 import { startOfDay, endOfDay } from '../lib/format';
 import { emitDataChanged } from '../lib/events';
 
@@ -135,7 +136,7 @@ export async function create({ prestamoId, cuotaNumero, monto, tipo, incluirInte
     if (msg.includes('cuotas agotadas') || msg.includes('agotad')) {
       throw new CuotasAgotadasError(0);
     }
-    throw error;
+    throwIfError(error, 'cobros.create', { prestamoId, cuotaNumero, monto, tipo });
   }
   if (!data) throw new Error('No se creó el cobro');
   emitDataChanged();
