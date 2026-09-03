@@ -7,6 +7,7 @@ import { Step2Contacto } from './steps/Step2Contacto';
 import { Step3Resumen } from './steps/Step3Resumen';
 import { useClienteForm } from '../hooks/useClienteForm';
 import { useAuth } from '../../auth/useAuth';
+import { showToast } from '../../../components/ui/Toast';
 
 const STEPS = [
   { num: 1, label: 'Identidad' },
@@ -30,10 +31,12 @@ export function ClienteFormFlow({ cliente, onClose, onSaved }) {
     };
   }, [onClose]);
 
-  function handleSave() {
-    const res = form.submit(user?.id);
+  async function handleSave() {
+    const res = await form.submit(user?.id);
     if (res.ok) {
       onSaved?.(res.cliente);
+    } else if (res.error) {
+      showToast(res.error, 'error');
     }
   }
 
