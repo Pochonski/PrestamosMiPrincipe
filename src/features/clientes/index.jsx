@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Users } from 'lucide-react';
 import { SectionTitle } from '../../components/ui/SectionTitle';
 import { StatCard } from '../../components/ui/StatCard';
 import { ClienteSearch } from './components/ClienteSearch';
