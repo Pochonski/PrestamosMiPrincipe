@@ -30,17 +30,15 @@ export function useCobrarHoy() {
     let cancelled = false;
     async function load() {
       try {
-        const [items, resumen] = await Promise.all([
+        const [items, resumen, clientes] = await Promise.all([
           getCobrarHoyDetalle(),
           getResumenCobrarHoy(),
+          clientesService.list(),
         ]);
-        const enriched = await Promise.all(
-          items.map(async (x) => ({
-            ...x,
-            cliente: await clientesService.getById(x.clienteId),
-          })),
-        );
-        const filtered = enriched.filter((x) => x.cliente);
+        const clienteById = new Map(clientes.map((c) => [c.id, c]));
+        const filtered = items
+          .map((x) => ({ ...x, cliente: clienteById.get(x.clienteId) || null }))
+          .filter((x) => x.cliente);
         if (!cancelled) {
           setState({ items: filtered, resumen, loading: false });
         }

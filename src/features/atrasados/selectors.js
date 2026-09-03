@@ -3,19 +3,22 @@ import * as prestamosService from '../../services/prestamos';
 import * as clientesService from '../../services/clientes';
 import { useDataChange } from '../../lib/hooks/useDataChange';
 
-export function getAtrasadosDetallado() {
-  return prestamosService.cuotasAtrasadas().then((items) =>
-    Promise.all(
-      items.map(async ({ prestamo, cuota }) => {
-        const cliente = await clientesService.getById(prestamo.clienteId);
-        const diffMs = Date.now() - new Date(cuota.fecha).getTime();
-        const diffDay = Math.floor(diffMs / 86400000);
-        return { prestamo, cuota, cliente, diasAtraso: diffDay };
-      }),
-    ).then((rows) =>
-      rows.filter((x) => x.cliente).sort((a, b) => b.diasAtraso - a.diasAtraso),
-    ),
-  );
+export async function getAtrasadosDetallado() {
+  const [items, clientes] = await Promise.all([
+    prestamosService.cuotasAtrasadas(),
+    clientesService.list(),
+  ]);
+  const clienteById = new Map(clientes.map((c) => [c.id, c]));
+  const rows = items
+    .map(({ prestamo, cuota }) => {
+      const cliente = clienteById.get(prestamo.clienteId) || null;
+      const diffMs = Date.now() - new Date(cuota.fecha).getTime();
+      const diffDay = Math.floor(diffMs / 86400000);
+      return { prestamo, cuota, cliente, diasAtraso: diffDay };
+    })
+    .filter((x) => x.cliente)
+    .sort((a, b) => b.diasAtraso - a.diasAtraso);
+  return rows;
 }
 
 export function getResumenAtrasados() {

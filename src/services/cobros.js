@@ -1,5 +1,6 @@
 import { supabase, getOrgId } from '../lib/supabase';
 import { startOfDay, endOfDay } from '../lib/format';
+import { emitDataChanged } from '../lib/events';
 
 export async function list() {
   const orgId = await getOrgId();
@@ -137,5 +138,6 @@ export async function create({ prestamoId, cuotaNumero, monto, tipo, incluirInte
     throw error;
   }
   if (!data) throw new Error('No se creó el cobro');
+  emitDataChanged();
   return await getById(data);
 }

@@ -1,7 +1,7 @@
 import { supabase, getOrgId } from '../lib/supabase';
 import { emitDataChanged } from '../lib/events';
 import { parseLocalDate } from '../lib/format';
-import { addDays, addMonths, nextCuotaDate } from '../lib/dates';
+import { firstCuotaDate, nextCuotaDate } from '../lib/dates';
 
 function startOfDay(d = new Date()) {
   const x = new Date(d);
@@ -27,39 +27,6 @@ function buildCuotasPayload({ fechaInicio, periodo, nCuotas, montoPorCuota }) {
     cursor = nextCuotaDate(cursor, periodo);
   }
   return out;
-}
-
-function firstCuotaDate(fechaInicio, periodo) {
-  const base = parseLocalDate(fechaInicio);
-  switch (periodo.tipo) {
-    case 'diario':
-      return addDays(base, 1);
-    case 'semanal':
-      return addDays(base, 7);
-    case 'quincenal':
-      return addDays(base, 14);
-    case 'mensual':
-      return addMonths(base, 1);
-    case 'dia_mes': {
-      const target = Number(periodo.diaDelMes);
-      if (Number.isNaN(target)) return addMonths(base, 1);
-      const baseDay = base.getDate();
-      if (baseDay < target) {
-        const r = new Date(base);
-        r.setDate(target);
-        return r;
-      }
-      if (baseDay > target) {
-        const r = addMonths(base, 1);
-        const lastDay = new Date(r.getFullYear(), r.getMonth() + 1, 0).getDate();
-        r.setDate(Math.min(target, lastDay));
-        return r;
-      }
-      return base;
-    }
-    default:
-      return addMonths(base, 1);
-  }
 }
 
 export async function list() {

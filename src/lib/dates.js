@@ -1,3 +1,5 @@
+import { parseLocalDate } from './format';
+
 export function addDays(d, n) {
   const r = new Date(d);
   r.setDate(r.getDate() + n);
@@ -31,7 +33,7 @@ export function nextCuotaDate(prev, periodo) {
 }
 
 export function firstCuotaDate(fechaInicio, periodo) {
-  const base = new Date(fechaInicio);
+  const base = parseLocalDate(fechaInicio);
   switch (periodo.tipo) {
     case 'diario':
       return addDays(base, 1);

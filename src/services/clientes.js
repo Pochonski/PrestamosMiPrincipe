@@ -1,4 +1,5 @@
 import { supabase, getOrgId } from '../lib/supabase';
+import { emitDataChanged } from '../lib/events';
 
 export async function list() {
   const orgId = await getOrgId();
@@ -23,19 +24,25 @@ export async function getById(id) {
 }
 
 export async function count() {
-  const items = await list();
-  return items.length;
+  const orgId = await getOrgId();
+  const { count: total, error } = await supabase
+    .from('clientes')
+    .select('id', { count: 'exact', head: true })
+    .eq('org_id', orgId);
+  if (error) throw error;
+  return total ?? 0;
 }
 
 export async function buscar(query) {
   const orgId = await getOrgId();
-  const q = String(query || '').trim();
+  const raw = String(query || '').trim();
   let qb = supabase
     .from('clientes')
     .select('*')
     .eq('org_id', orgId);
-  if (q) {
-    qb = qb.or(`nombre.ilike.%${q}%,cedula.ilike.%${q}%,telefono.ilike.%${q}%`);
+  if (raw) {
+    const safe = raw.replace(/[%_,\\]/g, '');
+    qb = qb.or(`nombre.ilike.%${safe}%,cedula.ilike.%${safe}%,telefono.ilike.%${safe}%,direccion.ilike.%${safe}%`);
   }
   const { data, error } = await qb.order('nombre');
   if (error) throw error;
@@ -58,6 +65,7 @@ export async function create({ nombre, cedula, telefono, direccion }) {
     .select()
     .single();
   if (error) throw error;
+  emitDataChanged();
   return data;
 }
 
@@ -77,6 +85,7 @@ export async function update(id, patch) {
     .select()
     .single();
   if (error) throw error;
+  emitDataChanged();
   return data;
 }
 
@@ -88,6 +97,7 @@ export async function remove(id) {
   const orgId = await getOrgId();
   const { error } = await supabase.from('clientes').delete().eq('id', id).eq('org_id', orgId);
   if (error) throw error;
+  emitDataChanged();
   return true;
 }
 

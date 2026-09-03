@@ -40,22 +40,20 @@ export async function getRecentActivity(limit = 6) {
   const cobros = await cobrosService.recientes(limit);
   const clientes = await clientesService.list();
   const clientesById = new Map(clientes.map((c) => [c.id, c]));
-  const cobrosWithProfile = await Promise.all(
-    cobros.slice(0, limit).map(async (cobro) => {
-      let cobrador = null;
-      if (cobro.cobradorId) {
-        const { data: prof } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('user_id', cobro.cobradorId)
-          .maybeSingle();
-        cobrador = prof?.full_name || null;
-      }
-      return { cobro, cobrador };
-    }),
-  );
-  return cobrosWithProfile.map(({ cobro, cobrador }) => {
-    const cobradorStr = cobrador ? ` · ${cobrador.split(' ')[0]}` : '';
+
+  const cobradorIds = [...new Set(cobros.map((c) => c.cobradorId).filter(Boolean))];
+  let profilesById = new Map();
+  if (cobradorIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('user_id, full_name')
+      .in('user_id', cobradorIds);
+    profilesById = new Map((profiles ?? []).map((p) => [p.user_id, p]));
+  }
+
+  return cobros.slice(0, limit).map((cobro) => {
+    const profile = profilesById.get(cobro.cobradorId);
+    const cobradorStr = profile?.full_name ? ` · ${profile.full_name.split(' ')[0]}` : '';
     return {
       id: cobro.id,
       tipo: 'cobro',
