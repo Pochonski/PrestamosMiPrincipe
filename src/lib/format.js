@@ -35,13 +35,15 @@ const dateTimeFormatter = new Intl.DateTimeFormat('es-CR', {
 });
 
 export function formatCRC(n) {
-  if (n === null || n === undefined || Number.isNaN(Number(n))) return '₡0';
-  return crcFormatter.format(Number(n));
+  const num = Number(n);
+  if (n === null || n === undefined || !Number.isFinite(num)) return '₡0';
+  return crcFormatter.format(num);
 }
 
 export function formatCRCCompact(n) {
-  if (n === null || n === undefined || Number.isNaN(Number(n))) return '₡0';
-  return crcCompactFormatter.format(Number(n));
+  const num = Number(n);
+  if (n === null || n === undefined || !Number.isFinite(num)) return '₡0';
+  return crcCompactFormatter.format(num);
 }
 
 export function parseLocalDate(value) {

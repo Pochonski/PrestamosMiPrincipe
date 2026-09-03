@@ -1,5 +1,9 @@
-import { TrendingUp, Wallet, AlertTriangle, Banknote, Users, HandCoins, CheckCircle2, Calendar, Loader2 } from 'lucide-react';
+import React from 'react';
+import { TrendingUp, Wallet, AlertTriangle, Banknote, Users, HandCoins, CheckCircle2, Calendar } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { IconBox } from '../../components/ui/IconBox';
 import { SectionTitle } from '../../components/ui/SectionTitle';
 import { StatCard } from '../../components/ui/StatCard';
 import { Avatar } from '../../components/ui/Avatar';
@@ -12,33 +16,42 @@ export function ResumenPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto flex max-w-5xl items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
+        <Skeleton className="h-20 w-full" />
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-28 w-full" />
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-28 w-full" />
+          ))}
+        </div>
+        <Skeleton className="h-40 w-full" />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-5 sm:gap-6">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
       <header>
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gold-50 text-gold-600 dark:bg-gold-500/10 dark:text-gold-300">
-            <TrendingUp className="h-5 w-5" />
-          </div>
+          <IconBox icon={TrendingUp} tone="gold" size="md" />
           <div>
-            <h1 className="text-xl font-bold text-navy-900 sm:text-2xl dark:text-white">
+            <h1 className="text-xl font-extrabold tracking-tight text-navy-900 sm:text-2xl dark:text-white">
               Resumen general
             </h1>
-            <p className="mt-0.5 text-sm text-slate-600 dark:text-navy-300">
+            <p className="mt-0.5 text-sm text-neutral-600 dark:text-navy-300">
               Vista ejecutiva del estado del negocio.
             </p>
           </div>
         </div>
       </header>
 
-      <section>
+      <section className="space-y-3">
         <SectionTitle title="Indicadores clave" />
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <StatCard
             label="Clientes"
             value={data.kpis.totalClientes}
@@ -68,7 +81,7 @@ export function ResumenPage() {
             tone={data.kpis.totalAtrasado > 0 ? 'danger' : 'neutral'}
           />
         </div>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
           <StatCard
             label="Cartera activa"
             value={formatCRC(data.kpis.carteraActiva)}
@@ -96,18 +109,13 @@ export function ResumenPage() {
       <section className="space-y-3">
         <SectionTitle title={`Top clientes (${data.topClientes.length})`} />
         {data.topClientes.length === 0 ? (
-          <Card className="flex flex-col items-center gap-2 p-8 text-center">
-            <Users className="h-6 w-6 text-slate-400 dark:text-navy-300" />
-            <p className="text-sm font-medium text-navy-700 dark:text-navy-100">
-              Sin clientes todavía
-            </p>
-          </Card>
+          <EmptyState icon={Users} title="Sin clientes todavía" />
         ) : (
           <Card className="overflow-hidden p-0">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto scrollbar-thin">
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 dark:bg-navy-700/50">
-                  <tr className="text-left text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-navy-300">
+                  <tr className="text-left text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-navy-300">
                     <th className="px-4 py-3">Cliente</th>
                     <th className="px-4 py-3 text-center">Préstamos</th>
                     <th className="px-4 py-3 text-right">Total prestado</th>
@@ -124,7 +132,7 @@ export function ResumenPage() {
                             <p className="truncate text-sm font-semibold text-navy-900 dark:text-white">
                               {c.nombre}
                             </p>
-                            <p className="truncate text-xs text-slate-500 dark:text-navy-300">
+                            <p className="truncate text-xs text-neutral-500 dark:text-navy-300">
                               {c.cedula}
                             </p>
                           </div>
@@ -151,18 +159,14 @@ export function ResumenPage() {
       <section className="space-y-3">
         <SectionTitle title={`Últimos cobros (${data.ultimosCobros.length})`} />
         {data.ultimosCobros.length === 0 ? (
-          <Card className="flex flex-col items-center gap-2 p-8 text-center">
-            <HandCoins className="h-6 w-6 text-slate-400 dark:text-navy-300" />
-            <p className="text-sm font-medium text-navy-700 dark:text-navy-100">
-              Aún no hay cobros
-            </p>
-          </Card>
+          <EmptyState icon={HandCoins} title="Aún no hay cobros" />
         ) : (
           <Card className="divide-y divide-slate-100 p-0 dark:divide-navy-700/60">
             {data.ultimosCobros.map((c) => {
-              const tipoMeta = c.tipo === 'capital'
-                ? { tone: 'emerald', label: 'Capital' }
-                : { tone: 'gold', label: 'Interés' };
+              const tipoMeta =
+                c.tipo === 'capital'
+                  ? { tone: 'emerald', label: 'Capital' }
+                  : { tone: 'gold', label: 'Interés' };
               return (
                 <div key={c.id} className="flex items-center gap-3 p-4">
                   <Avatar nombre={c.cliente?.nombre || '—'} size="sm" />
@@ -173,7 +177,7 @@ export function ResumenPage() {
                       </p>
                       <Badge tone={tipoMeta.tone}>{tipoMeta.label}</Badge>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-navy-300">
+                    <p className="text-xs text-neutral-500 dark:text-navy-300">
                       Cuota #{c.cuotaNumero} · {formatDateTime(c.fecha)}
                     </p>
                   </div>

@@ -1,17 +1,15 @@
+import React from 'react';
 import { User, MapPin, Phone, IdCard } from 'lucide-react';
 import { Card } from '../../../../components/ui/Card';
 import { Avatar } from '../../../../components/ui/Avatar';
+import { IconBox } from '../../../../components/ui/IconBox';
 
 function Row({ icon: Icon, label, value }) {
   return (
     <div className="flex items-start gap-3 py-2.5">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-navy-700 dark:text-navy-300">
-        <Icon className="h-4 w-4" />
-      </div>
+      <IconBox icon={Icon} tone="neutral" size="sm" />
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-navy-300">
-          {label}
-        </p>
+        <p className="section-label">{label}</p>
         <p className="mt-0.5 text-sm font-semibold text-navy-900 dark:text-white">
           {value || '—'}
         </p>
@@ -24,12 +22,10 @@ export function Step3Resumen({ values }) {
   return (
     <div className="space-y-5">
       <header className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300">
-          <User className="h-5 w-5" />
-        </div>
+        <IconBox icon={User} tone="emerald" size="md" />
         <div>
           <h2 className="text-lg font-bold text-navy-900 dark:text-white">Resumen</h2>
-          <p className="text-xs text-slate-500 dark:text-navy-300">
+          <p className="text-xs text-neutral-500 dark:text-navy-300">
             Revisá los datos antes de guardar.
           </p>
         </div>
@@ -42,7 +38,7 @@ export function Step3Resumen({ values }) {
             <p className="truncate text-base font-bold text-navy-900 dark:text-white">
               {values.nombre || '—'}
             </p>
-            <p className="text-xs text-slate-500 dark:text-navy-300">Nuevo cliente</p>
+            <p className="text-xs text-neutral-500 dark:text-navy-300">Nuevo cliente</p>
           </div>
         </div>
 

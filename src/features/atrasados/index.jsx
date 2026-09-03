@@ -1,8 +1,13 @@
-import { AlertTriangle, Wallet, TrendingDown, Loader2 } from 'lucide-react';
+import React from 'react';
+import { AlertTriangle, Wallet, TrendingDown } from 'lucide-react';
+import { Card } from '../../components/ui/Card';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { IconBox } from '../../components/ui/IconBox';
+import { Badge } from '../../components/ui/Badge';
 import { SectionTitle } from '../../components/ui/SectionTitle';
 import { StatCard } from '../../components/ui/StatCard';
 import { useAtrasados } from './selectors';
-import { Card } from '../../components/ui/Card';
 import { formatCRC, formatCRCCompact, formatDate } from '../../lib/format';
 
 export function AtrasadosPage({ onNavigate }) {
@@ -10,8 +15,14 @@ export function AtrasadosPage({ onNavigate }) {
 
   if (loading) {
     return (
-      <div className="mx-auto flex max-w-4xl items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
+        <Skeleton className="h-20 w-full" />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <Skeleton className="h-28 w-full" />
+          <Skeleton className="h-28 w-full" />
+          <Skeleton className="h-28 w-full" />
+        </div>
+        <Skeleton className="h-40 w-full" />
       </div>
     );
   }
@@ -26,26 +37,24 @@ export function AtrasadosPage({ onNavigate }) {
   const maxAtraso = items.reduce((max, x) => Math.max(max, x.diasAtraso), 0);
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-5 sm:gap-6">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
       <header>
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300">
-            <AlertTriangle className="h-5 w-5" />
-          </div>
+          <IconBox icon={AlertTriangle} tone="rose" size="md" />
           <div>
-            <h1 className="text-xl font-bold text-navy-900 sm:text-2xl dark:text-white">
+            <h1 className="text-xl font-extrabold tracking-tight text-navy-900 sm:text-2xl dark:text-white">
               Préstamos atrasados
             </h1>
-            <p className="mt-0.5 text-sm text-slate-600 dark:text-navy-300">
+            <p className="mt-0.5 text-sm text-neutral-600 dark:text-navy-300">
               Cuotas vencidas que aún no fueron pagadas.
             </p>
           </div>
         </div>
       </header>
 
-      <section>
+      <section className="space-y-2">
         <SectionTitle title="Resumen" />
-        <div className="mt-3 grid grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
           <StatCard
             label="Cuotas atrasadas"
             value={resumen.cantidad}
@@ -73,24 +82,16 @@ export function AtrasadosPage({ onNavigate }) {
       <section className="space-y-3">
         <SectionTitle title={`Pendientes (${items.length})`} />
         {items.length === 0 ? (
-          <Card className="flex flex-col items-center gap-3 p-8 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300">
-              <TrendingDown className="h-7 w-7 rotate-180" />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-navy-900 dark:text-white">¡Sin atrasos!</h3>
-              <p className="mt-1 text-sm text-slate-600 dark:text-navy-300">
-                Todos los clientes están al día con sus cuotas.
-              </p>
-            </div>
-          </Card>
+          <EmptyState
+            icon={TrendingDown}
+            variant="success"
+            title="¡Sin atrasos!"
+            description="Todos los clientes están al día con sus cuotas."
+          />
         ) : (
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {items.map((item) => (
-              <li
-                key={`${item.prestamo.id}-${item.cuota.numero}`}
-                className="animate-fade-in"
-              >
+              <li key={`${item.prestamo.id}-${item.cuota.numero}`} className="animate-fade-in">
                 <AtrasadoCard item={item} onCobrar={handleCobrar} />
               </li>
             ))}
@@ -109,20 +110,17 @@ function AtrasadoCard({ item, onCobrar }) {
       onClick={() => onCobrar?.(item)}
     >
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300">
-          <Wallet className="h-5 w-5" />
-        </div>
+        <IconBox icon={Wallet} tone="rose" size="sm" />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <p className="truncate text-base font-bold text-navy-900 dark:text-white">
               {cliente.nombre}
             </p>
-            <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
-              <AlertTriangle className="h-3 w-3" />
+            <Badge tone="danger" icon={AlertTriangle}>
               {diasAtraso}d
-            </span>
+            </Badge>
           </div>
-          <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-navy-300">
+          <p className="mt-0.5 truncate text-xs text-neutral-500 dark:text-navy-300">
             {cliente.cedula} · {cliente.telefono}
           </p>
         </div>
@@ -130,25 +128,19 @@ function AtrasadoCard({ item, onCobrar }) {
 
       <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 dark:border-navy-700/60">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-navy-300">
-            Cuota
-          </p>
+          <p className="section-label">Cuota</p>
           <p className="mt-0.5 text-sm font-bold tabular-nums text-navy-900 dark:text-white">
             {formatCRC(cuota.monto)}
           </p>
         </div>
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-navy-300">
-            Venció
-          </p>
-          <p className="mt-0.5 text-sm font-semibold tabular-nums text-rose-600 dark:text-rose-400">
+          <p className="section-label">Venció</p>
+          <p className="mt-0.5 text-sm font-semibold tabular-nums text-danger-600 dark:text-danger-500">
             {formatDate(cuota.fecha)}
           </p>
         </div>
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-navy-300">
-            Ruta
-          </p>
+          <p className="section-label">Ruta</p>
           <p className="mt-0.5 truncate text-sm font-semibold text-navy-900 dark:text-white">
             {prestamo.ruta || '—'}
           </p>

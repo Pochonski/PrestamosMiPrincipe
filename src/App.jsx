@@ -3,8 +3,8 @@ import { lazy, Suspense, useState } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import { Spinner } from './components/ui/Spinner';
 import { useNotificacionesAuto } from './features/notificaciones/hooks/useNotificacionesAuto';
-import { Loader2 } from 'lucide-react';
 import { AuthGuard } from './features/auth/AuthGuard';
 import { NAV_ITEMS, resolveActiveId } from './components/layout/nav-config';
 
@@ -46,7 +46,7 @@ const pages = {
 function PageFallback() {
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
-      <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
+      <Spinner size="lg" tone="gold" />
     </div>
   );
 }

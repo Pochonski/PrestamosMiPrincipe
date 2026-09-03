@@ -1,10 +1,10 @@
+import React from 'react';
 import { WelcomeHeader } from './components/WelcomeHeader';
 import { KpiRow } from './components/KpiRow';
 import { QuickActionsRow } from './components/QuickActionsRow';
 import { PrimaryActions } from './components/PrimaryActions';
 import { RecentActivity } from './components/RecentActivity';
-import { SectionTitle } from '../../components/ui/SectionTitle';
-import { Loader2 } from 'lucide-react';
+import { Skeleton } from '../../components/ui/Skeleton';
 import { useDashboardData } from './hooks/useDashboardData';
 import { useAuth } from '../auth/useAuth';
 
@@ -12,30 +12,45 @@ export function DashboardPage({ onNavigate }) {
   const data = useDashboardData();
   const { user, profile } = useAuth();
   const dashboardUser = profile
-    ? { nombre: profile.full_name || user?.email?.split('@')[0] || 'Usuario', color: profile.color }
+    ? {
+        nombre: profile.full_name || user?.email?.split('@')[0] || 'Usuario',
+        color: profile.color,
+      }
     : null;
 
   if (data.loading) {
     return (
-      <div className="mx-auto flex max-w-6xl items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
+        <Skeleton className="h-32 w-full rounded-card" />
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-28 w-full" />
+          ))}
+        </div>
+        <Skeleton className="h-10 w-full" />
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
+        <Skeleton className="h-48 w-full" />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-5 sm:gap-6">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
       <WelcomeHeader user={dashboardUser} kpis={data.kpis} />
 
       <KpiRow kpis={data.kpis} />
 
       <section className="space-y-2">
-        <SectionTitle title="Accesos rápidos" />
+        <h2 className="section-label">Accesos rápidos</h2>
         <QuickActionsRow badges={data.badges} onNavigate={onNavigate} />
       </section>
 
       <section className="space-y-2">
-        <SectionTitle title="Acciones principales" />
+        <h2 className="section-label">Acciones principales</h2>
         <PrimaryActions onNavigate={onNavigate} />
       </section>
 

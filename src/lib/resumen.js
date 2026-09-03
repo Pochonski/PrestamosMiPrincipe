@@ -14,7 +14,7 @@ export async function statsCliente(clienteId) {
   return { total: all.length, vigentes, atrasados, cancelados };
 }
 
-export async function getResumenPrestamo(prestamo) {
+export function getResumenPrestamo(prestamo) {
   if (!prestamo) return null;
   const saldo = prestamosService.getSaldoCapital(prestamo);
   const interes = prestamosService.cuotaDelPeriodo(prestamo);

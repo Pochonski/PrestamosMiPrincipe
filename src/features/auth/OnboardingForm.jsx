@@ -1,11 +1,14 @@
+import React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Building2, CheckCircle2, AlertTriangle } from 'lucide-react';
-import clsx from 'clsx';
+import { Building2, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from './useAuth';
 import { describeAuthError } from './errors';
-import { Input } from './components/Input';
+import { Input } from '../../components/ui/Input';
+import { Button } from '../../components/ui/Button';
+import { Alert } from '../../components/ui/Alert';
+import { IconBox } from '../../components/ui/IconBox';
 
 export function OnboardingForm() {
   const navigate = useNavigate();
@@ -16,14 +19,18 @@ export function OnboardingForm() {
   const [done, setDone] = useState(false);
   const redirectTimer = useRef(null);
 
-  useEffect(() => () => {
-    if (redirectTimer.current) clearTimeout(redirectTimer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (redirectTimer.current) clearTimeout(redirectTimer.current);
+    },
+    [],
+  );
 
   function makeSlug(v) {
     return v
       .toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
       .slice(0, 32);
@@ -56,11 +63,11 @@ export function OnboardingForm() {
   if (done) {
     return (
       <div className="space-y-4 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300">
-          <CheckCircle2 className="h-7 w-7" />
+        <div className="mx-auto">
+          <IconBox icon={CheckCircle2} tone="emerald" size="lg" ring />
         </div>
         <h2 className="text-xl font-bold text-navy-900 dark:text-white">¡Listo!</h2>
-        <p className="text-sm text-slate-600 dark:text-navy-300">
+        <p className="text-sm text-neutral-600 dark:text-navy-300">
           Tu organización fue creada. Redirigiendo al dashboard...
         </p>
       </div>
@@ -70,25 +77,12 @@ export function OnboardingForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {errorMeta && (
-        <div
-          className={clsx(
-            'flex items-start gap-2 rounded-2xl border p-3 text-sm',
-            errorMeta.variant === 'warning'
-              ? 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300'
-              : 'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-300',
-          )}
-        >
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider opacity-80">
-              {errorMeta.title}
-            </p>
-            <p>{errorMeta.message}</p>
-          </div>
-        </div>
+        <Alert tone={errorMeta.variant === 'warning' ? 'warning' : 'danger'} title={errorMeta.title}>
+          {errorMeta.message}
+        </Alert>
       )}
       <Input
-        type="text"
+        name="org_name"
         label="Nombre del negocio"
         placeholder="Ej: Préstamos Mi Príncipe"
         value={nombre}
@@ -97,14 +91,16 @@ export function OnboardingForm() {
         required
         autoFocus
       />
-      <button
+      <Button
         type="submit"
-        disabled={submitting || !nombre.trim()}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gold-gradient px-5 py-3.5 text-base font-bold text-navy-900 shadow-glow transition-all hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
+        variant="primary"
+        size="lg"
+        fullWidth
+        loading={submitting}
+        disabled={!nombre.trim()}
       >
-        {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
         Crear organización
-      </button>
+      </Button>
     </form>
   );
 }

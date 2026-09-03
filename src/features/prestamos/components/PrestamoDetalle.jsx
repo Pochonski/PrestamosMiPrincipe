@@ -1,8 +1,25 @@
+import React from 'react';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Plus, Wallet, TrendingUp, Banknote, Calendar, Receipt, ArrowDownCircle, AlertTriangle, Loader2, Pencil, Trash2 } from 'lucide-react';
-import clsx from 'clsx';
+import {
+  ArrowLeft,
+  Plus,
+  Wallet,
+  TrendingUp,
+  Banknote,
+  Calendar,
+  Receipt,
+  ArrowDownCircle,
+  Pencil,
+  Trash2,
+} from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
 import { Avatar } from '../../../components/ui/Avatar';
+import { Button } from '../../../components/ui/Button';
+import { Alert } from '../../../components/ui/Alert';
+import { EmptyState } from '../../../components/ui/EmptyState';
+import { IconBox } from '../../../components/ui/IconBox';
+import { Skeleton } from '../../../components/ui/Skeleton';
+import { Badge } from '../../../components/ui/Badge';
 import { formatCRC, formatDate, formatDateTime } from '../../../lib/format';
 import { showToast } from '../../../components/ui/Toast';
 import { useDataChange } from '../../../lib/hooks/useDataChange';
@@ -16,7 +33,6 @@ import { PrestamoCalendar } from './PrestamoCalendar';
 import { ExtenderCuotasModal } from './ExtenderCuotasModal';
 import { DeletePrestamoConfirm } from './DeletePrestamoConfirm';
 import { PrestamoEditModal } from './PrestamoEditModal';
-import { Badge } from '../../../components/ui/Badge';
 
 const STATUS_META = {
   vigente: { tone: 'success', label: 'Vigente' },
@@ -25,8 +41,8 @@ const STATUS_META = {
 };
 
 const COBRO_TIPO_META = {
-  interes: { label: 'Interés', tone: 'gold' },
-  capital: { label: 'Capital', tone: 'emerald' },
+  interes: { label: 'Interés', tone: 'gold', iconTone: 'gold' },
+  capital: { label: 'Capital', tone: 'emerald', iconTone: 'emerald' },
 };
 
 export function PrestamoDetalle({ onNavigate, params }) {
@@ -58,7 +74,9 @@ export function PrestamoDetalle({ onNavigate, params }) {
       }
     }
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [prestamoId]);
 
   useEffect(() => {
@@ -70,7 +88,9 @@ export function PrestamoDetalle({ onNavigate, params }) {
     clientesService.getById(prestamo.clienteId).then((c) => {
       if (!cancelled) setCliente(c);
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [prestamo]);
 
   useDataChange(async () => {
@@ -84,30 +104,42 @@ export function PrestamoDetalle({ onNavigate, params }) {
 
   if (loading && !prestamo) {
     return (
-      <div className="mx-auto flex max-w-2xl items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
+        <Skeleton className="h-10 w-40" />
+        <Skeleton className="h-36 w-full" />
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-20 w-full" />
+          ))}
+        </div>
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-48 w-full" />
       </div>
     );
   }
 
   if (!prestamo) {
     return (
-      <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 p-8 text-center">
-        <p className="text-sm text-slate-600 dark:text-navy-300">Préstamo no encontrado.</p>
-        <button
-          type="button"
-          onClick={() => onNavigate?.('clientes', {})}
-          className="rounded-xl bg-gold-gradient px-4 py-2.5 text-sm font-bold text-navy-900 shadow-glow"
-        >
+      <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-4 p-8 text-center">
+        <p className="text-sm text-neutral-600 dark:text-navy-300">Préstamo no encontrado.</p>
+        <Button variant="primary" onClick={() => onNavigate?.('clientes', {})}>
           Volver a Clientes
-        </button>
+        </Button>
       </div>
     );
   }
 
   const status = getStatus(prestamo);
   const meta = STATUS_META[status];
-  const resumen = getResumenPrestamo(prestamo);
+  const resumen = getResumenPrestamo(prestamo) || {
+    pagadas: 0,
+    total: 0,
+    canceladas: 0,
+    saldo: 0,
+    interes: 0,
+    totalPagado: 0,
+    proximoCobro: null,
+  };
   const labelPeriodoValue = labelPeriodo(prestamo.periodo);
   const clienteNombre = cliente?.nombre?.split(' ')[0] || 'cliente';
 
@@ -131,54 +163,55 @@ export function PrestamoDetalle({ onNavigate, params }) {
   }
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-5 sm:gap-6">
-      <button
-        type="button"
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
+      <Button
+        variant="ghost"
+        size="sm"
+        icon={ArrowLeft}
         onClick={() => onNavigate?.('cliente-detalle', { clienteId: prestamo.clienteId })}
-        className="inline-flex w-fit items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-semibold text-navy-700 transition-colors hover:bg-slate-100 dark:text-navy-100 dark:hover:bg-navy-800"
+        className="!w-fit"
       >
-        <ArrowLeft className="h-4 w-4" />
         Volver al cliente
-      </button>
+      </Button>
 
-      <Card className="relative overflow-hidden p-5 sm:p-6">
+      <Card className="relative overflow-hidden p-0">
         <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-gold-200/40 blur-3xl dark:bg-gold-500/10" />
-        <div className="relative">
+        <div className="relative p-5 sm:p-6">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gold-gradient text-navy-900">
-                <Wallet className="h-6 w-6" />
-              </div>
+              <span className="flex h-12 w-12 items-center justify-center rounded-card bg-gold-gradient text-navy-900 shadow-glow">
+                <Wallet className="h-6 w-6" aria-hidden="true" />
+              </span>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-bold tabular-nums text-navy-900 sm:text-2xl dark:text-white">
+                  <h1 className="text-xl font-extrabold tabular-nums text-navy-900 sm:text-2xl dark:text-white">
                     {formatCRC(prestamo.monto)}
                   </h1>
                   <Badge tone={meta.tone}>{meta.label}</Badge>
                 </div>
-                <p className="mt-1 text-sm text-slate-600 dark:text-navy-300">
+                <p className="mt-1 text-sm text-neutral-600 dark:text-navy-300">
                   {prestamo.ruta} · {labelPeriodoValue} · {prestamo.tasa}% por cuota
                 </p>
               </div>
             </div>
             {prestamo.estado !== 'cancelado' && (
               <div className="flex shrink-0 flex-wrap gap-2">
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={Pencil}
                   onClick={() => setEditOpen(true)}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-navy-700 transition-colors hover:border-gold-400 hover:bg-gold-50 dark:border-navy-700 dark:bg-navy-800 dark:text-navy-100 dark:hover:border-gold-400 dark:hover:bg-navy-700"
                 >
-                  <Pencil className="h-3.5 w-3.5" />
                   Editar
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  icon={Trash2}
                   onClick={() => setDeleteOpen(true)}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-600 transition-colors hover:border-rose-300 hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-300 dark:hover:bg-rose-500/20"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
                   Eliminar
-                </button>
+                </Button>
               </div>
             )}
           </div>
@@ -186,12 +219,12 @@ export function PrestamoDetalle({ onNavigate, params }) {
             <button
               type="button"
               onClick={() => onNavigate?.('cliente-detalle', { clienteId: cliente.id })}
-              className="mt-4 flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2 transition-colors hover:bg-slate-100 dark:bg-navy-700/50 dark:hover:bg-navy-700"
+              className="mt-4 flex items-center gap-3 rounded-input bg-slate-50 px-3 py-2 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 dark:bg-navy-700/50 dark:hover:bg-navy-700"
             >
               <Avatar nombre={cliente.nombre} size="sm" />
               <div className="text-left">
                 <p className="text-sm font-semibold text-navy-900 dark:text-white">{cliente.nombre}</p>
-                <p className="text-xs text-slate-500 dark:text-navy-300">{cliente.cedula}</p>
+                <p className="text-xs text-neutral-500 dark:text-navy-300">{cliente.cedula}</p>
               </div>
             </button>
           )}
@@ -230,84 +263,69 @@ export function PrestamoDetalle({ onNavigate, params }) {
       </div>
 
       {status !== 'cancelado' && (
-        <button
-          type="button"
-          onClick={() => onNavigate?.('cobro', { prestamoId: prestamo.id, clienteId: prestamo.clienteId })}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gold-gradient px-4 py-3.5 text-sm font-bold text-navy-900 shadow-glow transition-transform hover:scale-[1.01] active:scale-[0.99] sm:text-base"
+        <Button
+          variant="primary"
+          size="lg"
+          icon={Plus}
+          fullWidth
+          onClick={() =>
+            onNavigate?.('cobro', { prestamoId: prestamo.id, clienteId: prestamo.clienteId })
+          }
         >
-          <Plus className="h-5 w-5" />
           Registrar cobro
-        </button>
+        </Button>
       )}
 
       {cuotasAgotadas(prestamo) && (
-        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-500/40 dark:bg-amber-500/10">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
-              <AlertTriangle className="h-5 w-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-bold text-amber-900 dark:text-amber-200">
-                Cuotas agotadas
-              </p>
-              <p className="mt-0.5 text-xs text-amber-800 dark:text-amber-300">
-                Todas las cuotas del préstamo están cerradas pero aún queda saldo pendiente de{' '}
-                <strong className="tabular-nums">{formatCRC(prestamosService.getSaldoCapital(prestamo))}</strong>.
-                No se puede dar por cancelado hasta pagar el capital completo.
-              </p>
-              <p className="mt-1 text-xs text-amber-800 dark:text-amber-300">
-                Extendé las cuotas para continuar cobrando intereses, o pagá el capital completo.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
+        <Alert tone="warning" title="Cuotas agotadas">
+          <p>
+            Todas las cuotas del préstamo están cerradas pero aún queda saldo pendiente de{' '}
+            <strong className="tabular-nums">
+              {formatCRC(prestamosService.getSaldoCapital(prestamo))}
+            </strong>
+            . No se puede dar por cancelado hasta pagar el capital completo.
+          </p>
+          <p>Extendé las cuotas para continuar cobrando intereses, o pagá el capital completo.</p>
+          <Button
+            variant="warning"
+            size="md"
+            icon={Plus}
             onClick={() => setExtenderOpen(true)}
-            className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-amber-700"
+            className="!mt-1"
           >
-            <Plus className="h-4 w-4" />
             Extender cuotas
-          </button>
-        </div>
+          </Button>
+        </Alert>
       )}
 
       <section className="space-y-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-navy-300">
-          Calendario de cuotas
-        </h2>
-        <PrestamoCalendar cuotas={prestamo.cuotas} total={resumen.totalPagado + prestamo.cuotas.filter((c) => c.estado === 'pendiente').reduce((s, c) => s + c.monto, 0)} />
+        <h2 className="section-label">Calendario de cuotas</h2>
+        <PrestamoCalendar
+          cuotas={prestamo.cuotas || []}
+          total={
+            resumen.totalPagado +
+            (prestamo.cuotas || [])
+              .filter((c) => c.estado === 'pendiente')
+              .reduce((s, c) => s + c.monto, 0)
+          }
+        />
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-navy-300">
-          Historial de cobros ({cobros.length})
-        </h2>
+        <h2 className="section-label">Historial de cobros ({cobros.length})</h2>
         {cobros.length === 0 ? (
-          <Card className="flex flex-col items-center gap-2 p-8 text-center">
-            <Receipt className="h-6 w-6 text-slate-400 dark:text-navy-300" />
-            <p className="text-sm font-medium text-navy-700 dark:text-navy-100">
-              Aún no hay cobros registrados
-            </p>
-            <p className="text-xs text-slate-500 dark:text-navy-300">
-              Tocá "Registrar cobro" para empezar.
-            </p>
-          </Card>
+          <EmptyState
+            icon={Receipt}
+            title="Aún no hay cobros registrados"
+            description='Tocá "Registrar cobro" para empezar.'
+          />
         ) : (
           <Card className="divide-y divide-slate-100 p-0 dark:divide-navy-700/60">
             {cobros.map((c) => {
               const tipoMeta = COBRO_TIPO_META[c.tipo] || COBRO_TIPO_META.interes;
               return (
                 <div key={c.id} className="flex items-center gap-3 p-4">
-                  <div
-                    className={clsx(
-                      'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl',
-                      c.tipo === 'capital'
-                        ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300'
-                        : 'bg-gold-50 text-gold-600 dark:bg-gold-500/10 dark:text-gold-300',
-                    )}
-                  >
-                    <ArrowDownCircle className="h-4 w-4" />
-                  </div>
+                  <IconBox icon={ArrowDownCircle} tone={tipoMeta.iconTone} size="sm" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-semibold text-navy-900 dark:text-white">
@@ -315,11 +333,11 @@ export function PrestamoDetalle({ onNavigate, params }) {
                       </p>
                       <Badge tone={tipoMeta.tone}>{tipoMeta.label}</Badge>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-navy-300">
+                    <p className="text-xs text-neutral-500 dark:text-navy-300">
                       Cuota #{c.cuota_numero} · {formatDateTime(c.fecha)}
                     </p>
                     {c.nota && (
-                      <p className="mt-1 text-xs text-slate-600 dark:text-navy-300">
+                      <p className="mt-1 text-xs text-neutral-600 dark:text-navy-300">
                         "{c.nota}"
                       </p>
                     )}
@@ -360,27 +378,17 @@ export function PrestamoDetalle({ onNavigate, params }) {
 }
 
 function KpiTile({ icon: Icon, label, value, sub, tone }) {
-  const tones = {
-    navy: 'bg-navy-50 text-navy-700 dark:bg-navy-700/50 dark:text-navy-100',
-    gold: 'bg-gold-50 text-gold-600 dark:bg-gold-500/10 dark:text-gold-300',
-    emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300',
-    sky: 'bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300',
-    rose: 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300',
-  };
+  const toneMap = { navy: 'navy', gold: 'gold', emerald: 'emerald', sky: 'sky', rose: 'rose' };
   return (
-    <Card className="p-3 sm:p-4">
+    <Card padding="sm" hover>
       <div className="flex items-start gap-3">
-        <div className={clsx('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', tones[tone] || tones.gold)}>
-          <Icon className="h-4 w-4" />
-        </div>
+        <IconBox icon={Icon} tone={toneMap[tone] || 'gold'} size="md" />
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-navy-300">
-            {label}
-          </p>
+          <p className="section-label">{label}</p>
           <p className="mt-0.5 text-base font-bold tabular-nums text-navy-900 dark:text-white sm:text-lg">
             {value}
           </p>
-          {sub && <p className="mt-0.5 text-[10px] text-slate-500 dark:text-navy-300">{sub}</p>}
+          {sub && <p className="mt-0.5 text-[10px] text-neutral-500 dark:text-navy-300">{sub}</p>}
         </div>
       </div>
     </Card>

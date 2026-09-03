@@ -1,9 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Plus, MapPin, Phone, Wallet, TrendingUp, AlertTriangle, Loader2 } from 'lucide-react';
-import clsx from 'clsx';
+import React from 'react';
+import { useEffect, useState } from 'react';
+import { ArrowLeft, Plus, MapPin, Phone, Wallet, TrendingUp, AlertTriangle } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
+import { Avatar } from '../../../components/ui/Avatar';
+import { Button } from '../../../components/ui/Button';
+import { EmptyState } from '../../../components/ui/EmptyState';
+import { IconBox } from '../../../components/ui/IconBox';
+import { Skeleton } from '../../../components/ui/Skeleton';
 import { formatPhoneCR } from '../../../lib/format';
-import { colorFor } from '../../../lib/color';
 import { useDataChange } from '../../../lib/hooks/useDataChange';
 import { showToast } from '../../../components/ui/Toast';
 import * as clientesService from '../../../services/clientes';
@@ -37,36 +41,54 @@ export function ClienteDetalle({ onNavigate, params }) {
       }
     }
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [clienteId]);
 
   useDataChange(() => {
     clientesService.getById(clienteId).then(setCliente);
   });
 
-  const stats = useMemo(() => statsCliente(clienteId), [clienteId]);
+  const [stats, setStats] = useState({ total: 0, vigentes: 0, atrasados: 0, cancelados: 0 });
+  useEffect(() => {
+    let cancelled = false;
+    statsCliente(clienteId)
+      .then((s) => {
+        if (!cancelled) setStats(s);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [clienteId]);
+  useDataChange(() => {
+    statsCliente(clienteId).then(setStats).catch(() => {});
+  });
 
   if (loading) {
     return (
-      <div className="mx-auto flex max-w-2xl items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
+        <Skeleton className="h-10 w-40" />
+        <Skeleton className="h-32 w-full" />
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+        </div>
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-32 w-full" />
       </div>
     );
   }
 
   if (!cliente) {
     return (
-      <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 p-8 text-center">
-        <p className="text-sm text-slate-600 dark:text-navy-300">
-          Cliente no encontrado.
-        </p>
-        <button
-          type="button"
-          onClick={() => onNavigate?.('clientes')}
-          className="rounded-xl bg-gold-gradient px-4 py-2.5 text-sm font-bold text-navy-900 shadow-glow"
-        >
+      <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-4 p-8 text-center">
+        <p className="text-sm text-neutral-600 dark:text-navy-300">Cliente no encontrado.</p>
+        <Button variant="primary" onClick={() => onNavigate?.('clientes')}>
           Volver a Clientes
-        </button>
+        </Button>
       </div>
     );
   }
@@ -98,54 +120,40 @@ export function ClienteDetalle({ onNavigate, params }) {
   }
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-5 sm:gap-6">
-      <button
-        type="button"
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
+      <Button
+        variant="ghost"
+        size="sm"
+        icon={ArrowLeft}
         onClick={() => onNavigate?.('clientes')}
-        className={clsx(
-          'inline-flex w-fit items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-semibold transition-colors',
-          'text-navy-700 hover:bg-slate-100',
-          'dark:text-navy-100 dark:hover:bg-navy-800',
-        )}
+        className="!w-fit"
       >
-        <ArrowLeft className="h-4 w-4" />
         Volver a Clientes
-      </button>
+      </Button>
 
-      <Card className="relative overflow-hidden p-5 sm:p-6">
+      <Card className="relative overflow-hidden p-0">
         <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-gold-200/40 blur-3xl dark:bg-gold-500/10" />
-        <div className="relative">
+        <div className="relative p-5 sm:p-6">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div
-                className="flex h-12 w-12 items-center justify-center rounded-2xl"
-                style={{ backgroundColor: colorFor(clienteId), color: '#fff' }}
-              >
-                <span className="text-base font-bold">
-                  {cliente.nombre
-                    .split(' ')
-                    .map((s) => s[0])
-                    .filter(Boolean)
-                    .slice(0, 2)
-                    .join('')
-                    .toUpperCase()}
-                </span>
-              </div>
+              <Avatar nombre={cliente.nombre} size="lg" />
               <div>
-                <h1 className="text-xl font-bold text-navy-900 sm:text-2xl dark:text-white">
+                <h1 className="text-xl font-extrabold tracking-tight text-navy-900 sm:text-2xl dark:text-white">
                   {cliente.nombre}
                 </h1>
-                <p className="text-sm text-slate-600 dark:text-navy-300">{cliente.cedula}</p>
+                <p className="text-sm text-neutral-600 dark:text-navy-300">{cliente.cedula}</p>
               </div>
             </div>
           </div>
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 dark:bg-navy-700/50">
-              <Phone className="h-4 w-4 shrink-0 text-slate-400 dark:text-navy-300" />
-              <span className="text-sm text-navy-900 dark:text-white">{formatPhoneCR(cliente.telefono)}</span>
+            <div className="flex items-center gap-2 rounded-input bg-slate-50 px-3 py-2 dark:bg-navy-700/50">
+              <IconBox icon={Phone} tone="neutral" size="sm" />
+              <span className="text-sm text-navy-900 dark:text-white">
+                {formatPhoneCR(cliente.telefono)}
+              </span>
             </div>
-            <div className="flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2 dark:bg-navy-700/50">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-400 dark:text-navy-300" />
+            <div className="flex items-start gap-2 rounded-input bg-slate-50 px-3 py-2 dark:bg-navy-700/50">
+              <IconBox icon={MapPin} tone="neutral" size="sm" />
               <span className="text-sm text-navy-900 dark:text-white">{cliente.direccion}</span>
             </div>
           </div>
@@ -154,12 +162,7 @@ export function ClienteDetalle({ onNavigate, params }) {
 
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <StatTile icon={Wallet} label="Préstamos" value={stats.total} tone="navy" />
-        <StatTile
-          icon={TrendingUp}
-          label="Vigentes"
-          value={stats.vigentes}
-          tone="emerald"
-        />
+        <StatTile icon={TrendingUp} label="Vigentes" value={stats.vigentes} tone="emerald" />
         <StatTile
           icon={AlertTriangle}
           label="Atrasados"
@@ -168,29 +171,24 @@ export function ClienteDetalle({ onNavigate, params }) {
         />
       </div>
 
-      <button
-        type="button"
+      <Button
+        variant="primary"
+        size="lg"
+        icon={Plus}
         onClick={() => onNavigate?.('registrar-prestamo', { clienteId })}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gold-gradient px-4 py-3.5 text-sm font-bold text-navy-900 shadow-glow transition-transform hover:scale-[1.01] active:scale-[0.99] sm:text-base"
+        fullWidth
       >
-        <Plus className="h-5 w-5" />
         Registrar préstamo
-      </button>
+      </Button>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-navy-300">
-          Préstamos del cliente
-        </h2>
+        <h2 className="section-label">Préstamos del cliente</h2>
         {prestamos.length === 0 ? (
-          <Card className="flex flex-col items-center gap-3 p-8 text-center">
-            <Wallet className="h-6 w-6 text-slate-400 dark:text-navy-300" />
-            <p className="text-sm font-medium text-navy-700 dark:text-navy-100">
-              Este cliente aún no tiene préstamos
-            </p>
-            <p className="text-xs text-slate-500 dark:text-navy-300">
-              Tocá "Registrar préstamo" para crear el primero.
-            </p>
-          </Card>
+          <EmptyState
+            icon={Wallet}
+            title="Este cliente aún no tiene préstamos"
+            description="Tocá 'Registrar préstamo' para crear el primero."
+          />
         ) : (
           <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {prestamos.map((p) => (
@@ -229,24 +227,18 @@ export function ClienteDetalle({ onNavigate, params }) {
 
 function StatTile({ icon: Icon, label, value, tone }) {
   const tones = {
-    navy: 'bg-navy-50 text-navy-700 dark:bg-navy-700/50 dark:text-navy-100',
-    emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300',
-    rose: 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300',
-    slate: 'bg-slate-100 text-slate-500 dark:bg-navy-700 dark:text-navy-300',
+    navy: 'navy',
+    emerald: 'emerald',
+    rose: 'rose',
+    slate: 'neutral',
   };
   return (
-    <Card className="p-3 sm:p-4">
+    <Card padding="sm" hover>
       <div className="flex items-center gap-3">
-        <div className={clsx('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', tones[tone])}>
-          <Icon className="h-4 w-4" />
-        </div>
+        <IconBox icon={Icon} tone={tones[tone]} size="md" />
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-navy-300">
-            {label}
-          </p>
-          <p className="text-xl font-bold tabular-nums text-navy-900 dark:text-white">
-            {value}
-          </p>
+          <p className="section-label">{label}</p>
+          <p className="text-xl font-bold tabular-nums text-navy-900 dark:text-white">{value}</p>
         </div>
       </div>
     </Card>

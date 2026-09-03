@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { Eye, EyeOff, Calendar, CheckCircle2 } from 'lucide-react';
 import { Card } from '../../../../components/ui/Card';
 import { Avatar } from '../../../../components/ui/Avatar';
+import { Button } from '../../../../components/ui/Button';
+import { IconBox } from '../../../../components/ui/IconBox';
 import { formatCRC, formatDate } from '../../../../lib/format';
 import { firstCuotaDate, nextCuotaDate } from '../../../../lib/dates';
 import { labelPeriodo, cuotaDelPeriodo, totalIntereses, totalAPagar } from '../../selectors';
@@ -29,7 +31,7 @@ function buildCuotas({ fechaInicio, periodo, nCuotas, monto, tasa }) {
 function Row({ label, value }) {
   return (
     <div className="flex items-start justify-between gap-2 border-b border-slate-100 py-2 last:border-0 dark:border-navy-700/60">
-      <span className="text-xs font-medium text-slate-500 dark:text-navy-300">{label}</span>
+      <span className="text-xs font-medium text-neutral-500 dark:text-navy-300">{label}</span>
       <span className="text-right text-sm font-semibold text-navy-900 dark:text-white">{value}</span>
     </div>
   );
@@ -61,12 +63,10 @@ export function Step5Resumen({ values, cliente }) {
   return (
     <div className="space-y-5">
       <header className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300">
-          <CheckCircle2 className="h-5 w-5" />
-        </div>
+        <IconBox icon={CheckCircle2} tone="emerald" size="md" />
         <div>
           <h2 className="text-lg font-bold text-navy-900 dark:text-white">Resumen</h2>
-          <p className="text-xs text-slate-500 dark:text-navy-300">
+          <p className="text-xs text-neutral-500 dark:text-navy-300">
             Revisá los datos antes de guardar.
           </p>
         </div>
@@ -80,9 +80,7 @@ export function Step5Resumen({ values, cliente }) {
               <p className="truncate text-sm font-semibold text-navy-900 dark:text-white">
                 {cliente.nombre}
               </p>
-              <p className="truncate text-xs text-slate-500 dark:text-navy-300">
-                {cliente.cedula}
-              </p>
+              <p className="truncate text-xs text-neutral-500 dark:text-navy-300">{cliente.cedula}</p>
             </div>
           </div>
         )}
@@ -103,15 +101,15 @@ export function Step5Resumen({ values, cliente }) {
         )}
       </Card>
 
-      <button
-        type="button"
+      <Button
+        variant="secondary"
+        icon={showCalendar ? EyeOff : Eye}
+        iconRight={Calendar}
         onClick={() => setShowCalendar((v) => !v)}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-navy-700 transition-colors hover:bg-slate-50 dark:border-navy-700 dark:bg-navy-800 dark:text-navy-100 dark:hover:bg-navy-700"
+        fullWidth
       >
-        {showCalendar ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         {showCalendar ? 'Ocultar' : 'Ver'} calendario de cuotas
-        <Calendar className="h-4 w-4" />
-      </button>
+      </Button>
 
       {showCalendar && prestamoPreview.cuotas.length > 0 && (
         <PrestamoCalendar cuotas={prestamoPreview.cuotas} total={totalInt} />

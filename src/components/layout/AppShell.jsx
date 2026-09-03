@@ -1,11 +1,11 @@
 import React from 'react';
 import { Suspense, useCallback, useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { TopBar } from './TopBar';
 import { Sidebar } from './Sidebar';
 import { MobileBottomNav } from './MobileBottomNav';
 import { PlaceholderPage } from '../ui/PlaceholderPage';
+import { Spinner } from '../ui/Spinner';
 import { getTheme, setTheme } from '../../services/theme';
 import * as notificacionesService from '../../services/notificaciones';
 import { onDataChanged } from '../../lib/events';
@@ -14,7 +14,7 @@ import { useAuth } from '../../features/auth/useAuth';
 function PageSkeleton() {
   return (
     <div className="flex min-h-[40vh] items-center justify-center">
-      <Loader2 className="h-6 w-6 animate-spin text-gold-500" />
+      <Spinner size="lg" tone="gold" />
     </div>
   );
 }
@@ -58,7 +58,7 @@ export function AppShell({ pages = {} }) {
   const PageComponent = pages[page];
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-navy-800 dark:bg-navy-900 dark:text-navy-100">
+    <div className="flex min-h-screen bg-neutral-50 text-navy-800 dark:bg-navy-900 dark:text-navy-100">
       <Sidebar
         open={sidebarOpen}
         page={page}
@@ -66,7 +66,7 @@ export function AppShell({ pages = {} }) {
         onClose={handleCloseSidebar}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col lg:pl-72">
+      <div className="flex min-w-0 flex-1 flex-col lg:pl-[var(--sidebar-w)]">
         <TopBar
           page={page}
           onNavigate={handleNavigate}
@@ -76,7 +76,11 @@ export function AppShell({ pages = {} }) {
           notificationCount={notificationCount}
         />
 
-        <main className={clsx('flex-1 px-3 pb-28 pt-4 sm:px-5 sm:pt-6 lg:pb-10')}>
+        <main
+          className={clsx(
+            'mx-auto w-full max-w-6xl flex-1 px-3 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4 sm:px-5 sm:pt-6 lg:pb-10',
+          )}
+        >
           {PageComponent ? (
             <Suspense fallback={<PageSkeleton />}>
               <PageComponent onNavigate={handleNavigate} params={params} />
@@ -90,11 +94,15 @@ export function AppShell({ pages = {} }) {
 
         <div
           aria-hidden="true"
-          className="hidden border-t border-slate-200 bg-white px-5 py-3 text-xs text-slate-500 dark:border-navy-700 dark:bg-navy-900 dark:text-navy-300 lg:block"
+          className="hidden border-t border-slate-200 bg-white px-5 py-3 text-xs text-neutral-500 dark:border-navy-700 dark:bg-navy-900 dark:text-navy-300 lg:block"
         >
           <div className="mx-auto flex max-w-6xl items-center justify-between">
             <span>
-              Sesión activa: <strong className="text-navy-700 dark:text-navy-100">{profile?.full_name || '—'}</strong> · {currentOrg?.rol || 'miembro'}
+              Sesión activa:{' '}
+              <strong className="text-navy-700 dark:text-navy-100">
+                {profile?.full_name || '—'}
+              </strong>{' '}
+              · {currentOrg?.rol || 'miembro'}
             </span>
             <span>Préstamos Mi Príncipe · v1.0.0</span>
           </div>

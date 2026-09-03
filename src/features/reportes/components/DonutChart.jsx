@@ -1,4 +1,5 @@
-export function DonutChart({ data, total, size = 180 }) {
+import React from 'react';
+export function DonutChart({ data, total, size = 180, colorMap }) {
   const radius = size / 2 - 20;
   const circumference = 2 * Math.PI * radius;
   const cx = size / 2;
@@ -9,8 +10,10 @@ export function DonutChart({ data, total, size = 180 }) {
       <div
         className="flex items-center justify-center rounded-full border-2 border-dashed border-slate-200 dark:border-navy-700"
         style={{ width: size, height: size }}
+        role="img"
+        aria-label="Sin datos"
       >
-        <p className="text-xs text-slate-400 dark:text-navy-300">Sin datos</p>
+        <p className="text-xs text-neutral-400 dark:text-navy-300">Sin datos</p>
       </div>
     );
   }
@@ -24,14 +27,20 @@ export function DonutChart({ data, total, size = 180 }) {
   }
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      role="img"
+      aria-label="Gráfico de dona"
+    >
       <g transform={`translate(${cx}, ${cy}) rotate(-90)`}>
         {segments.map((d, i) => (
           <circle
             key={d.label + i}
             r={radius}
             fill="none"
-            stroke={d.color}
+            stroke={colorMap?.[d.label] || d.color}
             strokeWidth="20"
             strokeDasharray={`${d.length} ${circumference - d.length}`}
             strokeDashoffset={-d.offset}

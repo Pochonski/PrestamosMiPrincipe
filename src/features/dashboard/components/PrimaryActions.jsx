@@ -1,3 +1,4 @@
+import React from 'react';
 import { PlusCircle, HandCoins, Database, ClipboardList } from 'lucide-react';
 import { ActionTile } from '../../../components/ui/ActionTile';
 

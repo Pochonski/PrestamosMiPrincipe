@@ -1,15 +1,15 @@
+import React from 'react';
+import clsx from 'clsx';
 import { formatCRC } from '../../../lib/format';
 
 const CHART_HEIGHT = 220;
 const PADDING_TOP = 28;
 const PADDING_BOTTOM = 28;
 
-export function BarChart({ data, height = CHART_HEIGHT }) {
+export function BarChart({ data, height = CHART_HEIGHT, colorClass = 'fill-gold-400' }) {
   if (!data || data.length === 0) {
     return (
-      <p className="py-10 text-center text-sm text-slate-500 dark:text-navy-300">
-        Sin datos.
-      </p>
+      <p className="py-10 text-center text-sm text-neutral-500 dark:text-navy-300">Sin datos.</p>
     );
   }
 
@@ -26,6 +26,8 @@ export function BarChart({ data, height = CHART_HEIGHT }) {
       viewBox={`0 0 ${W} ${H}`}
       preserveAspectRatio="xMidYMid meet"
       className="h-56 w-full"
+      role="img"
+      aria-label="Gráfico de barras"
     >
       <line
         x1="0"
@@ -48,7 +50,7 @@ export function BarChart({ data, height = CHART_HEIGHT }) {
               width={barW}
               height={barH}
               rx="3"
-              fill="#D4AF37"
+              className={clsx(colorClass)}
             />
             {d.value > 0 && (
               <text

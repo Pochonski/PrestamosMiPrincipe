@@ -11,7 +11,7 @@ function idleCallback(timeout = 1000) {
   return (fn) => setTimeout(fn, 0);
 }
 
-function chunkedQuery(table, builder, chunkSize = 1000) {
+export function chunkedQuery(table, builder, chunkSize = 1000) {
   return async function* () {
     let offset = 0;
     while (true) {

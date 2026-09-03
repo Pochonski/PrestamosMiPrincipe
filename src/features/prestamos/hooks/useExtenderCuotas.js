@@ -49,12 +49,13 @@ function nextCuotaDate(prev, periodo) {
 
 function buildPreviewCuotas(prestamo, nCuotas) {
   if (!prestamo || !nCuotas) return [];
+  const cuotas = prestamo.cuotas || [];
   const saldo = prestamosService.getSaldoCapital(prestamo);
   const cuotaMonto = Math.round((saldo * Number(prestamo.tasa)) / 100);
-  const ultima = prestamo.cuotas[prestamo.cuotas.length - 1];
+  const ultima = cuotas[cuotas.length - 1];
   if (!ultima) return [];
   let cursor = parseLocalDateValue(ultima.fecha);
-  const baseNumero = prestamo.cuotas.length;
+  const baseNumero = cuotas.length;
   const out = [];
   for (let i = 0; i < Number(nCuotas); i++) {
     cursor = nextCuotaDate(cursor, prestamo.periodo);

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { Loader2, Users } from 'lucide-react';
+import { Users } from 'lucide-react';
+import { Skeleton } from '../../components/ui/Skeleton';
 import { SectionTitle } from '../../components/ui/SectionTitle';
 import { StatCard } from '../../components/ui/StatCard';
 import { ClienteSearch } from './components/ClienteSearch';
@@ -13,10 +14,12 @@ import { useClientes } from './hooks/useClientes';
 import {
   ClienteTienePrestamosError,
   remove as removeCliente,
+  create as createCliente,
 } from '../../services/clientes';
 
 export function ClientesPage({ onNavigate, params }) {
-  const { clientes, query, setQuery, loading, hasMore, loadingMore, loadMore, PAGE_SIZE } = useClientes();
+  const { clientes, query, setQuery, loading, hasMore, loadingMore, loadMore, PAGE_SIZE } =
+    useClientes();
   const [formMode, setFormMode] = useState(null);
   const [toDelete, setToDelete] = useState(null);
 
@@ -41,10 +44,7 @@ export function ClientesPage({ onNavigate, params }) {
 
   async function handleSaved() {
     const isEdit = formMode?.type === 'edit';
-    showToast(
-      isEdit ? 'Cambios guardados correctamente' : 'Cliente creado correctamente',
-      'success',
-    );
+    showToast(isEdit ? 'Cambios guardados correctamente' : 'Cliente creado correctamente', 'success');
     closeForm();
   }
 
@@ -58,7 +58,7 @@ export function ClientesPage({ onNavigate, params }) {
         duration: 8000,
         onClick: async () => {
           try {
-            await clientesService.create({
+            await createCliente({
               nombre: backup.nombre,
               cedula: backup.cedula,
               telefono: backup.telefono,
@@ -97,25 +97,29 @@ export function ClientesPage({ onNavigate, params }) {
 
   if (loading) {
     return (
-      <div className="mx-auto flex max-w-6xl items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-12 w-full" />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-28 w-full" />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-5 sm:gap-6">
-      <section>
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
+      <section className="space-y-2">
         <SectionTitle title="Resumen" />
-        <div className="mt-3">
-          <StatCard
-            label="Clientes registrados"
-            value={clientes.length}
-            sub="Total en cartera"
-            icon={Users}
-            tone="gold"
-          />
-        </div>
+        <StatCard
+          label="Clientes registrados"
+          value={clientes.length}
+          sub="Total en cartera"
+          icon={Users}
+          tone="gold"
+        />
       </section>
 
       <section className="space-y-3">
@@ -152,11 +156,7 @@ export function ClientesPage({ onNavigate, params }) {
       )}
 
       {toDelete && (
-        <DeleteConfirm
-          cliente={toDelete}
-          onConfirm={confirmDelete}
-          onCancel={() => setToDelete(null)}
-        />
+        <DeleteConfirm cliente={toDelete} onConfirm={confirmDelete} onCancel={() => setToDelete(null)} />
       )}
     </div>
   );

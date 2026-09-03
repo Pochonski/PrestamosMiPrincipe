@@ -88,10 +88,10 @@ export async function downloadCSVChunked(filename, items, columns) {
 
     const writeNext = (deadline) => {
       try {
-        const until = (deadline?.timeRemaining?.() ?? 50) > 0 ? deadline.timeRemaining() : 0;
+        const until = deadline?.timeRemaining?.() ?? 50;
         const start = performance.now();
         while (i < items.length && (performance.now() - start < until || i % BATCH === 0)) {
-          const row = items[i].map((c) => escapeCSV(items[i][c.key])).join(',');
+          const row = columns.map((c) => escapeCSV(items[i][c.key])).join(',');
           parts.push(row + '\n');
           i++;
           if (i % BATCH === 0) break;

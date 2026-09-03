@@ -1,6 +1,8 @@
+import React from 'react';
 import { AlertTriangle, HandCoins, Info, Bell, Circle } from 'lucide-react';
 import clsx from 'clsx';
 import { Card } from '../../../components/ui/Card';
+import { IconBox } from '../../../components/ui/IconBox';
 import { getTipoMeta, formatFechaRelativa } from '../selectors';
 
 const ICONS = {
@@ -10,30 +12,29 @@ const ICONS = {
   Bell,
 };
 
+const TONE_MAP = {
+  danger: 'rose',
+  success: 'emerald',
+  info: 'sky',
+  neutral: 'neutral',
+};
+
 export function NotificacionItem({ item, onClick }) {
   const meta = getTipoMeta(item.tipo);
   const Icon = ICONS[meta.icon] || Bell;
 
   return (
     <Card
+      interactive
+      padding="md"
       className={clsx(
-        'cursor-pointer p-4 transition-all hover:shadow-cardHover sm:p-5',
+        'p-4 sm:p-5',
         !item.leida && 'border-l-4 border-l-gold-400 bg-gold-50/40 dark:bg-gold-500/5',
       )}
       onClick={() => onClick?.(item)}
     >
       <div className="flex items-start gap-3">
-        <div
-          className={clsx(
-            'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
-            meta.tone === 'danger' && 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300',
-            meta.tone === 'success' && 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300',
-            meta.tone === 'info' && 'bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300',
-            meta.tone === 'neutral' && 'bg-slate-100 text-slate-600 dark:bg-navy-700 dark:text-navy-200',
-          )}
-        >
-          <Icon className="h-5 w-5" />
-        </div>
+        <IconBox icon={Icon} tone={TONE_MAP[meta.tone] || 'neutral'} size="md" />
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
@@ -46,21 +47,26 @@ export function NotificacionItem({ item, onClick }) {
               {item.titulo}
             </p>
             {!item.leida && (
-              <Circle
-                className="h-2 w-2 shrink-0 fill-gold-500 text-gold-500"
-                aria-label="No leída"
-              />
+              <span
+                className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-gold-700 dark:text-gold-300"
+              >
+                <Circle
+                  className="h-2 w-2 shrink-0 fill-gold-500 text-gold-500"
+                  aria-hidden="true"
+                />
+                <span>Nueva</span>
+              </span>
             )}
           </div>
           <p
             className={clsx(
               'mt-0.5 text-xs',
-              item.leida ? 'text-slate-500 dark:text-navy-300' : 'text-slate-700 dark:text-navy-100',
+              item.leida ? 'text-neutral-500 dark:text-navy-300' : 'text-neutral-700 dark:text-navy-100',
             )}
           >
             {item.mensaje}
           </p>
-          <p className="mt-1 text-[10px] text-slate-400 dark:text-navy-300">
+          <p className="mt-1 text-[10px] text-neutral-400 dark:text-navy-300">
             {formatFechaRelativa(item.fecha)}
           </p>
         </div>

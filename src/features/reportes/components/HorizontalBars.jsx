@@ -1,3 +1,4 @@
+import React from 'react';
 export function HorizontalBars({ data, max }) {
   if (!data || data.length === 0) {
     return null;
@@ -7,7 +8,7 @@ export function HorizontalBars({ data, max }) {
   return (
     <ul className="space-y-3">
       {data.map((d, i) => {
-        const pct = Math.round((d.value / maxValue) * 100);
+        const pct = Math.max(0, Math.min(100, Math.round((d.value / maxValue) * 100)));
         return (
           <li key={d.label + i} className="space-y-1">
             <div className="flex items-center justify-between text-xs">
@@ -22,6 +23,10 @@ export function HorizontalBars({ data, max }) {
               <div
                 className="absolute inset-y-0 left-0 rounded-full bg-gold-gradient"
                 style={{ width: `${pct}%` }}
+                role="progressbar"
+                aria-valuenow={pct}
+                aria-valuemin={0}
+                aria-valuemax={100}
               />
             </div>
           </li>
