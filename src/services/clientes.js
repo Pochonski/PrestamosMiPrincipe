@@ -70,7 +70,7 @@ export async function create({ nombre, cedula, telefono, direccion }) {
     .select()
     .single();
   throwIfError(error, 'clientes.create', { payload });
-  emitDataChanged();
+  emitDataChanged('clientes');
   return data;
 }
 
@@ -91,7 +91,7 @@ export async function update(id, patch) {
     .select()
     .single();
   throwIfError(error, 'clientes.update', { id, payload });
-  emitDataChanged();
+  emitDataChanged('clientes');
   return data;
 }
 
@@ -103,7 +103,7 @@ export async function remove(id) {
   const orgId = await getOrgId();
   const { error } = await supabase.from('clientes').delete().eq('id', id).eq('org_id', orgId);
   throwIfError(error, 'clientes.remove', { id });
-  emitDataChanged();
+  emitDataChanged('clientes');
   return true;
 }
 

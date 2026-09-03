@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useQueries } from '@tanstack/react-query';
 import * as prestamosService from '../../services/prestamos';
 import * as clientesService from '../../services/clientes';
-import { useTickOnDataChange } from '../../lib/hooks/useAsyncResource';
 
 export function getCobrarHoyDetalle() {
   return prestamosService.cobrarHoy().then((items) =>
@@ -21,32 +20,23 @@ export function getResumenCobrarHoy() {
 }
 
 export function useCobrarHoy() {
-  const tick = useTickOnDataChange();
-  const [state, setState] = useState({ items: [], resumen: null, loading: true });
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const [items, resumen, clientes] = await Promise.all([
-          getCobrarHoyDetalle(),
-          getResumenCobrarHoy(),
-          clientesService.list(),
-        ]);
-        const clienteById = new Map(clientes.map((c) => [c.id, c]));
-        const filtered = items
-          .map((x) => ({ ...x, cliente: clienteById.get(x.clienteId) || null }))
-          .filter((x) => x.cliente);
-        if (!cancelled) {
-          setState({ items: filtered, resumen, loading: false });
-        }
-      } catch {
-        if (!cancelled) setState({ items: [], resumen: null, loading: false });
-      }
-    }
-    load();
-    return () => { cancelled = true; };
-  }, [tick]);
-
-  return state;
+  const results = useQueries({
+    queries: [
+      { queryKey: ['cobrarHoy', 'detalle'], queryFn: getCobrarHoyDetalle, staleTime: 30_000 },
+      { queryKey: ['cobrarHoy', 'resumen'], queryFn: getResumenCobrarHoy, staleTime: 30_000 },
+      { queryKey: ['clientes', 'all'], queryFn: () => clientesService.list({ limit: 500, offset: 0 }), staleTime: 60_000 },
+    ],
+  });
+  const [itemsQ, resumenQ, clientesQ] = results;
+  const clientes = clientesQ.data || [];
+  const items = itemsQ.data || [];
+  const enriched = items
+    .map((x) => ({ ...x, cliente: clientes.find((c) => c.id === x.clienteId) || null }))
+    .filter((x) => x.cliente);
+  const loading = results.some((r) => r.isLoading) && !itemsQ.data;
+  return {
+    items: enriched,
+    resumen: resumenQ.data || null,
+    loading,
+  };
 }

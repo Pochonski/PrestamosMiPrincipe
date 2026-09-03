@@ -306,7 +306,7 @@ export async function extenderCuotas(prestamoId, nCuotas) {
   });
   if (error) throw error;
 
-  emitDataChanged();
+  emitDataChanged('prestamos');
   return await getById(prestamoId);
 }
 
@@ -345,9 +345,8 @@ export async function update(id, patch) {
     .select()
     .single();
   throwIfError(error, 'prestamos.update', { id, patch: updateObj });
-  emitDataChanged();
-  const normalized = normalizePrestamo(data);
-  return hydrateOne(normalized);
+  emitDataChanged('prestamos');
+  return normalizePrestamo(data);
 }
 
 export async function remove(id) {
@@ -385,7 +384,7 @@ export async function remove(id) {
     .eq('id', id)
     .eq('org_id', orgId);
   throwIfError(error, 'prestamos.remove', { id });
-  emitDataChanged();
+  emitDataChanged('prestamos');
   return true;
 }
 

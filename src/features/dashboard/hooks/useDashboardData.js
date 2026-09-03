@@ -1,53 +1,30 @@
-import { useEffect, useState } from 'react';
+import { useQueries } from '@tanstack/react-query';
 import { getKpis, getQuickBadges, getRecentActivity } from '../selectors';
-import { useDataChange } from '../../../lib/hooks/useDataChange';
+
+const EMPTY_KPIS = {
+  totalClientes: 0, prestamosActivos: 0, totalCobradoHoy: 0,
+  cobrosHoyCount: 0, totalAtrasado: 0, carteraActiva: 0,
+  cobrosMes: 0, cancelados30: 0, cantidadCobrarHoy: 0,
+};
+const EMPTY_BADGES = { notificaciones: 0, atrasados: 0, cobrarHoy: 0 };
+const EMPTY_RECENT = [];
 
 export function useDashboardData() {
-  const [tick, setTick] = useState(0);
-  const [state, setState] = useState({ data: null, loading: true });
+  const results = useQueries({
+    queries: [
+      { queryKey: ['dashboard', 'kpis'], queryFn: getKpis, staleTime: 30_000 },
+      { queryKey: ['dashboard', 'badges'], queryFn: getQuickBadges, staleTime: 30_000 },
+      { queryKey: ['dashboard', 'recent'], queryFn: () => getRecentActivity(6), staleTime: 30_000 },
+    ],
+  });
 
-  useDataChange(() => setTick((t) => t + 1));
+  const [kpisQ, badgesQ, recentQ] = results;
+  const loading = results.some((r) => r.isLoading) && !results.some((r) => r.data);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const [kpis, badges, recent] = await Promise.all([
-          getKpis(),
-          getQuickBadges(),
-          getRecentActivity(),
-        ]);
-        if (!cancelled) {
-          setState({ data: { kpis, badges, recent }, loading: false });
-        }
-      } catch {
-        if (!cancelled) setState({ data: null, loading: false });
-      }
-    }
-    load();
-    return () => { cancelled = true; };
-  }, [tick]);
-
-  if (state.loading && !state.data) {
-    return {
-      kpis: {
-        totalClientes: 0, prestamosActivos: 0, totalCobradoHoy: 0,
-        cobrosHoyCount: 0, totalAtrasado: 0, carteraActiva: 0,
-        cobrosMes: 0, cancelados30: 0, cantidadCobrarHoy: 0,
-      },
-      badges: { notificaciones: 0, atrasados: 0, cobrarHoy: 0 },
-      recent: [],
-      loading: true,
-    };
-  }
-  return state.data || {
-    kpis: {
-      totalClientes: 0, prestamosActivos: 0, totalCobradoHoy: 0,
-      cobrosHoyCount: 0, totalAtrasado: 0, carteraActiva: 0,
-      cobrosMes: 0, cancelados30: 0, cantidadCobrarHoy: 0,
-    },
-    badges: { notificaciones: 0, atrasados: 0, cobrarHoy: 0 },
-    recent: [],
-    loading: false,
+  return {
+    kpis: kpisQ.data || EMPTY_KPIS,
+    badges: badgesQ.data || EMPTY_BADGES,
+    recent: recentQ.data || EMPTY_RECENT,
+    loading,
   };
 }

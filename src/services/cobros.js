@@ -167,6 +167,6 @@ export async function create({ prestamoId, cuotaNumero, monto, tipo, incluirInte
     throwIfError(error, 'cobros.create', { prestamoId, cuotaNumero, monto, tipo });
   }
   if (!data) throw new Error('No se creó el cobro');
-  emitDataChanged();
+  emitDataChanged('cobros');
   return await getById(data);
 }

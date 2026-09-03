@@ -1,12 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useQueries } from '@tanstack/react-query';
 import * as prestamosService from '../../services/prestamos';
 import * as clientesService from '../../services/clientes';
-import { useTickOnDataChange } from '../../lib/hooks/useAsyncResource';
 
 export async function getAtrasadosDetallado() {
   const [items, clientes] = await Promise.all([
     prestamosService.cuotasAtrasadas(),
-    clientesService.list(),
+    clientesService.list({ limit: 500, offset: 0 }),
   ]);
   const clienteById = new Map(clientes.map((c) => [c.id, c]));
   const rows = items
@@ -29,25 +28,17 @@ export function getResumenAtrasados() {
 }
 
 export function useAtrasados() {
-  const tick = useTickOnDataChange();
-  const [state, setState] = useState({ items: [], resumen: null, loading: true });
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const [items, resumen] = await Promise.all([
-          getAtrasadosDetallado(),
-          getResumenAtrasados(),
-        ]);
-        if (!cancelled) setState({ items, resumen, loading: false });
-      } catch {
-        if (!cancelled) setState({ items: [], resumen: null, loading: false });
-      }
-    }
-    load();
-    return () => { cancelled = true; };
-  }, [tick]);
-
-  return state;
+  const results = useQueries({
+    queries: [
+      { queryKey: ['atrasados', 'detallado'], queryFn: getAtrasadosDetallado, staleTime: 30_000 },
+      { queryKey: ['atrasados', 'resumen'], queryFn: getResumenAtrasados, staleTime: 30_000 },
+    ],
+  });
+  const [itemsQ, resumenQ] = results;
+  const loading = results.some((r) => r.isLoading) && !itemsQ.data;
+  return {
+    items: itemsQ.data || [],
+    resumen: resumenQ.data || null,
+    loading,
+  };
 }

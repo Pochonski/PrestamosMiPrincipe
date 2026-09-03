@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useQueries } from '@tanstack/react-query';
 import * as cobrosService from '../../services/cobros';
 import * as prestamosService from '../../services/prestamos';
-import { onDataChanged } from '../../lib/events';
-import { useTickOnDataChange } from '../../lib/hooks/useAsyncResource';
 
 const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
@@ -52,45 +51,18 @@ export function compute(cobros, prestamos, ahora = new Date()) {
   };
 }
 
-function startOfMonthsAgo(ahora, n) {
-  return new Date(ahora.getFullYear(), ahora.getMonth() - n, 1).toISOString();
-}
-
 export function useReportesData() {
-  const [cobros, setCobros] = useState([]);
-  const [prestamos, setPrestamos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const dataTick = useTickOnDataChange();
+  const results = useQueries({
+    queries: [
+      { queryKey: ['cobros', 'list', { limit: 1000 }], queryFn: () => cobrosService.list({ limit: 1000, offset: 0 }), staleTime: 60_000 },
+      { queryKey: ['prestamos', 'list', { limit: 500 }], queryFn: () => prestamosService.list({ limit: 500, offset: 0 }), staleTime: 60_000 },
+    ],
+  });
 
-  async function load() {
-    setLoading(true);
-    try {
-      const desde = startOfMonthsAgo(new Date(), 6);
-      const [cobs, pres] = await Promise.all([
-        cobrosService.list({ limit: 1000, offset: 0 }),
-        prestamosService.list({ limit: 500, offset: 0 }),
-      ]);
-      setCobros((cobs || []).filter((c) => c.fecha >= desde));
-      setPrestamos(pres || []);
-    } catch {
-      setCobros([]);
-      setPrestamos([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    load();
-  }, [dataTick]);
-
-  useEffect(() => {
-    return onDataChanged(() => {
-      setCobros([]);
-      setPrestamos([]);
-      load();
-    });
-  }, []);
+  const [cobrosQ, prestamosQ] = results;
+  const cobros = cobrosQ.data ?? [];
+  const prestamos = prestamosQ.data ?? [];
+  const loading = results.some((r) => r.isLoading) && !cobrosQ.data;
 
   const data = useMemo(() => compute(cobros, prestamos), [cobros, prestamos]);
 

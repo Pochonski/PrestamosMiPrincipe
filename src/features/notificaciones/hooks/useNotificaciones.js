@@ -1,60 +1,48 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as notifService from '../../../services/notificaciones';
 import { getNotificacionesAgrupadas } from '../selectors';
-import { useDataChange } from '../../../lib/hooks/useDataChange';
 
 export function useNotificaciones() {
-  const [tick, setTick] = useState(0);
-  const [state, setState] = useState({ todas: [], loading: true });
+  const queryClient = useQueryClient();
+  const { data, isLoading } = useQuery({
+    queryKey: ['notificaciones', 'list'],
+    queryFn: notifService.list,
+    staleTime: 30_000,
+  });
 
-  useDataChange(() => setTick((t) => t + 1));
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const list = await notifService.list();
-        if (!cancelled) {
-          setState({
-            todas: list.sort((a, b) => new Date(b.fecha) - new Date(a.fecha)),
-            loading: false,
-          });
-        }
-      } catch {
-        if (!cancelled) setState({ todas: [], loading: false });
-      }
-    }
-    load();
-    return () => { cancelled = true; };
-  }, [tick]);
+  const marcarLeidaMut = useMutation({
+    mutationFn: (id) => notifService.marcarLeida(id),
+    onSuccess: invalidate,
+  });
+  const marcarTodasMut = useMutation({
+    mutationFn: notifService.marcarTodasLeidas,
+    onSuccess: invalidate,
+  });
 
-  const noLeidas = useMemo(() => state.todas.filter((n) => !n.leida), [state.todas]);
-  const total = state.todas.length;
+  const todas = useMemo(
+    () => (data ? [...data].sort((a, b) => new Date(b.fecha) - new Date(a.fecha)) : []),
+    [data],
+  );
+  const noLeidas = useMemo(() => todas.filter((n) => !n.leida), [todas]);
+  const total = todas.length;
   const countNoLeidas = noLeidas.length;
 
   function getAgrupadas(filter) {
-    const source = filter === 'no-leidas' ? noLeidas : state.todas;
+    const source = filter === 'no-leidas' ? noLeidas : todas;
     return getNotificacionesAgrupadas(source);
   }
 
-  async function marcarLeida(id) {
-    await notifService.marcarLeida(id);
-    setTick((t) => t + 1);
-  }
-
-  async function marcarTodas() {
-    await notifService.marcarTodasLeidas();
-    setTick((t) => t + 1);
-  }
-
   return {
-    todas: state.todas,
+    todas,
     noLeidas,
     total,
     countNoLeidas,
-    loading: state.loading,
-    marcarLeida,
-    marcarTodas,
+    loading: isLoading,
+    marcarLeida: (id) => marcarLeidaMut.mutateAsync(id),
+    marcarTodas: () => marcarTodasMut.mutateAsync(),
     getAgrupadas,
   };
 }
