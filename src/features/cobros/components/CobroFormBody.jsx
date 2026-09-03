@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState } from 'react';
 import { Check, Receipt, AlertCircle, AlertTriangle, Calendar } from 'lucide-react';
 import clsx from 'clsx';
@@ -35,7 +36,7 @@ export function CobroFormBody({ form }) {
   const capitalBloqueado =
     tipo === 'capital' && (cuotasQueImpidenCapital.length > 0 || agotadas);
 
-  const cuotasPendientes = prestamo.cuotas.filter((c) => c.estado === 'pendiente');
+  const cuotasPendientes = (prestamo.cuotas || []).filter((c) => c.estado === 'pendiente');
   const showCuotaSelector = cuotasPendientes.length > 1 && setCuotaNumero && cuotaNumero;
 
   return (
@@ -97,7 +98,7 @@ export function CobroFormBody({ form }) {
                 A cobrar
               </p>
               <p className="mt-1 text-2xl font-bold tabular-nums text-navy-900 dark:text-white">
-                {formatCRC(Number(String(monto).replace(/\D/g, '')) || 0)}
+                {formatCRC(cuotaActual.monto)}
               </p>
             </div>
           </div>

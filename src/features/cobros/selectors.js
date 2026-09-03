@@ -19,7 +19,7 @@ export const COBRO_TIPOS = [
 export async function getCuotasPendientes(prestamoId) {
   const prestamo = await prestamosService.getById(prestamoId);
   if (!prestamo) return [];
-  return prestamo.cuotas.filter((c) => c.estado === 'pendiente');
+  return (prestamo.cuotas || []).filter((c) => c.estado === 'pendiente');
 }
 
 export async function getCuotaActual(prestamoId) {
@@ -31,9 +31,9 @@ export function getResumenPrestamo(prestamo) {
   if (!prestamo) return null;
   const saldo = prestamosService.getSaldoCapital(prestamo);
   const interes = prestamosService.cuotaDelPeriodo(prestamo);
-  const pendientes = prestamo.cuotas.filter((c) => c.estado === 'pendiente');
-  const pagadas = prestamo.cuotas.filter((c) => c.estado === 'pagada');
-  const canceladas = prestamo.cuotas.filter((c) => c.estado === 'cancelada');
+  const pendientes = (prestamo.cuotas || []).filter((c) => c.estado === 'pendiente');
+  const pagadas = (prestamo.cuotas || []).filter((c) => c.estado === 'pagada');
+  const canceladas = (prestamo.cuotas || []).filter((c) => c.estado === 'cancelada');
   const totalPagado = pagadas.reduce((s, c) => s + c.monto, 0);
   const proximoCobro = pendientes[0] || null;
 
@@ -57,7 +57,7 @@ export function getCuotasAtrasadas(prestamo) {
   if (!prestamo) return [];
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
-  return prestamo.cuotas.filter(
+  return (prestamo.cuotas || []).filter(
     (c) => c.estado === 'pendiente' && new Date(c.fecha) < hoy,
   );
 }
@@ -71,6 +71,8 @@ export function getCuotasQueImpidenCapital(prestamo, { cuotaNumero, incluirInter
 }
 
 export function validateMontoCobro({ monto, tipo, prestamo, cuotaNumero, incluirInteres }) {
+  if (tipo === 'interes') return null;
+
   const n = Number(String(monto).replace(/\D/g, ''));
   if (!n) return 'Ingresa un monto';
   if (n <= 0) return 'El monto debe ser mayor a 0';
@@ -87,7 +89,7 @@ export function validateMontoCobro({ monto, tipo, prestamo, cuotaNumero, incluir
     }
 
     const saldo = prestamosService.getSaldoCapital(prestamo);
-    const cuota = prestamo.cuotas.find((c) => c.numero === Number(cuotaNumero));
+    const cuota = (prestamo.cuotas || []).find((c) => c.numero === Number(cuotaNumero));
     const interes = cuota?.monto || 0;
     const max = incluirInteres ? saldo + interes : saldo;
     if (n > max) {
@@ -102,7 +104,7 @@ export function validateMontoCobro({ monto, tipo, prestamo, cuotaNumero, incluir
 export { formatMontoLive } from '../../lib/format';
 
 export function buildResumenCobro({ prestamo, cuotaNumero, monto, tipo, incluirInteres, cliente }) {
-  const cuota = prestamo.cuotas.find((c) => c.numero === Number(cuotaNumero));
+  const cuota = (prestamo.cuotas || []).find((c) => c.numero === Number(cuotaNumero));
   const interes = cuota?.monto || 0;
   const saldo = prestamosService.getSaldoCapital(prestamo);
   let capitalPagado = 0;

@@ -54,13 +54,20 @@ export function useCobroForm({ prestamoId }) {
 
   const cuotaActual = useMemo(() => {
     if (!prestamo) return null;
-    return prestamo.cuotas.find((c) => c.numero === Number(cuotaNumero));
+    return (prestamo.cuotas || []).find((c) => c.numero === Number(cuotaNumero));
   }, [prestamo, cuotaNumero]);
 
   const montoSugerido = useMemo(
     () => suggestedMonto(prestamo, cuotaActual, tipo, incluirInteres),
     [prestamo, cuotaActual, tipo, incluirInteres],
   );
+
+  useEffect(() => {
+    if (tipo !== 'interes') return;
+    if (!prestamo || !cuotaActual) return;
+    const sugerido = suggestedMonto(prestamo, cuotaActual, 'interes', incluirInteres);
+    setMontoState(formatMontoLive(String(sugerido)));
+  }, [prestamo, cuotaActual, tipo, incluirInteres]);
 
   const atrasadas = useMemo(
     () => (prestamo ? getCuotasAtrasadas(prestamo) : []),
