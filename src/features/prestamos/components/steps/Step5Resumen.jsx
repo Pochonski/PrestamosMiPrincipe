@@ -1,76 +1,12 @@
+import React from 'react';
 import { useState } from 'react';
 import { Eye, EyeOff, Calendar, CheckCircle2 } from 'lucide-react';
 import { Card } from '../../../../components/ui/Card';
 import { Avatar } from '../../../../components/ui/Avatar';
-import { formatCRC, parseLocalDate } from '../../../../lib/format';
+import { formatCRC, formatDate } from '../../../../lib/format';
+import { firstCuotaDate, nextCuotaDate } from '../../../../lib/dates';
 import { labelPeriodo, cuotaDelPeriodo, totalIntereses, totalAPagar } from '../../selectors';
 import { PrestamoCalendar } from '../PrestamoCalendar';
-
-function addDays(d, n) {
-  const r = new Date(d);
-  r.setDate(r.getDate() + n);
-  return r;
-}
-
-function addMonths(d, n) {
-  const original = new Date(d);
-  const r = new Date(original);
-  r.setDate(1);
-  r.setMonth(r.getMonth() + n);
-  const lastDay = new Date(r.getFullYear(), r.getMonth() + 1, 0).getDate();
-  r.setDate(Math.min(original.getDate(), lastDay));
-  return r;
-}
-
-function firstCuotaDate(fechaInicio, periodo) {
-  if (!periodo) return null;
-  const base = parseLocalDate(fechaInicio);
-  switch (periodo.tipo) {
-    case 'diario':
-      return addDays(base, 1);
-    case 'semanal':
-      return addDays(base, 7);
-    case 'quincenal':
-      return addDays(base, 14);
-    case 'mensual':
-      return addMonths(base, 1);
-    case 'dia_mes': {
-      const target = Number(periodo.diaDelMes);
-      if (Number.isNaN(target)) return null;
-      const baseDay = base.getDate();
-      if (baseDay < target) {
-        const r = new Date(base);
-        r.setDate(target);
-        return r;
-      }
-      if (baseDay > target) {
-        const r = addMonths(base, 1);
-        const lastDay = new Date(r.getFullYear(), r.getMonth() + 1, 0).getDate();
-        r.setDate(Math.min(target, lastDay));
-        return r;
-      }
-      return base;
-    }
-    default:
-      return null;
-  }
-}
-
-function nextCuotaDate(prev, periodo) {
-  switch (periodo.tipo) {
-    case 'diario':
-      return addDays(prev, 1);
-    case 'semanal':
-      return addDays(prev, 7);
-    case 'quincenal':
-      return addDays(prev, 14);
-    case 'mensual':
-    case 'dia_mes':
-      return addMonths(prev, 1);
-    default:
-      return prev;
-  }
-}
 
 function buildCuotas({ fechaInicio, periodo, nCuotas, monto, tasa }) {
   const first = firstCuotaDate(fechaInicio, periodo);
@@ -81,7 +17,7 @@ function buildCuotas({ fechaInicio, periodo, nCuotas, monto, tasa }) {
   for (let i = 0; i < Number(nCuotas); i++) {
     out.push({
       numero: i + 1,
-      fecha: cursor.toISOString(),
+      fecha: cursor.toISOString().slice(0, 10),
       monto: cuota,
       estado: 'pendiente',
     });
@@ -158,11 +94,11 @@ export function Step5Resumen({ values, cliente }) {
         <Row label="Cuota por período" value={formatCRC(cuota)} />
         <Row label="Total intereses" value={formatCRC(totalInt)} />
         <Row label="Total a pagar" value={formatCRC(totalPag)} />
-        <Row label="Fecha inicial" value={new Date(values.fechaInicio).toLocaleDateString('es-CR')} />
+        <Row label="Fecha inicial" value={formatDate(values.fechaInicio)} />
         {prestamoPreview.cuotas.length > 0 && (
           <Row
             label="Fecha final estimada"
-            value={new Date(prestamoPreview.cuotas[prestamoPreview.cuotas.length - 1].fecha).toLocaleDateString('es-CR')}
+            value={formatDate(prestamoPreview.cuotas[prestamoPreview.cuotas.length - 1].fecha)}
           />
         )}
       </Card>

@@ -1,6 +1,7 @@
+import React from 'react';
 import { Calendar } from 'lucide-react';
 import clsx from 'clsx';
-import { parseLocalDate } from '../../../../lib/format';
+import { firstCuotaDate, nextCuotaDate } from '../../../../lib/dates';
 
 const inputBase = clsx(
   'w-full rounded-xl border bg-white px-3.5 py-3 text-base outline-none transition-colors',
@@ -9,72 +10,6 @@ const inputBase = clsx(
   'border-slate-200 focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20',
   'dark:bg-navy-800 dark:border-navy-700 dark:focus:border-gold-400',
 );
-
-function addDays(d, n) {
-  const r = new Date(d);
-  r.setDate(r.getDate() + n);
-  return r;
-}
-
-function addMonths(d, n) {
-  const original = new Date(d);
-  const r = new Date(original);
-  r.setDate(1);
-  r.setMonth(r.getMonth() + n);
-  const lastDay = new Date(r.getFullYear(), r.getMonth() + 1, 0).getDate();
-  r.setDate(Math.min(original.getDate(), lastDay));
-  return r;
-}
-
-function firstCuotaDate(fechaInicio, periodo) {
-  if (!periodo) return null;
-  const base = parseLocalDate(fechaInicio);
-  switch (periodo.tipo) {
-    case 'diario':
-      return addDays(base, 1);
-    case 'semanal':
-      return addDays(base, 7);
-    case 'quincenal':
-      return addDays(base, 14);
-    case 'mensual':
-      return addMonths(base, 1);
-    case 'dia_mes': {
-      const target = Number(periodo.diaDelMes);
-      if (Number.isNaN(target)) return null;
-      const baseDay = base.getDate();
-      if (baseDay < target) {
-        const r = new Date(base);
-        r.setDate(target);
-        return r;
-      }
-      if (baseDay > target) {
-        const r = addMonths(base, 1);
-        const lastDay = new Date(r.getFullYear(), r.getMonth() + 1, 0).getDate();
-        r.setDate(Math.min(target, lastDay));
-        return r;
-      }
-      return base;
-    }
-    default:
-      return null;
-  }
-}
-
-function nextCuotaDate(prev, periodo) {
-  switch (periodo.tipo) {
-    case 'diario':
-      return addDays(prev, 1);
-    case 'semanal':
-      return addDays(prev, 7);
-    case 'quincenal':
-      return addDays(prev, 14);
-    case 'mensual':
-    case 'dia_mes':
-      return addMonths(prev, 1);
-    default:
-      return prev;
-  }
-}
 
 function buildCuotas({ fechaInicio, periodo, nCuotas }) {
   if (!periodo || !fechaInicio) return [];

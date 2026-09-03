@@ -44,23 +44,20 @@ export function formatCRCCompact(n) {
   return crcCompactFormatter.format(Number(n));
 }
 
-export function toDate(value) {
-  if (!value) return null;
-  if (value instanceof Date) return value;
-  return new Date(value);
-}
-
 export function parseLocalDate(value) {
   if (!value) return null;
   if (value instanceof Date) return value;
   if (typeof value === 'string') {
-    const datePart = value.split('T')[0];
-    if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
-      const [y, m, d] = datePart.split('-').map(Number);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const [y, m, d] = value.split('-').map(Number);
       return new Date(y, m - 1, d);
     }
   }
   return new Date(value);
+}
+
+export function toDate(value) {
+  return parseLocalDate(value);
 }
 
 export function formatMontoLive(v) {
