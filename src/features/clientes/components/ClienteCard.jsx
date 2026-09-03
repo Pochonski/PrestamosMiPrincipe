@@ -9,7 +9,7 @@ export function ClienteCard({ cliente, onOpen, onEdit, onDelete }) {
   return (
     <Card interactive padding="md" onClick={() => onOpen?.(cliente)}>
       <div
-        className="absolute right-3 top-3 sm:right-4 sm:top-4"
+        className="absolute right-2 top-2 sm:right-3 sm:top-3"
         onClick={(e) => e.stopPropagation()}
       >
         <ClienteActionsMenu
@@ -18,7 +18,7 @@ export function ClienteCard({ cliente, onOpen, onEdit, onDelete }) {
         />
       </div>
 
-      <div className="flex items-start gap-3 pr-10">
+      <div className="flex items-start gap-3 pr-24">
         <Avatar nombre={cliente.nombre} color={colorFor(cliente.id)} size="md" />
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-base font-bold text-navy-900 dark:text-white">
