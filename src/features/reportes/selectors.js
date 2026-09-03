@@ -3,7 +3,7 @@ import * as cobrosService from '../../services/cobros';
 import * as prestamosService from '../../services/prestamos';
 import { onDataChanged } from '../../lib/events';
 
-const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
 function compute(cobros, prestamos) {
   const ahora = new Date();

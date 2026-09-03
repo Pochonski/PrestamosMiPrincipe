@@ -1,27 +1,41 @@
 import { supabase } from '../../lib/supabase';
 import { emitDataChanged } from '../../lib/events';
 
-const TABLES = ['clientes', 'prestamos', 'cobros', 'notificaciones'];
+const TABLES_ORG_SCOPED = ['clientes', 'prestamos', 'cobros', 'notificaciones'];
 
 export async function buildBackup() {
-  const orgId = await supabase.auth.getSession().then(
-    (s) => s.data.session?.user?.id,
-  );
-  if (!orgId) throw new Error('No authenticated user');
-  const { data: userRow } = await supabase
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id;
+  if (!userId) throw new Error('No authenticated user');
+
+  const { data: membership, error: mErr } = await supabase
     .from('org_members')
     .select('org_id')
-    .eq('user_id', orgId)
+    .eq('user_id', userId)
     .single();
+  if (mErr) throw mErr;
+  const orgId = membership.org_id;
 
   const data = {};
-  for (const table of TABLES) {
+  for (const table of TABLES_ORG_SCOPED) {
     const { data: rows } = await supabase
       .from(table)
       .select('*')
-      .eq('org_id', userRow.org_id);
+      .eq('org_id', orgId);
     data[table] = rows ?? [];
   }
+
+  const prestamoIds = (data.prestamos || []).map((p) => p.id);
+  if (prestamoIds.length > 0) {
+    const { data: cuotasRows } = await supabase
+      .from('cuotas')
+      .select('*')
+      .in('prestamo_id', prestamoIds);
+    data.cuotas = cuotasRows ?? [];
+  } else {
+    data.cuotas = [];
+  }
+
   return {
     app: 'pmp',
     version: 1,
@@ -76,6 +90,7 @@ export function previewBackup(parsed) {
     counts: {
       clientes: (parsed.data.clientes || []).length,
       prestamos: (parsed.data.prestamos || []).length,
+      cuotas: (parsed.data.cuotas || []).length,
       cobros: (parsed.data.cobros || []).length,
       notificaciones: (parsed.data.notificaciones || []).length,
     },
@@ -103,6 +118,13 @@ export async function applyBackup(parsed) {
     const rows = Array.isArray(value) ? value : [];
     if (rows.length === 0) continue;
     const { error } = await supabase.from(table).upsert(rows, { onConflict: 'id' });
+    if (error) throw error;
+  }
+  const cuotas = parsed.data.cuotas;
+  if (Array.isArray(cuotas) && cuotas.length > 0) {
+    const { error } = await supabase
+      .from('cuotas')
+      .upsert(cuotas, { onConflict: 'id' });
     if (error) throw error;
   }
   emitDataChanged();

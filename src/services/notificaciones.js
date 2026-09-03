@@ -47,10 +47,13 @@ export async function create({ tipo, titulo, mensaje, leida = false }) {
 }
 
 export async function marcarLeida(id) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('No authenticated user');
   const { error } = await supabase
     .from('notificaciones')
     .update({ leida: true })
-    .eq('id', id);
+    .eq('id', id)
+    .eq('user_id', user.id);
   if (error) throw error;
   return true;
 }

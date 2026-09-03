@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Trash2, AlertTriangle, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { Card } from '../../../components/ui/Card';
@@ -7,8 +7,22 @@ import { formatCRC } from '../../../lib/format';
 export function DeletePrestamoConfirm({ prestamo, loading, onConfirm, onCancel }) {
   const [confirmText, setConfirmText] = useState('');
 
-  const expected = prestamo?.nombre_cliente || prestamo?.id?.slice(0, 6) || '';
-  const matches = confirmText.trim().toLowerCase() === expected.toLowerCase();
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === 'Escape') onCancel?.();
+    }
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [onCancel]);
+
+  const expected = (prestamo?.nombre_cliente && prestamo.nombre_cliente.split(' ')[0])
+    || prestamo?.id?.slice(0, 6)
+    || '';
+  const matches = expected.length > 0 && confirmText.trim().toLowerCase() === expected.toLowerCase();
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-navy-900/60 backdrop-blur-sm sm:items-center">

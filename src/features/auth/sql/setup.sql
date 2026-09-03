@@ -191,8 +191,10 @@ drop policy if exists "User-scoped notif delete" on public.notificaciones;
 create policy "Users see their orgs" on public.organizations
   for select to authenticated using (public.is_org_member(id));
 
-create policy "Users can create orgs" on public.organizations
-  for insert to authenticated with check (auth.uid() is not null);
+-- Inserción de orgs se hace SOLO vía el RPC create_organization (security definer).
+drop policy if exists "Users can create orgs" on public.organizations;
+create policy "Users can create orgs (no direct)" on public.organizations
+  for insert to authenticated with check (false);
 
 create policy "Users can update their orgs" on public.organizations
   for update to authenticated using (public.is_org_member(id));
@@ -297,9 +299,16 @@ create policy "User-scoped notif delete" on public.notificaciones
 
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer as $$
+declare
+  full_name_value text;
 begin
+  full_name_value := coalesce(
+    new.raw_user_meta_data->>'full_name',
+    new.raw_user_meta_data->>'name',
+    new.email
+  );
   insert into public.profiles (user_id, full_name, color)
-  values (new.id, new.email, '#D4AF37')
+  values (new.id, full_name_value, '#D4AF37')
   on conflict (user_id) do nothing;
   return new;
 end;

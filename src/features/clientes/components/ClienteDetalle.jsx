@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
-import { ArrowLeft, Plus, MapPin, Phone, IdCard, Wallet, TrendingUp, AlertTriangle, Loader2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, Plus, MapPin, Phone, Wallet, TrendingUp, AlertTriangle, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { Card } from '../../../components/ui/Card';
-import { Avatar } from '../../../components/ui/Avatar';
 import { formatPhoneCR } from '../../../lib/format';
 import { colorFor } from '../../../lib/color';
 import { useDataChange } from '../../../lib/hooks/useDataChange';
@@ -45,6 +44,8 @@ export function ClienteDetalle({ onNavigate, params }) {
     clientesService.getById(clienteId).then(setCliente);
   });
 
+  const stats = useMemo(() => statsCliente(clienteId), [clienteId]);
+
   if (loading) {
     return (
       <div className="mx-auto flex max-w-2xl items-center justify-center py-20">
@@ -69,8 +70,6 @@ export function ClienteDetalle({ onNavigate, params }) {
       </div>
     );
   }
-
-  const stats = statsCliente(clienteId);
 
   function handleOpenPrestamo(p) {
     onNavigate?.('prestamo-detalle', { prestamoId: p.id, clienteId });

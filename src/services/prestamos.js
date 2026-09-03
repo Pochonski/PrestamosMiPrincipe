@@ -1,4 +1,5 @@
 import { supabase, getOrgId } from '../lib/supabase';
+import { emitDataChanged } from '../lib/events';
 import { parseLocalDate } from '../lib/format';
 import { addDays, addMonths, nextCuotaDate } from '../lib/dates';
 
@@ -6,6 +7,12 @@ function startOfDay(d = new Date()) {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
   return x;
+}
+
+function normalizePrestamo(p) {
+  if (!p) return p;
+  const { cliente_id, ...rest } = p;
+  return { clienteId: cliente_id, ...rest };
 }
 
 function buildCuotasPayload({ fechaInicio, periodo, nCuotas, montoPorCuota }) {
@@ -63,7 +70,7 @@ export async function list() {
     .eq('org_id', orgId)
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map(normalizePrestamo);
 }
 
 export async function getById(id) {
@@ -75,7 +82,7 @@ export async function getById(id) {
     .eq('id', id)
     .maybeSingle();
   if (error) throw error;
-  return data;
+  return normalizePrestamo(data);
 }
 
 export async function delCliente(clienteId) {
@@ -86,7 +93,7 @@ export async function delCliente(clienteId) {
     .eq('org_id', orgId)
     .eq('cliente_id', clienteId);
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map(normalizePrestamo);
 }
 
 export function activos() {
@@ -123,10 +130,9 @@ export async function totalAtrasado() {
 
 export async function carteraTotal() {
   const items = await list();
-  return items.reduce((sum, p) => {
-    const pendiente = p.saldo_capital || 0;
-    return sum + pendiente;
-  }, 0);
+  return items
+    .filter((p) => p.estado !== 'cancelado')
+    .reduce((sum, p) => sum + Number(p.saldo_capital ?? 0), 0);
 }
 
 export async function cantidadActivos() {
@@ -199,16 +205,16 @@ export function getStatus(prestamo) {
 
 export function getSaldoCapital(prestamo) {
   if (!prestamo) return 0;
-  return Number(prestamo.saldo_capital || 0);
+  return Number(prestamo.saldo_capital ?? prestamo.monto ?? 0);
 }
 
 export function cuotaDelPeriodo(prestamo) {
   if (!prestamo) return 0;
-  return Math.round((getSaldoCapital(prestamo) * Number(prestamo.tasa)) / 100);
+  return Math.round((getSaldoCapital(prestamo) * Number(prestamo.tasa ?? 0)) / 100);
 }
 
 export function totalIntereses(prestamo) {
-  return cuotaDelPeriodo(prestamo) * Number(prestamo?.n_cuotas || 0);
+  return cuotaDelPeriodo(prestamo) * Number(prestamo?.n_cuotas || prestamo?.nCuotas || 0);
 }
 
 export function totalAPagar(prestamo) {
@@ -268,9 +274,10 @@ export async function create({ clienteId, ruta, periodo, monto, tasa, nCuotas, f
 
 export async function extenderCuotas(prestamoId, nCuotas) {
   const prestamo = await getById(prestamoId);
-  if (!prestamo) return null;
-  const nExistentes = (prestamo.cuotas || []).length;
-  const cuotaMonto = Math.round((getSaldoCapital(prestamo) * Number(prestamo.tasa)) / 100);
+  if (!prestamo) throw new PrestamoNoEncontradoError(prestamoId);
+
+  const orgId = prestamo.orgId || prestamo.org_id || (await getOrgId());
+  const cuotaMonto = Math.round((getSaldoCapital(prestamo) * Number(prestamo.tasa || 0)) / 100);
   const startDate = (prestamo.cuotas && prestamo.cuotas.length > 0)
     ? prestamo.cuotas[prestamo.cuotas.length - 1].fecha
     : prestamo.fecha_inicio;
@@ -280,7 +287,7 @@ export async function extenderCuotas(prestamoId, nCuotas) {
   for (let i = 0; i < Number(nCuotas); i++) {
     cursor = nextCuotaDate(cursor, prestamo.periodo);
     nuevasCuotas.push({
-      numero: nExistentes + i + 1,
+      numero: prestamo.n_cuotas + i + 1,
       fecha: cursor.toISOString().slice(0, 10),
       monto: cuotaMonto,
     });
@@ -292,21 +299,35 @@ export async function extenderCuotas(prestamoId, nCuotas) {
   });
   if (error) throw error;
 
+  emitDataChanged();
   return await getById(prestamoId);
 }
 
 export async function update(id, patch) {
   const orgId = await getOrgId();
+  const prestamo = await getById(id);
+  if (!prestamo) throw new PrestamoNoEncontradoError(id);
+
   const updateObj = {};
   if (patch.ruta !== undefined) updateObj.ruta = String(patch.ruta).trim();
   if (patch.periodo !== undefined) updateObj.periodo = patch.periodo;
-  if (patch.monto !== undefined) updateObj.monto = Number(patch.monto);
   if (patch.tasa !== undefined) updateObj.tasa = Number(patch.tasa);
   if (patch.fecha_inicio !== undefined) updateObj.fecha_inicio = patch.fecha_inicio;
+
+  const montoChanged = patch.monto !== undefined && Number(patch.monto) !== Number(prestamo.monto);
+  if (montoChanged) {
+    updateObj.monto = Number(patch.monto);
+    // Mantener el saldo_capital coherente con el nuevo monto.
+    updateObj.saldo_capital = Number(patch.monto);
+  }
+  if (patch.n_cuotas !== undefined) {
+    const nc = Number(patch.n_cuotas);
+    if (nc !== Number(prestamo.n_cuotas)) updateObj.n_cuotas = nc;
+  }
   updateObj.updated_at = new Date().toISOString();
 
   if (Object.keys(updateObj).length === 1) {
-    return getById(id);
+    return prestamo;
   }
 
   const { data, error } = await supabase
@@ -317,7 +338,8 @@ export async function update(id, patch) {
     .select()
     .single();
   if (error) throw error;
-  return data;
+  emitDataChanged();
+  return normalizePrestamo(data);
 }
 
 export async function remove(id) {
@@ -356,6 +378,7 @@ export async function remove(id) {
     .eq('id', id)
     .eq('org_id', orgId);
   if (error) throw error;
+  emitDataChanged();
   return true;
 }
 
