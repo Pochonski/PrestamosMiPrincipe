@@ -105,6 +105,70 @@ describe('prestamos.update', () => {
   });
 });
 
+describe('prestamos agregaciones async', () => {
+  const makeListChain = (data) => {
+    const listChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis(), range: vi.fn().mockReturnThis() };
+    listChain.select.mockReturnValue(listChain); listChain.eq.mockReturnValue(listChain); listChain.order.mockReturnValue(listChain);
+    listChain.range = listChain.range || require('vitest').vi.fn().mockReturnThis();
+    listChain.range.mockReturnValue(listChain);
+    listChain.then = (res) => Promise.resolve({ data, error: null }).then(res);
+    return listChain;
+  };
+  const makeCuotasChain = (data) => {
+    const c = { select: vi.fn().mockReturnThis(), in: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis(), range: vi.fn().mockReturnThis() };
+    c.select.mockReturnValue(c); c.in.mockReturnValue(c); c.order.mockReturnValue(c); c.range = c.range || require('vitest').vi.fn().mockReturnThis(); c.range.mockReturnValue(c);
+    c.then = (res) => Promise.resolve({ data, error: null }).then(res);
+    return c;
+  };
+
+  it('totalAtrasado', async () => {
+    const past = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const cuotasData = [{ prestamo_id: 'p1', estado: 'pendiente', fecha: past, monto: 100 }];
+    let call = 0;
+    vi.mocked(supabase.from).mockImplementation((t) => {
+      if (t === 'cuotas') { call++; return call === 1 ? makeCuotasChain([]) : makeCuotasChain(cuotasData); }
+      return makeListChain([{ id: 'p1', cliente_id: 'c1', saldo_capital: 1000, monto: 1000, n_cuotas: 1, periodo: 'semanal', fecha_inicio: '2024-01-01', estado: 'vigente' }]);
+    });
+    const r = await prestamosService.totalAtrasado();
+    expect(r).toBe(100);
+  });
+
+  it('carteraTotal', async () => {
+    const items = [
+      { id: 'p1', cliente_id: 'c1', saldo_capital: 1000, estado: 'vigente', monto: 1000, n_cuotas: 1, periodo: 'semanal', fecha_inicio: '2024-01-01' },
+      { id: 'p2', cliente_id: 'c1', saldo_capital: 500, estado: 'cancelado', monto: 500, n_cuotas: 1, periodo: 'semanal', fecha_inicio: '2024-01-01' },
+    ];
+    vi.mocked(supabase.from).mockImplementation((t) => t === 'cuotas' ? makeCuotasChain([]) : makeListChain(items));
+    const r = await prestamosService.carteraTotal();
+    expect(r).toBe(1000);
+  });
+
+  it('cantidadActivos', async () => {
+    const items = [
+      { id: 'p1', cliente_id: 'c1', saldo_capital: 1000, estado: 'vigente', monto: 1000, n_cuotas: 1, periodo: 'semanal', fecha_inicio: '2024-01-01', cuotas: [{ numero: 1, fecha: new Date(Date.now() + 86400000).toISOString().slice(0, 10), estado: 'pendiente', monto: 100 }] },
+    ];
+    vi.mocked(supabase.from).mockImplementation((t) => t === 'cuotas' ? makeCuotasChain([]) : makeListChain(items));
+    const r = await prestamosService.cantidadActivos();
+    expect(r).toBe(1);
+  });
+
+  it('totalCobrarHoy', async () => {
+    const hoy = new Date().toISOString().slice(0, 10);
+    const cuotasData = [{ prestamo_id: 'p1', estado: 'pendiente', fecha: hoy, monto: 300 }];
+    let call = 0;
+    const listData = [{ id: 'p1', cliente_id: 'c1', saldo_capital: 1000, monto: 1000, n_cuotas: 1, periodo: 'semanal', fecha_inicio: hoy, estado: 'vigente' }];
+    const cobrarHoyCuotas = { select: vi.fn().mockReturnThis(), in: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), gte: vi.fn().mockReturnThis(), lt: vi.fn().mockReturnThis() };
+    cobrarHoyCuotas.select.mockReturnValue(cobrarHoyCuotas); cobrarHoyCuotas.in.mockReturnValue(cobrarHoyCuotas); cobrarHoyCuotas.eq.mockReturnValue(cobrarHoyCuotas); cobrarHoyCuotas.gte.mockReturnValue(cobrarHoyCuotas); cobrarHoyCuotas.lt.mockReturnValue(cobrarHoyCuotas);
+    cobrarHoyCuotas.then = (res) => Promise.resolve({ data: cuotasData, error: null }).then(res);
+    vi.mocked(supabase.from).mockImplementation((t) => {
+      if (t === 'cuotas') { call++; return call === 1 ? makeCuotasChain([]) : cobrarHoyCuotas; }
+      return makeListChain(listData);
+    });
+    const r = await prestamosService.totalCobrarHoy();
+    expect(r).toBe(300);
+  });
+});
+
 describe('prestamos delCliente y getById normalize', () => {
   it('delCliente hydrate', async () => {
     const data = [{ id: 'p1', cliente_id: 'c1', monto: 1000 }];

@@ -89,6 +89,106 @@ describe('computeResumen', () => {
     const r = computeResumen({ clientes: [], prestamos, cobros: [], hoy });
     expect(r.kpis.cancelados30).toBe(1);
   });
+
+  it('cancelados30 via updated_at', () => {
+    const recent = new Date(hoy.getTime() - 5 * 86400000).toISOString();
+    const prestamos = [
+      { id: 'p1', updated_at: recent, monto: 0, saldo_capital: 0, estado: 'cancelado', cuotas: [] },
+    ];
+    const r = computeResumen({ clientes: [], prestamos, cobros: [], hoy });
+    expect(r.kpis.cancelados30).toBe(1);
+  });
+
+  it('filtra por ruta', () => {
+    const clientes = [{ id: 'c1' }, { id: 'c2' }];
+    const prestamos = [
+      { id: 'p1', cliente_id: 'c1', ruta: 'A', estado: 'vigente', saldo_capital: 100, monto: 200, cuotas: [] },
+      { id: 'p2', cliente_id: 'c2', ruta: 'B', estado: 'vigente', saldo_capital: 999, monto: 999, cuotas: [] },
+    ];
+    const cobros = [{ id: 'cob', fecha: hoy.toISOString(), monto: 100, cliente_id: 'c1', prestamo_id: 'p1' }];
+    const r = computeResumen({ clientes, prestamos, cobros, hoy, filters: { ruta: 'A' } });
+    expect(r.kpis.totalClientes).toBe(1);
+    expect(r.kpis.carteraActiva).toBe(100);
+    expect(r.kpis.totalCobradoHoy).toBe(100);
+  });
+
+  it('getDateRange hoy / 7d / 30d / mes / custom', () => {
+    const clientes = [];
+    const prestamos = [];
+    const cobros = [
+      { id: 'a', fecha: hoy.toISOString(), monto: 10, cliente_id: 'c1' },
+    ];
+    const rHoy = computeResumen({ clientes, prestamos, cobros, hoy, filters: { rango: 'hoy' } });
+    expect(rHoy.cobrosEnRangoCount).toBe(1);
+    const r7 = computeResumen({ clientes, prestamos, cobros, hoy, filters: { rango: '7d' } });
+    expect(r7.cobrosEnRangoCount).toBe(1);
+    const r30 = computeResumen({ clientes, prestamos, cobros, hoy, filters: { rango: '30d' } });
+    expect(r30.cobrosEnRangoCount).toBe(1);
+    const rMes = computeResumen({ clientes, prestamos, cobros, hoy, filters: { rango: 'mes' } });
+    expect(rMes.cobrosEnRangoCount).toBe(1);
+    const rCustom = computeResumen({
+      clientes, prestamos, cobros, hoy,
+      filters: { rango: 'custom', from: '2024-06-01', to: '2024-06-30' },
+    });
+    expect(rCustom.cobrosEnRangoCount).toBe(1);
+  });
+
+  it('cobrosPrevMes y deltaCobrosMes', () => {
+    const prevMes = new Date('2024-05-10T10:00:00.000Z').toISOString();
+    const esteMes = new Date('2024-06-10T10:00:00.000Z').toISOString();
+    const cobros = [
+      { id: '1', fecha: prevMes, monto: 1000, cliente_id: 'c1' },
+      { id: '2', fecha: esteMes, monto: 2000, cliente_id: 'c1' },
+    ];
+    const r = computeResumen({ clientes: [], prestamos: [], cobros, hoy });
+    expect(r.kpis.cobrosPrevMes).toBe(1000);
+    expect(r.kpis.cobrosMes).toBe(2000);
+    expect(r.kpis.deltaCobrosMes).toBe(100);
+  });
+
+  it('tasaMorosidad y prestamoPromedio y eficienciaCobroHoy', () => {
+    const prestamos = [
+      { id: 'p1', cliente_id: 'c1', estado: 'vigente', saldo_capital: 1000, monto: 1000, cuotas: [{ estado: 'pendiente', fecha: '2024-06-15', monto: 500 }] },
+    ];
+    const atrasada = { id: 'p2', cliente_id: 'c1', estado: 'atrasado', saldo_capital: 100, monto: 100, cuotas: [{ estado: 'pendiente', fecha: '2024-01-01', monto: 50 }] };
+    const cobros = [{ id: 'c', fecha: hoy.toISOString(), monto: 250, cliente_id: 'c1' }];
+    const r = computeResumen({ clientes: [{ id: 'c1' }], prestamos: [...prestamos, atrasada], cobros, hoy });
+    expect(r.kpis.tasaMorosidad).toBeCloseTo(50 / 1100 * 100);
+    expect(r.kpis.prestamoPromedio).toBe(550);
+    expect(r.kpis.eficienciaCobroHoy).toBe(50);
+  });
+
+  it('topMorosos y saldoPorRuta y porEstado y rutas', () => {
+    const clientes = [{ id: 'c1', nombre: 'Ana' }, { id: 'c2', nombre: 'Bob' }];
+    const prestamos = [
+      { id: 'p1', cliente_id: 'c1', ruta: 'A', estado: 'vigente', saldo_capital: 100, monto: 100, cuotas: [{ estado: 'pendiente', fecha: '2024-01-01', monto: 50 }] },
+      { id: 'p2', cliente_id: 'c2', ruta: 'B', estado: 'atrasado', saldo_capital: 200, monto: 200, cuotas: [{ estado: 'pendiente', fecha: '2024-01-01', monto: 150 }] },
+    ];
+    const r = computeResumen({ clientes, prestamos, cobros: [], hoy });
+    expect(r.topMorosos[0].id).toBe('c2');
+    expect(r.saldoPorRuta).toHaveLength(2);
+    expect(r.porEstado.vigente).toBe(1);
+    expect(r.porEstado.atrasado).toBe(1);
+    expect(r.rutas).toEqual(['A', 'B']);
+  });
+
+  it('saldoPorRuta sin ruta usa Sin ruta', () => {
+    const r = computeResumen({
+      clientes: [],
+      prestamos: [{ id: 'p1', cliente_id: 'c1', estado: 'vigente', saldo_capital: 10, monto: 10, cuotas: [] }],
+      cobros: [], hoy,
+    });
+    expect(r.saldoPorRuta[0].ruta).toBe('Sin ruta');
+  });
+
+  it('cobros6m y spark7/30 y cobros30Count', () => {
+    const cobros = [{ id: 'c', fecha: hoy.toISOString(), monto: 100, cliente_id: 'c1' }];
+    const r = computeResumen({ clientes: [], prestamos: [], cobros, hoy });
+    expect(r.cobros6m).toHaveLength(6);
+    expect(r.spark7).toHaveLength(7);
+    expect(r.spark30).toHaveLength(30);
+    expect(r.cobros30Count).toBe(1);
+  });
 });
 
 describe('useResumenData', () => {
