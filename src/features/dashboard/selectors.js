@@ -40,13 +40,16 @@ export function buildRecentActivity({ cobros, clientes, profiles = [], limit = 6
   const clientesById = new Map(clientes.map((c) => [c.id, c]));
   const profilesById = new Map((profiles ?? []).map((p) => [p.user_id, p]));
   return cobros.slice(0, limit).map((cobro) => {
-    const profile = profilesById.get(cobro.cobradorId);
+    const clienteId = cobro.clienteId ?? cobro.cliente_id;
+    const cuotaNumero = cobro.cuotaNumero ?? cobro.cuota_numero;
+    const cobradorId = cobro.cobradorId ?? cobro.cobrador_id;
+    const profile = profilesById.get(cobradorId);
     const cobradorStr = profile?.full_name ? ` · ${profile.full_name.split(' ')[0]}` : '';
     return {
       id: cobro.id,
       tipo: 'cobro',
-      titulo: `Cobro a ${clientesById.get(cobro.clienteId)?.nombre || 'Cliente'}`,
-      subtitulo: `Cuota #${cobro.cuotaNumero}${cobradorStr}${cobro.nota ? ` · ${cobro.nota}` : ''}`,
+      titulo: `Cobro a ${clientesById.get(clienteId)?.nombre || 'Cliente'}`,
+      subtitulo: `Cuota #${cuotaNumero}${cobradorStr}${cobro.nota ? ` · ${cobro.nota}` : ''}`,
       monto: cobro.monto,
       fecha: cobro.fecha,
     };
@@ -55,7 +58,7 @@ export function buildRecentActivity({ cobros, clientes, profiles = [], limit = 6
 
 export async function getRecentActivity(limit = 6) {
   const cobros = await cobrosService.recientes(limit);
-  const cobradorIds = [...new Set(cobros.map((c) => c.cobradorId).filter(Boolean))];
+  const cobradorIds = [...new Set(cobros.map((c) => c.cobradorId ?? c.cobrador_id).filter(Boolean))];
   const [clientes, profilesRows] = await Promise.all([
     clientesService.list({ limit: 200, offset: 0 }),
     cobradorIds.length > 0

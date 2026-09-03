@@ -5,6 +5,23 @@ import { emitDataChanged } from '../lib/events';
 
 const DEFAULT_LIMIT = 50;
 
+function normalizeCobro(c) {
+  if (!c || typeof c !== 'object') return c;
+  return {
+    ...c,
+    clienteId: c.clienteId ?? c.cliente_id,
+    cliente_id: c.cliente_id ?? c.clienteId,
+    cuotaNumero: c.cuotaNumero ?? c.cuota_numero,
+    cuota_numero: c.cuota_numero ?? c.cuotaNumero,
+    cobradorId: c.cobradorId ?? c.cobrador_id,
+    cobrador_id: c.cobrador_id ?? c.cobradorId,
+    prestamoId: c.prestamoId ?? c.prestamo_id,
+    prestamo_id: c.prestamo_id ?? c.prestamoId,
+    incluirInteres: c.incluirInteres ?? c.incluir_interes,
+    incluir_interes: c.incluir_interes ?? c.incluirInteres,
+  };
+}
+
 export async function list({ limit = DEFAULT_LIMIT, offset = 0 } = {}) {
   const orgId = await getOrgId();
   const { data, error } = await supabase
@@ -14,7 +31,7 @@ export async function list({ limit = DEFAULT_LIMIT, offset = 0 } = {}) {
     .order('fecha', { ascending: false })
     .range(offset, offset + limit - 1);
   throwIfError(error, 'cobros.list', { limit, offset });
-  return data ?? [];
+  return (data ?? []).map(normalizeCobro);
 }
 
 export async function getById(id) {
@@ -25,7 +42,7 @@ export async function getById(id) {
     .eq('org_id', orgId)
     .eq('id', id)
     .maybeSingle();
-  return data;
+  return normalizeCobro(data);
 }
 
 export async function delDia() {
@@ -39,7 +56,7 @@ export async function delDia() {
     .gte('fecha', inicio)
     .lte('fecha', fin);
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map(normalizeCobro);
 }
 
 export async function totalDelDia() {
@@ -56,7 +73,7 @@ export async function recientes(limit = 8) {
     .order('fecha', { ascending: false })
     .limit(limit);
   throwIfError(error, 'cobros.recientes', { limit });
-  return data ?? [];
+  return (data ?? []).map(normalizeCobro);
 }
 
 export async function delPrestamo(prestamoId) {
@@ -68,7 +85,7 @@ export async function delPrestamo(prestamoId) {
     .eq('prestamo_id', prestamoId)
     .order('fecha', { ascending: false });
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map(normalizeCobro);
 }
 
 export async function resumen() {
