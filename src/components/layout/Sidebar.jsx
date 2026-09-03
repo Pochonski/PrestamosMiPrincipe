@@ -1,9 +1,14 @@
 import clsx from 'clsx';
 import { X } from 'lucide-react';
 import { Logo } from '../ui/Logo';
-import { NAV_ITEMS } from './navItems';
+import { NAV_ITEMS, findItemById } from './nav-config';
 
 export function Sidebar({ open, page, onNavigate, onClose }) {
+  const current = findItemById(page);
+  const activeId = current?.parent ?? current?.id ?? 'dashboard';
+  const principal = NAV_ITEMS.filter((n) => n.section === 'principal');
+  const acciones = NAV_ITEMS.filter((n) => n.section === 'acciones');
+
   return (
     <>
       {open && (
@@ -39,8 +44,13 @@ export function Sidebar({ open, page, onNavigate, onClose }) {
             Principal
           </p>
           <ul className="space-y-1">
-            {NAV_ITEMS.filter((n) => n.mobile).map((item) => (
-              <NavLink key={item.id} item={item} active={page === item.id} onClick={() => { onNavigate(item.id); onClose(); }} />
+            {principal.map((item) => (
+              <NavLink
+                key={item.id}
+                item={item}
+                active={activeId === item.id}
+                onClick={() => { onNavigate(item.id); onClose(); }}
+              />
             ))}
           </ul>
 
@@ -48,8 +58,13 @@ export function Sidebar({ open, page, onNavigate, onClose }) {
             Acciones
           </p>
           <ul className="space-y-1">
-            {NAV_ITEMS.filter((n) => !n.mobile).map((item) => (
-              <NavLink key={item.id} item={item} active={page === item.id} onClick={() => { onNavigate(item.id); onClose(); }} />
+            {acciones.map((item) => (
+              <NavLink
+                key={item.id}
+                item={item}
+                active={activeId === item.id}
+                onClick={() => { onNavigate(item.id); onClose(); }}
+              />
             ))}
           </ul>
         </nav>
@@ -74,6 +89,7 @@ function NavLink({ item, active, onClick }) {
       <button
         type="button"
         onClick={onClick}
+        aria-current={active ? 'page' : undefined}
         className={clsx(
           'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
           active

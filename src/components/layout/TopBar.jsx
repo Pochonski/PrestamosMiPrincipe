@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import { Logo } from '../ui/Logo';
 import { UserMenu } from './UserMenu';
 import { ThemeToggle } from '../ui/ThemeToggle';
-import { NAV_ITEMS } from './navItems';
+import { findItemById, NAV_ITEMS } from './nav-config';
 
 export function TopBar({ page, onNavigate, onOpenSidebar, theme, onToggleTheme, notificationCount }) {
   const [isDesktop, setIsDesktop] = useState(false);
@@ -17,7 +17,7 @@ export function TopBar({ page, onNavigate, onOpenSidebar, theme, onToggleTheme, 
     return () => mq.removeEventListener('change', update);
   }, []);
 
-  const current = NAV_ITEMS.find((n) => n.id === page) || NAV_ITEMS[0];
+  const current = findItemById(page) || NAV_ITEMS[0];
 
   return (
     <header

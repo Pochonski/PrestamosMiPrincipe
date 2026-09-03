@@ -1,22 +1,18 @@
 import clsx from 'clsx';
-import {
-  LayoutDashboard,
-  Users,
-  UserPlus,
-  HandCoins,
-} from 'lucide-react';
+import { NAV_ITEMS, MOBILE_EXTRA_ITEMS, findItemById } from './nav-config';
 
-const ITEMS = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'clientes', label: 'Clientes', icon: Users },
-  { id: 'registrar-pago', label: 'Registrar pago', icon: HandCoins, page: 'cobro' },
-  { id: 'registrar-cliente', label: 'Registrar cliente', icon: UserPlus, page: 'clientes', params: { autoCreate: true } },
-];
+const TOP_ITEMS = NAV_ITEMS
+  .filter((n) => n.mobile)
+  .filter((n) => n.id === 'dashboard' || n.id === 'clientes');
+
+const ITEMS = [...TOP_ITEMS, ...MOBILE_EXTRA_ITEMS];
 
 function getActiveId(page) {
-  if (page === 'cliente-detalle') return 'clientes';
-  if (page === 'prestamo-detalle') return 'registrar-pago';
-  return page;
+  const current = findItemById(page);
+  const parentId = current?.parent ?? current?.id;
+  if (page === 'cobro') return 'registrar-pago';
+  if (page === 'cliente-detalle' || page === 'registrar-prestamo') return 'clientes';
+  return parentId;
 }
 
 export function MobileBottomNav({ page, onNavigate }) {

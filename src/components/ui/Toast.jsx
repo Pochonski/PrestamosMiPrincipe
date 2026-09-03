@@ -3,8 +3,8 @@ import { createPortal } from 'react-dom';
 import { CheckCircle2, AlertCircle, Info, Undo2 } from 'lucide-react';
 import clsx from 'clsx';
 
-let externalShow = null;
 const subscribers = new Set();
+const MAX_TOASTS = 3;
 
 function emit(toast) {
   subscribers.forEach((fn) => fn(toast));
@@ -79,7 +79,10 @@ export function ToastViewport() {
 
   useEffect(() => {
     function sub(toast) {
-      setToasts((t) => [...t, toast]);
+      setToasts((t) => {
+        const next = [...t, toast];
+        return next.length > MAX_TOASTS ? next.slice(next.length - MAX_TOASTS) : next;
+      });
     }
     subscribers.add(sub);
     return () => subscribers.delete(sub);
@@ -92,7 +95,12 @@ export function ToastViewport() {
   if (typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="pointer-events-none fixed inset-x-0 top-4 left-1/2 z-50 mx-auto flex w-fit -translate-x-1/2 max-w-[90vw] flex-col items-center gap-2">
+    <div
+      role="region"
+      aria-live="polite"
+      aria-label="Notificaciones"
+      className="pointer-events-none fixed inset-x-0 top-4 left-1/2 z-50 mx-auto flex w-fit -translate-x-1/2 max-w-[90vw] flex-col items-center gap-2"
+    >
       {toasts.map((t) => (
         <div key={t.id} className="pointer-events-auto">
           <ToastItem toast={t} onDone={() => dismiss(t.id)} />

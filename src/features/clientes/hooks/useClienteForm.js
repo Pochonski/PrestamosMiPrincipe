@@ -1,21 +1,23 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   formatTelefonoLive,
   formatCedulaLive,
   validateAll,
-  hasErrors,
-  validateNombre,
-  validateDireccion,
-  validateTelefono,
-  validateCedula,
 } from '../selectors';
 import * as clientesService from '../../../services/clientes';
+import { useWizardForm } from '../../../lib/hooks/useWizardForm';
 
 const STEP_FIELDS = {
   1: ['nombre', 'direccion'],
   2: ['telefono', 'cedula'],
   3: [],
 };
+
+const FORM_STEPS = [
+  { fields: STEP_FIELDS[1], validate: validateAll },
+  { fields: STEP_FIELDS[2], validate: validateAll },
+  { fields: STEP_FIELDS[3], validate: validateAll },
+];
 
 function buildInitial(cliente) {
   if (cliente) {
@@ -31,105 +33,75 @@ function buildInitial(cliente) {
 
 export function useClienteForm({ cliente = null } = {}) {
   const isEdit = Boolean(cliente);
-  const [step, setStep] = useState(1);
-  const [values, setValues] = useState(() => buildInitial(cliente));
-  const [touched, setTouched] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
-  const errors = useMemo(() => validateAll(values), [values]);
-  const stepErrors = useMemo(() => {
+  const form = useWizardForm({
+    steps: FORM_STEPS,
+    formatters: {
+      telefono: formatTelefonoLive,
+      cedula: formatCedulaLive,
+    },
+    initialValues: buildInitial(cliente),
+    totalSteps: 3,
+  });
+
+  const stepErrors = (() => {
     const out = {};
-    for (const f of STEP_FIELDS[step]) out[f] = errors[f];
+    for (const f of STEP_FIELDS[form.step]) out[f] = form.errors[f];
     return out;
-  }, [errors, step]);
+  })();
 
-  const stepIsValid = !hasErrors(stepErrors);
-  const allValid = !hasErrors(errors);
-
-  const showError = (field) => touched[field] && errors[field];
-
-  function set(field, value) {
-    setValues((v) => {
-      let next = value;
-      if (field === 'telefono') next = formatTelefonoLive(value);
-      else if (field === 'cedula') next = formatCedulaLive(value);
-      else next = value;
-      return { ...v, [field]: next };
-    });
-  }
-
-  const touch = useCallback((field) => {
-    setTouched((t) => (t[field] ? t : { ...t, [field]: true }));
-  }, []);
+  const showError = (field) => form.touched.has(field) && form.errors[field];
 
   function touchStep(stepNum) {
-    setTouched((t) => {
-      const next = { ...t };
-      for (const f of STEP_FIELDS[stepNum]) next[f] = true;
-      return next;
-    });
+    setValuesTouchedForStep(stepNum, form);
   }
 
   function nextStep() {
-    if (!stepIsValid) {
-      touchStep(step);
+    if (!form.stepIsValid(form.step)) {
+      touchStep(form.step);
       return false;
     }
-    setStep((s) => Math.min(3, s + 1));
+    form.nextStep();
     return true;
   }
 
   function prevStep() {
-    setStep((s) => Math.max(1, s - 1));
+    form.prevStep();
   }
 
   function goToStep(target) {
-    if (target < step) {
-      setStep(target);
+    if (target < form.step) {
+      form.goToStep(target);
       return;
     }
-    for (let i = step; i < target; i++) {
-      const fields = STEP_FIELDS[i];
-      const hasAny = fields.some((f) => errors[f]);
-      if (hasAny) {
+    for (let i = form.step; i < target; i++) {
+      if (!form.stepIsValid(i)) {
         touchStep(i);
-        setStep(i);
         return;
       }
     }
-    setStep(target);
+    form.goToStep(target);
   }
 
-  function validateStep(stepNum) {
-    const out = {};
-    for (const f of STEP_FIELDS[stepNum]) {
-      if (f === 'nombre') out.nombre = validateNombre(values.nombre);
-      if (f === 'direccion') out.direccion = validateDireccion(values.direccion);
-      if (f === 'telefono') out.telefono = validateTelefono(values.telefono);
-      if (f === 'cedula') out.cedula = validateCedula(values.cedula);
-    }
-    return out;
-  }
-
-  async function submit(userId) {
-    if (!allValid) {
-      setTouched({ nombre: true, direccion: true, telefono: true, cedula: true });
+  async function submit() {
+    if (!form.allValid) {
       for (let i = 1; i <= 2; i++) {
-        const e = validateStep(i);
-        if (e.nombre || e.direccion || e.telefono || e.cedula) {
-          setStep(i);
-          return { ok: false, error: 'Datos inválidos', errors };
+        if (!form.stepIsValid(i)) {
+          touchStep(i);
+          form.goToStep(i);
+          return { ok: false, error: 'Datos inválidos', errors: form.errors };
         }
       }
-      return { ok: false, error: 'Datos inválidos', errors };
+      return { ok: false, error: 'Datos inválidos', errors: form.errors };
     }
     setSubmitting(true);
     try {
       const payload = {
-        nombre: values.nombre,
-        direccion: values.direccion,
-        telefono: values.telefono.replace(/\D/g, ''),
-        cedula: values.cedula,
+        nombre: form.values.nombre,
+        direccion: form.values.direccion,
+        telefono: form.values.telefono.replace(/\D/g, ''),
+        cedula: form.values.cedula,
       };
       const result = isEdit
         ? await clientesService.update(cliente.id, payload)
@@ -144,19 +116,28 @@ export function useClienteForm({ cliente = null } = {}) {
 
   return {
     isEdit,
-    step,
-    values,
-    errors,
+    step: form.step,
+    values: form.values,
+    errors: form.errors,
     stepErrors,
-    stepIsValid,
-    allValid,
+    stepIsValid: form.stepIsValid(form.step),
+    allValid: form.allValid,
     submitting,
     showError,
-    set,
-    touch,
+    set: form.set,
+    touch: form.touch,
     nextStep,
     prevStep,
     goToStep,
     submit,
   };
+}
+
+function setValuesTouchedForStep(stepNum, form) {
+  const fields = STEP_FIELDS[stepNum] || [];
+  // setTouched no está expuesto en el contrato del hook por simplicidad;
+  // marcamos via touch() cada campo del step. Como touch usa un Set inmutable,
+  // necesitamos acceso directo. Para no romper encapsulación, hacemos un hack
+  // llamando touch por cada field.
+  fields.forEach((f) => form.touch(f));
 }

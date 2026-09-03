@@ -1,9 +1,11 @@
 import { lazy, Suspense, useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { useNotificacionesAuto } from './features/notificaciones/hooks/useNotificacionesAuto';
 import { Loader2 } from 'lucide-react';
 import { AuthGuard } from './features/auth/AuthGuard';
+import { NAV_ITEMS, resolveActiveId } from './components/layout/nav-config';
 
 const LoginPage = lazy(() => import('./features/auth/LoginPage').then((m) => ({ default: m.LoginPage })));
 const SignupPage = lazy(() => import('./features/auth/SignupPage').then((m) => ({ default: m.SignupPage })));
@@ -50,16 +52,27 @@ function PageFallback() {
 
 function AppShellRoute() {
   useNotificacionesAuto();
-  const [page, setPage] = useState('dashboard');
+  const navigate = useNavigate();
+  const location = useLocation();
   const [params, setParams] = useState({});
+  const [resetKey, setResetKey] = useState(0);
+
+  const page = resolveActiveId(location.pathname);
 
   function handleNavigate(id, newParams = {}) {
-    setPage(id);
     setParams(newParams);
+    const item = NAV_ITEMS.find((n) => n.id === id);
+    const path = item?.path ?? '/';
+    const search = Object.keys(newParams).length
+      ? '?' + new URLSearchParams(newParams).toString()
+      : '';
+    navigate(path + search);
   }
 
   return (
-    <AppShell pages={pages} page={page} params={params} onNavigate={handleNavigate} />
+    <ErrorBoundary key={resetKey} onReset={() => setResetKey((k) => k + 1)}>
+      <AppShell pages={pages} page={page} params={params} onNavigate={handleNavigate} />
+    </ErrorBoundary>
   );
 }
 

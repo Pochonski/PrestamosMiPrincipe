@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import * as prestamosService from '../../services/prestamos';
 import * as clientesService from '../../services/clientes';
-import { useDataChange } from '../../lib/hooks/useDataChange';
+import { useTickOnDataChange } from '../../lib/hooks/useAsyncResource';
 
 export async function getAtrasadosDetallado() {
   const [items, clientes] = await Promise.all([
@@ -29,10 +29,8 @@ export function getResumenAtrasados() {
 }
 
 export function useAtrasados() {
-  const [tick, setTick] = useState(0);
+  const tick = useTickOnDataChange();
   const [state, setState] = useState({ items: [], resumen: null, loading: true });
-
-  useDataChange(() => setTick((t) => t + 1));
 
   useEffect(() => {
     let cancelled = false;

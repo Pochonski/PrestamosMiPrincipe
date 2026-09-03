@@ -9,15 +9,6 @@ import * as notificacionesService from '../../services/notificaciones';
 import { onDataChanged } from '../../lib/events';
 import { useAuth } from '../../features/auth/useAuth';
 
-const PAGE_META = {};
-
-const SUB_PAGE_PARENT = {
-  'cliente-detalle': 'clientes',
-  'registrar-prestamo': 'clientes',
-  'prestamo-detalle': 'clientes',
-  cobro: 'clientes',
-};
-
 export function AppShell({ pages = {} }) {
   const [page, setPage] = useState('dashboard');
   const [params, setParams] = useState({});
@@ -51,22 +42,20 @@ export function AppShell({ pages = {} }) {
     setSidebarOpen(false);
   }
 
-  const meta = PAGE_META[page];
   const PageComponent = pages[page];
-  const sidebarPage = SUB_PAGE_PARENT[page] || page;
 
   return (
     <div className="flex min-h-screen bg-slate-50 text-navy-800 dark:bg-navy-900 dark:text-navy-100">
       <Sidebar
         open={sidebarOpen}
-        page={sidebarPage}
+        page={page}
         onNavigate={handleNavigate}
         onClose={() => setSidebarOpen(false)}
       />
 
       <div className="flex min-w-0 flex-1 flex-col lg:pl-72">
         <TopBar
-          page={sidebarPage}
+          page={page}
           onNavigate={handleNavigate}
           onOpenSidebar={() => setSidebarOpen(true)}
           theme={theme}
@@ -77,12 +66,12 @@ export function AppShell({ pages = {} }) {
         <main className={clsx('flex-1 px-3 pb-28 pt-4 sm:px-5 sm:pt-6 lg:pb-10')}>
           {PageComponent ? (
             <PageComponent onNavigate={handleNavigate} params={params} />
-          ) : meta ? (
-            <PlaceholderPage titulo={meta.titulo} descripcion={meta.descripcion} />
-          ) : null}
+          ) : (
+            <PlaceholderPage titulo="Página no encontrada" descripcion="La sección solicitada no existe." />
+          )}
         </main>
 
-        <MobileBottomNav page={sidebarPage} onNavigate={handleNavigate} />
+        <MobileBottomNav page={page} onNavigate={handleNavigate} />
 
         <div
           aria-hidden="true"
