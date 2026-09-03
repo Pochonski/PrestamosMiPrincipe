@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import { useAuth } from './useAuth';
 import { OnboardingForm } from './OnboardingForm';
@@ -9,8 +9,12 @@ import { MeshGradient } from './components/MeshGradient';
 import { Avatar } from '../../components/ui/Avatar';
 
 export function OnboardingPage() {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, currentOrg, loading } = useAuth();
   const name = profile?.full_name || user?.email?.split('@')[0] || 'Ahí';
+
+  if (!loading && currentOrg) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="grid min-h-screen grid-cols-1 bg-neutral-50 dark:bg-navy-900 lg:grid-cols-2">

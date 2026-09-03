@@ -1,13 +1,32 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { AuthBranding } from './AuthBranding';
 import { LoginForm } from './LoginForm';
 import { GlassCard } from './components/GlassCard';
 import { Logo } from '../../components/ui/Logo';
 import { MeshGradient } from './components/MeshGradient';
+import { useAuth } from './useAuth';
 
 export function SignupPage() {
+  const navigate = useNavigate();
+  const { session, loading, currentOrg } = useAuth();
+  useEffect(() => {
+    if (loading) return;
+    if (session) {
+      let inviteToken = null;
+      try {
+        inviteToken = localStorage.getItem('pmp:invite_token') || new URLSearchParams(window.location.search).get('invite');
+      } catch {}
+      if (inviteToken && !currentOrg) {
+        navigate(`/invite/${inviteToken}`, { replace: true });
+        return;
+      }
+      if (currentOrg) navigate('/', { replace: true });
+      else navigate('/onboarding', { replace: true });
+    }
+  }, [loading, session, currentOrg, navigate]);
   return (
     <div className="grid min-h-screen grid-cols-1 bg-neutral-50 dark:bg-navy-900 lg:grid-cols-2">
       <AuthBranding />

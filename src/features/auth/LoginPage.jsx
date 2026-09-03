@@ -16,8 +16,19 @@ export function LoginPage() {
   const from = location.state?.from || '/';
 
   useEffect(() => {
-    if (!loading && session && currentOrg) navigate(from, { replace: true });
-    else if (!loading && session) navigate('/onboarding', { replace: true });
+    if (loading) return;
+    if (session) {
+      let inviteToken = null;
+      try {
+        inviteToken = localStorage.getItem('pmp:invite_token') || new URLSearchParams(window.location.search).get('invite');
+      } catch {}
+      if (inviteToken && !currentOrg) {
+        navigate(`/invite/${inviteToken}`, { replace: true });
+        return;
+      }
+      if (currentOrg) navigate(from, { replace: true });
+      else navigate('/onboarding', { replace: true });
+    }
   }, [loading, session, currentOrg, navigate, from]);
 
   return (

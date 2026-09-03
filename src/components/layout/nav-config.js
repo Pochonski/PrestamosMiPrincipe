@@ -11,6 +11,7 @@ import {
   ClipboardList,
   Users,
   UserPlus,
+  Settings,
 } from 'lucide-react';
 
 /**
@@ -34,6 +35,7 @@ export const NAV_ITEMS = [
   { id: 'respaldar', label: 'Respaldar datos', icon: Database, path: '/respaldar', mobile: false, section: 'acciones' },
   { id: 'exportar', label: 'Exportar Excel', icon: Download, path: '/exportar', mobile: false, section: 'acciones' },
   { id: 'notificaciones', label: 'Notificaciones', icon: Bell, path: '/notificaciones', mobile: false, section: 'acciones' },
+  { id: 'settings', label: 'Organización', icon: Settings, path: '/settings', mobile: false, section: 'acciones' },
 ];
 
 const BY_ID = new Map(NAV_ITEMS.map((n) => [n.id, n]));

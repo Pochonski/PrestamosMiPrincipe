@@ -36,24 +36,50 @@ export function OnboardingForm() {
       .slice(0, 32);
   }
 
+  async function tryCreate(slugBase) {
+    let lastErr = null;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const slug = attempt === 0 ? slugBase : `${slugBase}-${attempt + 1}`;
+      const { data: orgId, error: rpcErr } = await supabase.rpc('create_organization', {
+        org_nombre: nombre.trim(),
+        org_slug: slug,
+      });
+      if (!rpcErr) return orgId;
+      const msg = String(rpcErr.message || '').toLowerCase();
+      const isDuplicate = rpcErr.code === '23505' || msg.includes('duplicate') || msg.includes('slug');
+      if (isDuplicate && attempt < 4) {
+        lastErr = rpcErr;
+        continue;
+      }
+      throw rpcErr;
+    }
+    throw lastErr;
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     if (!nombre.trim() || !user) return;
     setErrorMeta(null);
     setSubmitting(true);
     try {
-      const slug = makeSlug(nombre) || 'org';
-      const { data: orgId, error: rpcErr } = await supabase.rpc('create_organization', {
-        org_nombre: nombre.trim(),
-        org_slug: slug,
-      });
-      if (rpcErr) throw rpcErr;
+      const slugBase = makeSlug(nombre) || 'org';
+      const orgId = await tryCreate(slugBase);
       if (!orgId) throw new Error('No se creó la organización');
 
       await refreshProfile();
       setDone(true);
       redirectTimer.current = setTimeout(() => navigate('/', { replace: true }), 800);
     } catch (err) {
+      const raw = String(err?.message || '').toLowerCase();
+      if (raw.includes('already in organization')) {
+        setErrorMeta({
+          title: 'Ya tenés una organización',
+          message: 'Cada usuario solo puede pertenecer a una organización. Redirigiendo al dashboard...',
+          variant: 'warning',
+        });
+        setTimeout(() => navigate('/', { replace: true }), 1200);
+        return;
+      }
       setErrorMeta(describeAuthError(err));
     } finally {
       setSubmitting(false);

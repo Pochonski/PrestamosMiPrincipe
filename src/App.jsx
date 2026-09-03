@@ -26,6 +26,8 @@ const ExportarPage = lazy(() => import('./features/exportar').then((m) => ({ def
 const RespaldoPage = lazy(() => import('./features/respaldo').then((m) => ({ default: m.RespaldoPage })));
 const ResumenPage = lazy(() => import('./features/resumen').then((m) => ({ default: m.ResumenPage })));
 const ReportesPage = lazy(() => import('./features/reportes').then((m) => ({ default: m.ReportesPage })));
+const SettingsPage = lazy(() => import('./features/organizations/pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
+const InviteAcceptPage = lazy(() => import('./features/organizations/pages/InviteAcceptPage').then((m) => ({ default: m.InviteAcceptPage })));
 
 const pages = {
   dashboard: DashboardPage,
@@ -41,6 +43,7 @@ const pages = {
   respaldar: RespaldoPage,
   resumen: ResumenPage,
   reportes: ReportesPage,
+  settings: SettingsPage,
 };
 
 function PageFallback() {
@@ -112,6 +115,14 @@ function App() {
               <OnboardingPage />
             </Suspense>
           </AuthGuard>
+        }
+      />
+      <Route
+        path="/invite/:token"
+        element={
+          <Suspense fallback={<PageFallback />}>
+            <InviteAcceptPage />
+          </Suspense>
         }
       />
       <Route

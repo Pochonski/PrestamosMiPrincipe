@@ -1,6 +1,6 @@
 import React from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { supabase, invalidateOrgCache } from '../../lib/supabase';
 import { AuthContext } from './authContextValue';
 
 export function AuthProvider({ children }) {
@@ -44,6 +44,7 @@ export function AuthProvider({ children }) {
 
   const refreshProfile = useCallback(async () => {
     if (session?.user?.id) {
+      invalidateOrgCache();
       await loadProfile(session.user.id);
     }
   }, [session, loadProfile]);
@@ -100,12 +101,25 @@ export function AuthProvider({ children }) {
     };
   }, [loadProfile]);
 
+  const rol = currentOrg?.rol ?? null;
+  const isOwner = rol === 'owner';
+  const isAdmin = rol === 'owner' || rol === 'admin';
+  const isViewer = rol === 'viewer';
+  const canInvite = rol === 'owner' || rol === 'admin' || rol === 'cobrador';
+  const canManageMembers = isAdmin;
+
   const value = {
     session,
     user: session?.user ?? null,
     profile,
     currentOrg,
     orgId: currentOrg?.id ?? null,
+    rol,
+    isOwner,
+    isAdmin,
+    isViewer,
+    canInvite,
+    canManageMembers,
     loading,
     signOut: forceSignOut,
     refreshProfile,
