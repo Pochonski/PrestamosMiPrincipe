@@ -7,7 +7,7 @@ import { Spinner } from './components/ui/Spinner';
 import { useNotificacionesAuto } from './features/notificaciones/hooks/useNotificacionesAuto';
 import { AuthGuard } from './features/auth/AuthGuard';
 import { OrgSlugGuard, LegacyRedirect } from './features/auth/OrgSlugGuard';
-import { NAV_ITEMS, resolveActiveId, withOrgPrefix } from './components/layout/nav-config';
+import { NAV_ITEMS, resolveActiveId, withOrgPrefix, stripOrgPrefix } from './components/layout/nav-config';
 import { useAuth } from './features/auth/useAuth';
 
 const LoginPage = lazy(() => import('./features/auth/LoginPage').then((m) => ({ default: m.LoginPage })));
@@ -61,12 +61,42 @@ function AppShellRoute() {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentOrg } = useAuth();
-  const [params, setParams] = useState({});
   const [resetKey, setResetKey] = useState(0);
 
-  const page = resolveActiveId(location.pathname);
+  // Derive initial page/params from URL (supports direct link with query)
+  const getPageFromUrl = () => {
+    const sp = new URLSearchParams(location.search);
+    const stripped = stripOrgPrefix(location.pathname);
+    if (sp.has('prestamoId')) return 'prestamo-detalle';
+    if (sp.has('clienteId')) {
+      if (stripped === '/prestamos/nuevo') return 'registrar-prestamo';
+      return 'cliente-detalle';
+    }
+    return resolveActiveId(location.pathname);
+  };
+  const getParamsFromUrl = () => Object.fromEntries(new URLSearchParams(location.search));
+
+  const [page, setPage] = useState(getPageFromUrl);
+  const [params, setParams] = useState(getParamsFromUrl);
+
+  // Sync when URL changes (back/forward, direct entry, or after handleNavigate)
+  React.useEffect(() => {
+    const sp = new URLSearchParams(location.search);
+    const stripped = stripOrgPrefix(location.pathname);
+    let nextPage;
+    if (sp.has('prestamoId')) nextPage = 'prestamo-detalle';
+    else if (sp.has('clienteId')) {
+      if (stripped === '/prestamos/nuevo') nextPage = 'registrar-prestamo';
+      else nextPage = 'cliente-detalle';
+    } else {
+      nextPage = resolveActiveId(location.pathname);
+    }
+    setPage(nextPage);
+    setParams(Object.fromEntries(sp));
+  }, [location.pathname, location.search]);
 
   function handleNavigate(id, newParams = {}) {
+    setPage(id);
     setParams(newParams);
     const item = NAV_ITEMS.find((n) => n.id === id);
     const basePath = item?.path ?? '/';
