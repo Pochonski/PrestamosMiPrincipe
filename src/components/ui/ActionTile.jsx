@@ -25,7 +25,7 @@ export function ActionTile({ icon: Icon, title, description, tone = 'gold', onCl
       <div className={clsx('absolute inset-0 bg-gradient-to-br', tones[tone])} />
       <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10 blur-2xl transition-all duration-500 group-hover:scale-125" />
       <div className="absolute inset-0 bg-gold-shine opacity-0 transition-opacity duration-700 group-hover:opacity-60" />
-      <div className="relative flex items-start gap-3 p-4 sm:p-5">
+      <div className="relative flex items-center gap-3 p-4 sm:p-5">
         <div
           className={clsx(
             'flex h-11 w-11 shrink-0 items-center justify-center rounded-input bg-white/20 backdrop-blur-sm sm:h-12 sm:w-12',
