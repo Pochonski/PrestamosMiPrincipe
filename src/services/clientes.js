@@ -52,14 +52,12 @@ export async function buscar(query) {
 
 export async function create({ nombre, cedula, telefono, direccion }) {
   const orgId = await getOrgId();
-  const { data: { user } } = await supabase.auth.getUser();
   const payload = {
     org_id: orgId,
     nombre: String(nombre || '').trim(),
     cedula: String(cedula || '').trim(),
     telefono: String(telefono || '').trim(),
     direccion: String(direccion || '').trim(),
-    created_by: user?.id,
   };
   const { data, error } = await supabase
     .from('clientes')
