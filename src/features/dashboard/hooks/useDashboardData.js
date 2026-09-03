@@ -1,5 +1,12 @@
 import { useQueries } from '@tanstack/react-query';
-import { getKpis, getQuickBadges, getRecentActivity } from '../selectors';
+import { useMemo } from 'react';
+import {
+  getKpis,
+  getQuickBadges,
+  getRecentActivity,
+  getMetrics,
+  deriveDeltas,
+} from '../selectors';
 
 const EMPTY_KPIS = {
   carteraTotal: 0,
@@ -22,11 +29,13 @@ export function useDashboardData() {
       { queryKey: ['dashboard', 'kpis'], queryFn: getKpis, staleTime: 30_000 },
       { queryKey: ['dashboard', 'badges'], queryFn: getQuickBadges, staleTime: 30_000 },
       { queryKey: ['dashboard', 'recent'], queryFn: () => getRecentActivity(6), staleTime: 30_000 },
+      { queryKey: ['dashboard', 'metrics'], queryFn: getMetrics, staleTime: 60_000 },
     ],
   });
 
-  const [kpisQ, badgesQ, recentQ] = results;
+  const [kpisQ, badgesQ, recentQ, metricsQ] = results;
   const loading = results.some((r) => r.isLoading) && !results.some((r) => r.data);
+  const error = results.find((r) => r.isError)?.error || null;
 
   const rawKpis = kpisQ.data ?? EMPTY_KPIS;
   const kpis = {
@@ -49,6 +58,14 @@ export function useDashboardData() {
   };
 
   const recent = Array.isArray(recentQ.data) ? recentQ.data : EMPTY_RECENT;
+  const metrics = metricsQ.data ?? null;
 
-  return { kpis, badges, recent, loading };
+  const deltas = useMemo(
+    () => deriveDeltas({ kpis, metrics }),
+    [kpis, metrics],
+  );
+
+  const refetch = () => results.forEach((r) => r.refetch?.());
+
+  return { kpis, badges, recent, metrics, deltas, loading, error, refetch };
 }

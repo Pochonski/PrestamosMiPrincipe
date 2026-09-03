@@ -3,6 +3,9 @@ import * as prestamosService from '../../services/prestamos';
 import * as cobrosService from '../../services/cobros';
 import * as clientesService from '../../services/clientes';
 import * as notificacionesService from '../../services/notificaciones';
+import * as carteraHistoryService from '../../services/carteraHistory';
+import { startOfDay } from '../../lib/format';
+import { computeResumen } from '../resumen/selectors';
 
 export async function getKpis() {
   const [prestamos, cobros, totalClientes] = await Promise.all([
@@ -79,4 +82,102 @@ export async function getCobrarHoyDetalle() {
     clienteId: x.prestamo.clienteId,
     cuota: x.cuota,
   }));
+}
+
+function isSameDay(a, b) {
+  return startOfDay(a).getTime() === startOfDay(b).getTime();
+}
+
+export async function getMetrics() {
+  const [snapshotResult, historyRows, cobros, prestamos, clientes] = await Promise.all([
+    carteraHistoryService.snapshot().catch(() => null),
+    carteraHistoryService.history(35).catch(() => []),
+    cobrosService.list({ limit: 1000, offset: 0 }),
+    prestamosService.list({ limit: 500, offset: 0 }),
+    clientesService.list({ limit: 500, offset: 0 }),
+  ]);
+
+  const resumen = computeResumen({ clientes, prestamos, cobros });
+
+  const cobradoAyer = cobros
+    .filter((c) => {
+      const ayer = startOfDay(new Date());
+      ayer.setDate(ayer.getDate() - 1);
+      return isSameDay(c.fecha, ayer);
+    })
+    .reduce((s, c) => s + Number(c.monto || 0), 0);
+
+  const hoy = startOfDay(new Date());
+  const snapshotHoy = (historyRows || []).find((r) => isSameDay(r.fecha, hoy)) || null;
+  const snapshotMesAnterior = findSnapshotMesAnterior(historyRows || []);
+  const snapshotAyer = (historyRows || []).find((r) => {
+    const ayer = startOfDay(new Date());
+    ayer.setDate(ayer.getDate() - 1);
+    return isSameDay(r.fecha, ayer);
+  }) || null;
+
+  return {
+    cobros6m: resumen.cobros6m || [],
+    spark7: resumen.spark7 || [],
+    porEstado: resumen.porEstado,
+    cobrosPrevMes: resumen.kpis.cobrosPrevMes,
+    cobrosMes: resumen.kpis.cobrosMes,
+    cobradoAyer,
+    snapshotHoy,
+    snapshotMesAnterior,
+    snapshotAyer: snapshotAyer ?? snapshotResult,
+  };
+}
+
+function findSnapshotMesAnterior(rows) {
+  if (!rows || rows.length === 0) return null;
+  const ahora = new Date();
+  const prevStart = new Date(ahora.getFullYear(), ahora.getMonth() - 1, 1);
+  const prevEnd = new Date(ahora.getFullYear(), ahora.getMonth(), 0);
+  const prevStartDay = startOfDay(prevStart);
+  const prevEndDay = startOfDay(prevEnd);
+  const inPrev = rows.filter((r) => {
+    const d = startOfDay(r.fecha);
+    return d >= prevStartDay && d <= prevEndDay;
+  });
+  if (inPrev.length === 0) return null;
+  return inPrev[inPrev.length - 1];
+}
+
+export function deriveDeltas({ kpis, metrics }) {
+  const deltas = {
+    cobradoHoy: null,
+    carteraTotal: null,
+    totalAtrasado: null,
+    totalCobrarHoy: null,
+  };
+
+  if (!metrics) return deltas;
+
+  if (metrics.cobradoAyer > 0 && kpis.totalCobradoHoy != null) {
+    deltas.cobradoHoy = ((kpis.totalCobradoHoy - metrics.cobradoAyer) / metrics.cobradoAyer) * 100;
+  }
+
+  if (metrics.snapshotMesAnterior && metrics.snapshotMesAnterior.cartera_total != null) {
+    const prev = Number(metrics.snapshotMesAnterior.cartera_total);
+    if (prev > 0) {
+      deltas.carteraTotal = ((kpis.carteraTotal - prev) / prev) * 100;
+    }
+  }
+
+  if (metrics.snapshotAyer && metrics.snapshotAyer.total_atrasado != null) {
+    const prev = Number(metrics.snapshotAyer.total_atrasado);
+    if (prev > 0) {
+      deltas.totalAtrasado = ((kpis.totalAtrasado - prev) / prev) * 100;
+    }
+  }
+
+  if (metrics.snapshotAyer && metrics.snapshotAyer.total_por_cobrar != null) {
+    const prev = Number(metrics.snapshotAyer.total_por_cobrar);
+    if (prev > 0) {
+      deltas.totalCobrarHoy = ((kpis.totalCobrarHoy - prev) / prev) * 100;
+    }
+  }
+
+  return deltas;
 }

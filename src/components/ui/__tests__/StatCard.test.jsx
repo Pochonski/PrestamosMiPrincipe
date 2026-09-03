@@ -19,4 +19,20 @@ describe('StatCard', () => {
     render(<StatCard label="L" value="1" delta={-2} />);
     expect(screen.getByText('2.0%')).toBeInTheDocument();
   });
+  it('renderiza sparkline cuando hay data', () => {
+    const { container } = render(
+      <StatCard label="L" value="1" spark={[10, 20, 15, 30]} />,
+    );
+    expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
+  });
+  it('sparkline con tone coloreado y valores no numéricos', () => {
+    const { container } = render(
+      <StatCard label="L" value="1" tone="gold" icon={Wallet} spark={[10, 'x', null, 30]} />,
+    );
+    expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
+  });
+  it('no renderiza sparkline con data insuficiente', () => {
+    const { container } = render(<StatCard label="L" value="1" spark={[10]} />);
+    expect(container.querySelector('.recharts-responsive-container')).not.toBeInTheDocument();
+  });
 });
