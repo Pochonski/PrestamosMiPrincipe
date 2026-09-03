@@ -19,9 +19,12 @@ function PageSkeleton() {
   );
 }
 
-export function AppShell({ pages = {} }) {
-  const [page, setPage] = useState('dashboard');
-  const [params, setParams] = useState({});
+export function AppShell({ pages = {}, page: controlledPage, params: controlledParams, onNavigate: controlledOnNavigate }) {
+  const [internalPage, setInternalPage] = useState('dashboard');
+  const [internalParams, setInternalParams] = useState({});
+  const isControlled = controlledPage !== undefined && controlledOnNavigate !== undefined;
+  const page = isControlled ? controlledPage : internalPage;
+  const params = isControlled ? controlledParams ?? {} : internalParams;
   const [theme, setThemeState] = useState(() => getTheme());
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
@@ -46,11 +49,18 @@ export function AppShell({ pages = {} }) {
     setTheme(next);
   }, []);
 
-  const handleNavigate = useCallback((id, newParams = {}) => {
-    setPage(id);
-    setParams(newParams);
-    setSidebarOpen(false);
-  }, []);
+  const handleNavigate = useCallback(
+    (id, newParams = {}) => {
+      if (isControlled) {
+        controlledOnNavigate(id, newParams);
+      } else {
+        setInternalPage(id);
+        setInternalParams(newParams);
+      }
+      setSidebarOpen(false);
+    },
+    [isControlled, controlledOnNavigate],
+  );
 
   const handleCloseSidebar = useCallback(() => setSidebarOpen(false), []);
   const handleOpenSidebar = useCallback(() => setSidebarOpen(true), []);

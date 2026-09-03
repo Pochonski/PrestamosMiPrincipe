@@ -16,6 +16,7 @@ const PREFETCH_MAP = {
   respaldar: () => import('../../features/respaldo'),
   'registrar-prestamo': () => import('../../features/prestamos'),
   cobro: () => import('../../features/cobros'),
+  settings: () => import('../../features/organizations/pages/SettingsPage'),
 };
 
 export const Sidebar = memo(function Sidebar({ open, page, onNavigate, onClose }) {
