@@ -18,12 +18,12 @@ end $$;
 do $$
 declare r record;
 begin
-  for r in select org_id from public.organizations loop
-    if not exists (select 1 from public.org_members where org_id=r.org_id and rol='owner') then
+  for r in select id from public.organizations loop
+    if not exists (select 1 from public.org_members where org_id=r.id and rol='owner') then
       update public.org_members
          set rol='owner'
        where (org_id, created_at) in (
-         select org_id, min(created_at) from public.org_members where org_id=r.org_id group by org_id
+         select org_id, min(created_at) from public.org_members where org_id=r.id group by org_id
        );
     end if;
   end loop;
