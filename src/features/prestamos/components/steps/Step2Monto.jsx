@@ -1,10 +1,23 @@
 import React from 'react';
+import { useRef } from 'react';
 import { Wallet } from 'lucide-react';
 import { Input } from '../../../../components/ui/Input';
 import { IconBox } from '../../../../components/ui/IconBox';
-import { formatCRC } from '../../../../lib/format';
+import { formatCRC, formatMontoLive } from '../../../../lib/format';
+
+function getNextCaret(formatted, digitsBeforeCursor) {
+  if (digitsBeforeCursor === 0) return 0;
+  if (!formatted) return 0;
+  let count = 0;
+  for (let i = 0; i < formatted.length; i++) {
+    if (/\d/.test(formatted[i])) count += 1;
+    if (count === digitsBeforeCursor) return i + 1;
+  }
+  return formatted.length;
+}
 
 export function Step2Monto({ values, errors, showError, set, touch }) {
+  const inputRef = useRef(null);
   return (
     <div className="space-y-5">
       <header className="flex items-center gap-3">
@@ -18,6 +31,7 @@ export function Step2Monto({ values, errors, showError, set, touch }) {
       </header>
 
       <Input
+        ref={inputRef}
         type="text"
         name="monto"
         size="lg"
@@ -30,7 +44,25 @@ export function Step2Monto({ values, errors, showError, set, touch }) {
         prefix="₡"
         inputMode="numeric"
         value={values.monto}
-        onChange={(e) => set('monto', e.target.value)}
+        onChange={(e) => {
+          const el = e.target;
+          const raw = el.value;
+          const cursor = el.selectionStart ?? raw.length;
+          const digitsBeforeCursor = raw.slice(0, cursor).replace(/\D/g, '').length;
+          const nextFormatted = formatMontoLive(raw);
+          const nextCaret = getNextCaret(nextFormatted, digitsBeforeCursor);
+          set('monto', raw);
+          requestAnimationFrame(() => {
+            const input = inputRef.current;
+            if (input && document.activeElement === input) {
+              try {
+                input.setSelectionRange(nextCaret, nextCaret);
+              } catch {
+                // ignore if not selectable
+              }
+            }
+          });
+        }}
         onBlur={() => touch('monto')}
         placeholder="0"
         error={showError('monto') && errors.monto}

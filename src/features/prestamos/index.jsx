@@ -1,5 +1,5 @@
 import React from 'react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight, Save, Search, UserPlus } from 'lucide-react';
 import clsx from 'clsx';
 import { ModalShell } from '../../components/ui/ModalShell';
@@ -28,9 +28,10 @@ const STEPS = [
 export function PrestamoCreatePage({ onNavigate, params }) {
   const initialClienteId = params?.clienteId || null;
   const [clienteId, setClienteId] = useState(initialClienteId);
+  const handleClosePicker = useCallback(() => onNavigate?.('clientes', {}), [onNavigate]);
 
   if (!clienteId) {
-    return <ClientPicker onPick={setClienteId} onClose={() => onNavigate?.('clientes', {})} />;
+    return <ClientPicker onPick={setClienteId} onClose={handleClosePicker} />;
   }
 
   return <PrestamoForm clienteId={clienteId} onNavigate={onNavigate} />;
@@ -111,6 +112,7 @@ function PrestamoForm({ clienteId, onNavigate }) {
   const form = usePrestamoForm({ clienteId });
   const { user } = useAuth();
   const [cliente, setCliente] = useState(null);
+  const handleClose = useCallback(() => onNavigate?.('cliente-detalle', { clienteId }), [onNavigate, clienteId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -166,7 +168,7 @@ function PrestamoForm({ clienteId, onNavigate }) {
   return (
     <ModalShell
       open
-      onClose={() => onNavigate?.('cliente-detalle', { clienteId })}
+      onClose={handleClose}
       title="Nuevo préstamo"
       description={cliente ? `Para ${cliente.nombre}` : null}
       size="lg"

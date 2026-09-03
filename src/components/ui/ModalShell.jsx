@@ -27,6 +27,8 @@ export function ModalShell({
 }) {
   const panelRef = useRef(null);
   const previouslyFocused = useRef(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
@@ -37,7 +39,7 @@ export function ModalShell({
     function onKeyDown(e) {
       if (e.key === 'Escape') {
         e.stopPropagation();
-        onClose?.();
+        onCloseRef.current?.();
       }
     }
     document.addEventListener('keydown', onKeyDown);
@@ -54,7 +56,7 @@ export function ModalShell({
         previouslyFocused.current.focus();
       }
     };
-  }, [open, onClose, initialFocusRef]);
+  }, [open]);
 
   if (!open) return null;
   if (typeof document === 'undefined') return null;
