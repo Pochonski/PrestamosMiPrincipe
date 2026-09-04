@@ -12,13 +12,14 @@ export default defineConfig({
           if (!id.includes('node_modules')) return;
           if (id.includes('@supabase/supabase-js')) return 'supabase';
           if (id.includes('lucide-react') || id.includes('/clsx/')) return 'ui';
+          if (id.includes('@tanstack')) return 'query';
+          if (id.includes('/react-router') || id.includes('/react-router-dom')) return 'router';
           if (
             id.includes('/react/') ||
             id.includes('/react-dom/') ||
-            id.includes('/react-router') ||
             id.includes('/scheduler/')
           ) {
-            return 'vendor';
+            return 'react';
           }
           return 'vendor';
         },

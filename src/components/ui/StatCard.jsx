@@ -2,7 +2,6 @@ import React from 'react';
 import { memo, useMemo } from 'react';
 import clsx from 'clsx';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import { Card } from './Card';
 import { IconBox } from './IconBox';
 
@@ -15,32 +14,44 @@ const SPARK_TONES = {
   navy: '#334155',
 };
 
+function monotonePath(values, width, height, padding = 2) {
+  if (values.length < 2) return '';
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const stepX = (width - padding * 2) / (values.length - 1);
+  const x = (i) => padding + i * stepX;
+  const y = (v) => padding + (height - padding * 2) * (1 - (v - min) / range);
+  const pts = values.map((v, i) => [x(i), y(v)]);
+  const line = pts.map((p) => p.map((n) => n.toFixed(2)).join(',')).join(' ');
+  const area = `${line} ${x(values.length - 1).toFixed(2)},${height} ${x(0).toFixed(2)},${height}`;
+  return { line, area };
+}
+
 function Sparkline({ data, tone = 'neutral' }) {
   if (!data || data.length < 2) return null;
   const stroke = SPARK_TONES[tone];
-  const points = data.map((v, i) => ({ i, v: Number(v) || 0 }));
+  const values = data.map((v) => Number(v) || 0);
+  const width = 200;
+  const height = 36;
+  const { line, area } = monotonePath(values, width, height);
+  const gid = `spark-${tone}`;
   return (
-    <div className="mt-3 h-9 w-full" aria-hidden="true">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={points} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
-          <defs>
-            <linearGradient id={`spark-${tone}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={stroke} stopOpacity={0.35} />
-              <stop offset="100%" stopColor={stroke} stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <Area
-            type="monotone"
-            dataKey="v"
-            stroke={stroke}
-            strokeWidth={1.5}
-            fill={`url(#spark-${tone})`}
-            dot={false}
-            isAnimationActive={false}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="mt-3 h-9 w-full"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={stroke} stopOpacity={0.35} />
+          <stop offset="100%" stopColor={stroke} stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      <polygon points={area} fill={`url(#${gid})`} />
+      <polyline points={line} fill="none" stroke={stroke} strokeWidth={1.5} />
+    </svg>
   );
 }
 

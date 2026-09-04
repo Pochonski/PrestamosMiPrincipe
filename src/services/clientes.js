@@ -18,12 +18,13 @@ export async function list({ limit = DEFAULT_LIMIT, offset = 0 } = {}) {
 
 export async function getById(id) {
   const orgId = await getOrgId();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('clientes')
     .select('*')
     .eq('org_id', orgId)
     .eq('id', id)
     .maybeSingle();
+  if (error) throw error;
   return data;
 }
 

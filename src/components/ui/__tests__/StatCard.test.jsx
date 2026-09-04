@@ -23,16 +23,16 @@ describe('StatCard', () => {
     const { container } = render(
       <StatCard label="L" value="1" spark={[10, 20, 15, 30]} />,
     );
-    expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
+    expect(container.querySelector('svg polyline')).toBeInTheDocument();
   });
   it('sparkline con tone coloreado y valores no numéricos', () => {
     const { container } = render(
       <StatCard label="L" value="1" tone="gold" icon={Wallet} spark={[10, 'x', null, 30]} />,
     );
-    expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
+    expect(container.querySelector('svg polyline')).toBeInTheDocument();
   });
   it('no renderiza sparkline con data insuficiente', () => {
     const { container } = render(<StatCard label="L" value="1" spark={[10]} />);
-    expect(container.querySelector('.recharts-responsive-container')).not.toBeInTheDocument();
+    expect(container.querySelector('svg polyline')).not.toBeInTheDocument();
   });
 });
