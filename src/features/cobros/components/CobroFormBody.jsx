@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
-import { Check, Receipt, AlertCircle, AlertTriangle, Calendar } from 'lucide-react';
+import { Receipt, AlertCircle, AlertTriangle, Calendar } from 'lucide-react';
 import clsx from 'clsx';
 import { CobroTipoPicker } from './CobroTipoPicker';
 import { Input } from '../../../components/ui/Input';
@@ -160,28 +160,6 @@ export function CobroFormBody({ form }) {
               capitalBloqueado && 'cursor-not-allowed opacity-50',
             )}
           />
-
-          {!capitalBloqueado && (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => setMonto(String(Math.round(saldo / 2)))}
-              >
-                Mitad del saldo ({formatCRC(Math.round(saldo / 2))})
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                icon={Check}
-                onClick={() => setMonto(String(liquidar))}
-              >
-                Liquidar todo {formatCRC(liquidar)}
-              </Button>
-            </div>
-          )}
 
           <label
             className={clsx(
