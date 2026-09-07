@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import clsx from 'clsx';
-import { CalendarClock, HandCoins, Wallet, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, CalendarClock, HandCoins, Wallet, CheckCircle2 } from 'lucide-react';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { IconBox } from '../../components/ui/IconBox';
@@ -18,7 +18,7 @@ const TABS = [
 
 export function CobrarHoyPage({ onNavigate }) {
   const [tab, setTab] = useState('hoy');
-  const { items, resumen, loading } = useCobrarHoy();
+  const { items, atrasadas, resumenDia, loading } = useCobrarHoy();
 
   function handleCobrar(item) {
     onNavigate?.('cobro', {
@@ -76,44 +76,75 @@ export function CobrarHoyPage({ onNavigate }) {
       ) : (
         <>
           <section className="space-y-2">
-            <SectionTitle title="Resumen de hoy" />
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <SectionTitle title="Resumen del día" />
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
               <StatCard
-                label="Cuotas hoy"
-                value={resumen.cantidad}
-                sub={resumen.cantidad === 1 ? 'cuota vence hoy' : 'cuotas vencen hoy'}
+                label="A cobrar hoy"
+                value={formatCRCCompact(resumenDia.total)}
+                sub={`${resumenDia.cantidad === 1 ? '1 cuota pendiente' : `${resumenDia.cantidad} cuotas pendientes`} · hoy + atrasadas`}
+                icon={Wallet}
+                tone="gold"
+              />
+              <StatCard
+                label="Vencen hoy"
+                value={resumenDia.hoyCant}
+                sub={`${formatCRCCompact(resumenDia.hoyTotal)} por cobrar`}
                 icon={CalendarClock}
                 tone="info"
               />
               <StatCard
-                label="Total a cobrar"
-                value={formatCRCCompact(resumen.total)}
-                sub="solo intereses"
-                icon={Wallet}
-                tone="gold"
+                label="Atrasadas"
+                value={resumenDia.atrCant}
+                sub={`${formatCRCCompact(resumenDia.atrTotal)} por cobrar`}
+                icon={AlertTriangle}
+                tone={resumenDia.atrCant > 0 ? 'danger' : 'neutral'}
               />
             </div>
           </section>
 
-          <section className="space-y-3">
-            <SectionTitle title={`Pendientes (${items.length})`} />
-            {items.length === 0 ? (
-              <EmptyState
-                icon={CheckCircle2}
-                variant="success"
-                title="¡Al día!"
-                description="No hay cuotas con vencimiento hoy."
-              />
-            ) : (
-              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {items.map((item) => (
-                  <li key={`${item.prestamo.id}-${item.cuota.numero}`} className="animate-fade-in">
-                    <CuotaItem item={item} onCobrar={handleCobrar} variant="today" />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+          {resumenDia.cantidad === 0 ? (
+            <EmptyState
+              icon={CheckCircle2}
+              variant="success"
+              title="¡Al día!"
+              description="No hay cuotas con vencimiento hoy ni pagos atrasados."
+            />
+          ) : (
+            <>
+              {atrasadas.length > 0 && (
+                <section className="space-y-3">
+                  <SectionTitle title={`Atrasadas (${atrasadas.length})`} />
+                  <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {atrasadas.map((item) => (
+                      <li key={`${item.prestamo.id}-${item.cuota.numero}`} className="animate-fade-in">
+                        <CuotaItem item={item} onCobrar={handleCobrar} variant="atrasado" />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
+              <section className="space-y-3">
+                <SectionTitle title={`Vencen hoy (${items.length})`} />
+                {items.length === 0 ? (
+                  <EmptyState
+                    icon={CheckCircle2}
+                    variant="success"
+                    title="Hoy al día"
+                    description="Nada vence hoy; solo quedan atrasadas por cobrar."
+                  />
+                ) : (
+                  <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {items.map((item) => (
+                      <li key={`${item.prestamo.id}-${item.cuota.numero}`} className="animate-fade-in">
+                        <CuotaItem item={item} onCobrar={handleCobrar} variant="today" />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            </>
+          )}
         </>
       )}
     </div>

@@ -5,8 +5,6 @@ import * as cobrosService from '../../services/cobros';
 import { parseLocalDate, startOfDay } from '../../lib/format';
 import { useDataChange } from '../../lib/hooks/useDataChange';
 
-const EMPTY_RESUMEN = { cantidad: 0, total: 0 };
-
 export function getCobrarHoyDetalle() {
   return prestamosService.cobrarHoy().then((items) =>
     items.map(({ prestamo, cuota }) => ({
@@ -25,24 +23,58 @@ export function getResumenCobrarHoy() {
   }));
 }
 
+export function getAtrasadasDetalle() {
+  return prestamosService.cuotasAtrasadas().then((items) =>
+    (items || [])
+      .map(({ prestamo, cuota }) => {
+        if (!prestamo || !cuota) return null;
+        const diffMs = Date.now() - new Date(cuota.fecha).getTime();
+        return {
+          prestamo,
+          prestamoId: prestamo.id,
+          clienteId: prestamo.clienteId,
+          cuota,
+          diasAtraso: Math.max(0, Math.floor(diffMs / 86400000)),
+        };
+      })
+      .filter(Boolean),
+  );
+}
+
 export function useCobrarHoy() {
   const results = useQueries({
     queries: [
       { queryKey: ['cobrarHoy', 'detalle'], queryFn: getCobrarHoyDetalle, staleTime: 30_000 },
-      { queryKey: ['cobrarHoy', 'resumen'], queryFn: getResumenCobrarHoy, staleTime: 30_000 },
+      { queryKey: ['cobrarHoy', 'atrasadas'], queryFn: getAtrasadasDetalle, staleTime: 30_000 },
       { queryKey: ['clientes', 'all'], queryFn: () => clientesService.list({ limit: 500, offset: 0 }), staleTime: 60_000 },
     ],
   });
-  const [itemsQ, resumenQ, clientesQ] = results;
+  const [itemsQ, atrasadasQ, clientesQ] = results;
   const clientes = clientesQ.data || [];
-  const items = itemsQ.data || [];
-  const enriched = items
-    .map((x) => ({ ...x, cliente: clientes.find((c) => c.id === x.clienteId) || null }))
-    .filter((x) => x.cliente);
+  const joinCliente = (x) => ({ ...x, cliente: clientes.find((c) => c.id === x.clienteId) || null });
+  const items = (itemsQ.data || []).map(joinCliente).filter((x) => x.cliente);
+  // Las fechas son disjuntas por definición (== hoy vs < hoy), pero se
+  // protege contra solapamiento por si cambia la regla del servicio.
+  const hoyKeys = new Set(items.map((x) => `${x.prestamoId}-${x.cuota?.numero}`));
+  const atrasadas = (atrasadasQ.data || [])
+    .map(joinCliente)
+    .filter((x) => x.cliente && !hoyKeys.has(`${x.prestamoId}-${x.cuota?.numero}`))
+    .sort((a, b) => b.diasAtraso - a.diasAtraso);
+  const hoyTotal = items.reduce((s, x) => s + Number(x.cuota?.monto ?? 0), 0);
+  const atrTotal = atrasadas.reduce((s, x) => s + Number(x.cuota?.monto ?? 0), 0);
   const loading = results.some((r) => r.isLoading) && !itemsQ.data;
   return {
-    items: enriched,
-    resumen: resumenQ.data ?? EMPTY_RESUMEN,
+    items,
+    atrasadas,
+    resumen: { cantidad: items.length, total: hoyTotal },
+    resumenDia: {
+      hoyCant: items.length,
+      hoyTotal,
+      atrCant: atrasadas.length,
+      atrTotal,
+      cantidad: items.length + atrasadas.length,
+      total: hoyTotal + atrTotal,
+    },
     loading,
   };
 }
