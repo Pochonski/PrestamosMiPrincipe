@@ -41,6 +41,56 @@ describe('computeResumen', () => {
     expect(r.kpis.totalAtrasado).toBe(5000);
   });
 
+  it('porEstado deriva atrasado por cuotas vencidas aunque p.estado sea vigente', () => {
+    const prestamos = [
+      { id: 'p1', cliente_id: 'c1', estado: 'vigente', saldo_capital: 50000, monto: 100000, cuotas: [{ estado: 'pendiente', fecha: '2024-01-01', monto: 5000 }] },
+      { id: 'p2', cliente_id: 'c1', estado: 'vigente', saldo_capital: 30000, monto: 80000, cuotas: [{ estado: 'pendiente', fecha: '2024-12-31', monto: 5000 }] },
+    ];
+    const r = computeResumen({ clientes: [{ id: 'c1' }], prestamos, cobros: [], hoy });
+    expect(r.porEstado.atrasado).toBe(1);
+    expect(r.porEstado.vigente).toBe(1);
+    expect(r.porEstado.cancelado).toBe(0);
+    expect(r.kpis.cantidadAtrasados).toBe(1);
+    expect(r.kpis.totalAtrasado).toBe(5000);
+    expect(r.kpis.prestamosActivos).toBe(2);
+  });
+
+  it('porEstado cuenta parcial vencida como atrasada (unificado con getStatus)', () => {
+    const prestamos = [
+      { id: 'p1', cliente_id: 'c1', estado: 'vigente', saldo_capital: 50000, monto: 100000, cuotas: [{ estado: 'parcial', fecha: '2024-01-01', monto: 5000 }] },
+    ];
+    const r = computeResumen({ clientes: [{ id: 'c1' }], prestamos, cobros: [], hoy });
+    expect(r.porEstado.atrasado).toBe(1);
+    expect(r.kpis.cantidadAtrasados).toBe(1);
+  });
+
+  it('porEstado cuenta 1 préstamo con 3 cuotas vencidas como 1 (no como cuotas)', () => {
+    const prestamos = [
+      {
+        id: 'p1', cliente_id: 'c1', estado: 'vigente', saldo_capital: 50000, monto: 100000,
+        cuotas: [
+          { estado: 'pendiente', fecha: '2024-01-01', monto: 1000 },
+          { estado: 'pendiente', fecha: '2024-02-01', monto: 1000 },
+          { estado: 'pendiente', fecha: '2024-03-01', monto: 1000 },
+        ],
+      },
+    ];
+    const r = computeResumen({ clientes: [{ id: 'c1' }], prestamos, cobros: [], hoy });
+    expect(r.porEstado.atrasado).toBe(1);
+    expect(r.kpis.cantidadAtrasados).toBe(1);
+    expect(r.kpis.totalAtrasado).toBe(3000);
+  });
+
+  it('porEstado respeta filtro por ruta', () => {
+    const prestamos = [
+      { id: 'p1', cliente_id: 'c1', ruta: 'A', estado: 'vigente', saldo_capital: 100, monto: 200, cuotas: [{ estado: 'pendiente', fecha: '2024-01-01', monto: 50 }] },
+      { id: 'p2', cliente_id: 'c2', ruta: 'B', estado: 'vigente', saldo_capital: 100, monto: 200, cuotas: [] },
+    ];
+    const r = computeResumen({ clientes: [{ id: 'c1' }, { id: 'c2' }], prestamos, cobros: [], hoy, filters: { ruta: 'A' } });
+    expect(r.porEstado.atrasado).toBe(1);
+    expect(r.porEstado.vigente).toBe(0);
+  });
+
   it('cobrado hoy y este mes', () => {
     const hoyStr = hoy.toISOString();
     const antes = new Date('2024-06-01T10:00:00.000Z').toISOString();
@@ -167,8 +217,9 @@ describe('computeResumen', () => {
     const r = computeResumen({ clientes, prestamos, cobros: [], hoy });
     expect(r.topMorosos[0].id).toBe('c2');
     expect(r.saldoPorRuta).toHaveLength(2);
-    expect(r.porEstado.vigente).toBe(1);
-    expect(r.porEstado.atrasado).toBe(1);
+    // p1 tiene cuota vencida aunque su p.estado sea 'vigente' → también cuenta como atrasado (derivado)
+    expect(r.porEstado.vigente).toBe(0);
+    expect(r.porEstado.atrasado).toBe(2);
     expect(r.rutas).toEqual(['A', 'B']);
   });
 

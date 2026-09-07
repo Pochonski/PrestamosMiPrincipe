@@ -308,6 +308,9 @@ export function ResumenPage({ onNavigate }) {
         </Card>
         <Card>
           <SectionTitle title="Préstamos por estado" />
+          <p className="mt-1 text-sm text-neutral-600 dark:text-navy-300">
+            Por préstamo · derivado por cuotas vencidas
+          </p>
           <div className="mt-3 flex flex-col items-center gap-4">
             <DonutChart data={donutData} total={porEstadoTotal} />
             <div className="flex flex-wrap justify-center gap-4 text-xs">

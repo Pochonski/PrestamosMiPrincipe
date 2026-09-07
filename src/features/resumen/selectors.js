@@ -9,6 +9,28 @@ function isSameDay(a, b) {
   return startOfDay(a).getTime() === startOfDay(b).getTime();
 }
 
+function isCuotaAbierta(c) {
+  return c.estado !== 'pagada' && c.estado !== 'cancelada';
+}
+
+// Estado derivado por cuotas vencidas (misma regla que prestamosService.getStatus,
+// pero con `hoy` inyectable para que sea determinista en tests/filtros).
+// p.estado en DB nunca llega a 'atrasado', por eso no se lee directo.
+function getEstadoDerivado(p, hoyStart) {
+  if (!p) return 'cancelado';
+  if (p.estado === 'cancelado') return 'cancelado';
+  const cuotas = p.cuotas || [];
+  const tieneAtrasada = cuotas.some((c) => {
+    if (!isCuotaAbierta(c)) return false;
+    return startOfDay(parseLocalDate(c.fecha)) < hoyStart;
+  });
+  if (tieneAtrasada) return 'atrasado';
+  if (cuotas.length === 0) return 'vigente';
+  const todasCerradas = cuotas.every((c) => !isCuotaAbierta(c));
+  if (todasCerradas) return 'cancelado';
+  return 'vigente';
+}
+
 function getDateRange({ rango, from, to, hoy = new Date() }) {
   const h = startOfDay(hoy);
   if (rango === 'custom' && from && to) {
@@ -37,7 +59,10 @@ export function computeResumen({ clientes, prestamos, cobros, hoy = new Date(), 
     ? clientes.filter((c) => prestamosFiltrados.some((p) => p.cliente_id === c.id))
     : clientes;
 
-  const activos = prestamosFiltrados.filter((p) => p.estado === 'vigente' || p.estado === 'atrasado');
+  const activos = prestamosFiltrados.filter((p) => {
+    const s = getEstadoDerivado(p, hoyStart);
+    return s === 'vigente' || s === 'atrasado';
+  });
 
   // Cobros filtered by ruta if needed
   let cobrosFiltrados = cobros;
@@ -60,11 +85,11 @@ export function computeResumen({ clientes, prestamos, cobros, hoy = new Date(), 
     .reduce((s, c) => s + Number(c.monto || 0), 0);
   const cobrosHoyCount = cobrosFiltrados.filter((c) => isSameDay(parseLocalDate(c.fecha), hoyStart)).length;
 
-  // Correct atrasado: solo cuotas atrasadas
+  // Atrasado por préstamo: ≥1 cuota abierta con fecha < hoy (unificado con getStatus/Atrasados)
   let totalAtrasado = 0;
   let cantidadAtrasados = 0;
   for (const p of prestamosFiltrados) {
-    const atrasadas = (p.cuotas || []).filter((c) => c.estado === 'pendiente' && parseLocalDate(c.fecha) < hoyStart);
+    const atrasadas = (p.cuotas || []).filter((c) => isCuotaAbierta(c) && parseLocalDate(c.fecha) < hoyStart);
     if (atrasadas.length > 0) {
       cantidadAtrasados += 1;
       totalAtrasado += atrasadas.reduce((s, c) => s + Number(c.monto || 0), 0);
@@ -96,12 +121,12 @@ export function computeResumen({ clientes, prestamos, cobros, hoy = new Date(), 
     return (p.cuotas || []).some((c) => c.pagada_en && parseLocalDate(c.pagada_en) >= thirtyDaysAgo);
   }).length;
 
-  // Por cobrar hoy: cuotas pendientes con fecha hoy
+  // Por cobrar hoy: cuotas abiertas con fecha hoy
   let totalPorCobrarHoy = 0;
   let cantidadCobrarHoy = 0;
   for (const p of prestamosFiltrados) {
     for (const c of p.cuotas || []) {
-      if (c.estado === 'pendiente' && isSameDay(parseLocalDate(c.fecha), hoyStart)) {
+      if (isCuotaAbierta(c) && isSameDay(parseLocalDate(c.fecha), hoyStart)) {
         cantidadCobrarHoy += 1;
         totalPorCobrarHoy += Number(c.monto || 0);
       }
@@ -192,11 +217,12 @@ export function computeResumen({ clientes, prestamos, cobros, hoy = new Date(), 
       .slice(0, 5);
   })();
 
-  // Prestamos por estado for donut
+  // Prestamos por estado para donut: DERIVADO por cuotas vencidas (p.estado nunca es 'atrasado' en DB).
+  // Unidad: préstamos (1 préstamo con N cuotas vencidas = 1). Atrasados cuenta cuotas.
   const porEstado = {
-    vigente: prestamosFiltrados.filter((p) => p.estado === 'vigente').length,
-    atrasado: prestamosFiltrados.filter((p) => p.estado === 'atrasado').length,
-    cancelado: prestamosFiltrados.filter((p) => p.estado === 'cancelado').length,
+    vigente: prestamosFiltrados.filter((p) => getEstadoDerivado(p, hoyStart) === 'vigente').length,
+    atrasado: prestamosFiltrados.filter((p) => getEstadoDerivado(p, hoyStart) === 'atrasado').length,
+    cancelado: prestamosFiltrados.filter((p) => getEstadoDerivado(p, hoyStart) === 'cancelado').length,
   };
 
   // Cobros 6m for bar chart
