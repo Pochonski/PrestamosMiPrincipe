@@ -22,6 +22,7 @@ const PrestamoCreatePage = lazy(() => import('./features/prestamos').then((m) =>
 const PrestamoDetalle = lazy(() => import('./features/prestamos/components/PrestamoDetalle').then((m) => ({ default: m.PrestamoDetalle })));
 const CobroPage = lazy(() => import('./features/cobros').then((m) => ({ default: m.CobroPage })));
 const CobrarHoyPage = lazy(() => import('./features/cobrar-hoy').then((m) => ({ default: m.CobrarHoyPage })));
+const PrestamosPage = lazy(() => import('./features/prestamos-lista').then((m) => ({ default: m.PrestamosPage })));
 const AtrasadosPage = lazy(() => import('./features/atrasados').then((m) => ({ default: m.AtrasadosPage })));
 const NotificacionesPage = lazy(() => import('./features/notificaciones').then((m) => ({ default: m.NotificacionesPage })));
 const ExportarPage = lazy(() => import('./features/exportar').then((m) => ({ default: m.ExportarPage })));
@@ -38,6 +39,7 @@ const pages = {
   'prestamo-detalle': PrestamoDetalle,
   cobro: CobroPage,
   'cobrar-hoy': CobrarHoyPage,
+  prestamos: PrestamosPage,
   atrasados: AtrasadosPage,
   notificaciones: NotificacionesPage,
   exportar: ExportarPage,

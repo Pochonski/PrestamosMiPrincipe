@@ -8,6 +8,7 @@ import { NAV_ITEMS, findItemById } from './nav-config';
 const PREFETCH_MAP = {
   resumen: () => import('../../features/resumen'),
   'cobrar-hoy': () => import('../../features/cobrar-hoy'),
+  prestamos: () => import('../../features/prestamos-lista'),
   atrasados: () => import('../../features/atrasados'),
   clientes: () => import('../../features/clientes'),
   notificaciones: () => import('../../features/notificaciones'),

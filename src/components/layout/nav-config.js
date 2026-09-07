@@ -11,6 +11,7 @@ import {
   Users,
   UserPlus,
   Settings,
+  Wallet,
 } from 'lucide-react';
 
 /**
@@ -25,6 +26,7 @@ import {
 export const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/', mobile: true, section: 'principal' },
   { id: 'cobrar-hoy', label: 'Cobrar hoy', icon: CalendarClock, path: '/cobrar-hoy', mobile: true, section: 'principal' },
+  { id: 'prestamos', label: 'Préstamos', icon: Wallet, path: '/prestamos', mobile: false, section: 'principal' },
   { id: 'atrasados', label: 'Atrasados', icon: AlertTriangle, path: '/atrasados', mobile: true, section: 'principal' },
   { id: 'resumen', label: 'Resumen', icon: ClipboardList, path: '/resumen', mobile: true, section: 'principal' },
   { id: 'clientes', label: 'Clientes', icon: Users, path: '/clientes', mobile: false, section: 'acciones' },
@@ -73,10 +75,13 @@ export function findItemById(id) {
 export function findItemByPath(path) {
   const stripped = stripOrgPrefix(path);
   if (BY_PATH.has(stripped)) return BY_PATH.get(stripped);
+  let best = null;
   for (const item of NAV_ITEMS) {
-    if (item.path !== '/' && stripped.startsWith(item.path)) return item;
+    if (item.path !== '/' && stripped.startsWith(item.path)) {
+      if (!best || item.path.length > best.path.length) best = item;
+    }
   }
-  return null;
+  return best;
 }
 
 export function resolveActiveId(currentPath) {
