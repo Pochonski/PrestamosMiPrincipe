@@ -13,8 +13,11 @@ vi.mock('../../lib/supabase', async (importOriginal) => {
   };
 });
 
+vi.mock('../../lib/events', () => ({ emitDataChanged: vi.fn() }));
+
 import * as notifService from '../notificaciones';
 import { supabase } from '../../lib/supabase';
+import { emitDataChanged } from '../../lib/events';
 
 function chainSelect(data, error = null) {
   const c = {
@@ -81,7 +84,7 @@ describe('marcarLeida', () => {
     vi.mocked(supabase.auth.getUser).mockResolvedValue({ data: { user: null } });
     await expect(notifService.marcarLeida('id1')).rejects.toThrow('No authenticated user');
   });
-  it('marca leida ok', async () => {
+  it('marca leida ok y emite evento', async () => {
     vi.mocked(supabase.auth.getUser).mockResolvedValue({ data: { user: { id: 'u1' } } });
     const updateChain = { update: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis() };
     updateChain.update.mockReturnValue(updateChain);
@@ -89,6 +92,7 @@ describe('marcarLeida', () => {
     updateChain.then = (res) => Promise.resolve({ error: null }).then(res);
     vi.mocked(supabase.from).mockReturnValue(updateChain);
     expect(await notifService.marcarLeida('id1')).toBe(true);
+    expect(emitDataChanged).toHaveBeenCalledWith('notificaciones');
   });
 });
 
@@ -101,6 +105,7 @@ describe('create / marcarTodasLeidas', () => {
     vi.mocked(supabase.from).mockReturnValue(chain);
     const r = await notifService.create({ tipo: 'mora', titulo: 'T', mensaje: 'M' });
     expect(r.id).toBe('n1');
+    expect(emitDataChanged).toHaveBeenCalledWith('notificaciones');
   });
   it('marcarTodasLeidas retorna count', async () => {
     vi.mocked(supabase.auth.getUser).mockResolvedValue({ data: { user: { id: 'u1' } } });
@@ -117,6 +122,7 @@ describe('create / marcarTodasLeidas', () => {
     vi.mocked(supabase.from).mockReturnValue(updChain);
     const r = await notifService.marcarTodasLeidas();
     expect(r).toBe(2);
+    expect(emitDataChanged).toHaveBeenCalledWith('notificaciones');
   });
   it('marcarTodasLeidas 0 si no user', async () => {
     vi.mocked(supabase.auth.getUser).mockResolvedValue({ data: { user: null } });

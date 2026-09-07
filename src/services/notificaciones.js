@@ -1,4 +1,5 @@
 import { supabase, getOrgId } from '../lib/supabase';
+import { emitDataChanged } from '../lib/events';
 
 export async function list() {
   const { data: { user } } = await supabase.auth.getUser();
@@ -55,6 +56,7 @@ export async function create({ tipo, titulo, mensaje, leida = false }) {
     .select()
     .single();
   if (error) throw error;
+  emitDataChanged('notificaciones');
   return data;
 }
 
@@ -67,6 +69,7 @@ export async function marcarLeida(id) {
     .eq('id', id)
     .eq('user_id', user.id);
   if (error) throw error;
+  emitDataChanged('notificaciones');
   return true;
 }
 
@@ -80,6 +83,7 @@ export async function marcarTodasLeidas() {
     .eq('leida', false)
     .select();
   if (error) throw error;
+  emitDataChanged('notificaciones');
   return (data ?? []).length;
 }
 
@@ -92,5 +96,6 @@ export async function remove(id) {
     .eq('id', id)
     .eq('user_id', user.id);
   if (error) throw error;
+  emitDataChanged('notificaciones');
   return true;
 }
