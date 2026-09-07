@@ -86,16 +86,16 @@ describe('clientes.list / getById', () => {
 describe('clientes.remove bloquea con préstamos activos', () => {
   it('lanza ClienteTienePrestamosError si tiene activos', async () => {
     const prestamos = [{ id: 'p1', estado: 'vigente' }];
-    const emptyChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis() };
+    const emptyChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis() };
     emptyChain.then = (res) => Promise.resolve({ data: prestamos, error: null }).then(res);
-    emptyChain.select.mockReturnValue(emptyChain); emptyChain.eq.mockReturnValue(emptyChain);
+    emptyChain.select.mockReturnValue(emptyChain); emptyChain.eq.mockReturnValue(emptyChain); emptyChain.order.mockReturnValue(emptyChain);
     vi.mocked(supabase.from).mockReturnValue(emptyChain);
     await expect(clientesService.remove('cli-1')).rejects.toHaveProperty('name', 'ClienteTienePrestamosError');
   });
   it('permite borrar si no tiene activos', async () => {
-    const emptyPrestamos = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis() };
+    const emptyPrestamos = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis() };
     emptyPrestamos.then = (res) => Promise.resolve({ data: [], error: null }).then(res);
-    emptyPrestamos.select.mockReturnValue(emptyPrestamos); emptyPrestamos.eq.mockReturnValue(emptyPrestamos);
+    emptyPrestamos.select.mockReturnValue(emptyPrestamos); emptyPrestamos.eq.mockReturnValue(emptyPrestamos); emptyPrestamos.order.mockReturnValue(emptyPrestamos);
     const deleteChain = { delete: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis() };
     deleteChain.then = (res) => Promise.resolve({ error: null }).then(res);
     deleteChain.delete.mockReturnValue(deleteChain); deleteChain.eq.mockReturnValue(deleteChain);

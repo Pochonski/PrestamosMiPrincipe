@@ -12,6 +12,18 @@ export async function list() {
   return data ?? [];
 }
 
+export async function getById(id) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data, error } = await supabase
+    .from('notificaciones')
+    .select('*')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
 export async function noLeidas() {
   const all = await list();
   return all.filter((n) => !n.leida);
@@ -69,4 +81,16 @@ export async function marcarTodasLeidas() {
     .select();
   if (error) throw error;
   return (data ?? []).length;
+}
+
+export async function remove(id) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('No authenticated user');
+  const { error } = await supabase
+    .from('notificaciones')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id);
+  if (error) throw error;
+  return true;
 }

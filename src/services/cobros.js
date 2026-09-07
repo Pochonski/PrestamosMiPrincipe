@@ -1,6 +1,5 @@
 import { supabase, getOrgId } from '../lib/supabase';
 import { throwIfError } from '../lib/supabase-errors';
-import { startOfDay, endOfDay } from '../lib/format';
 import { emitDataChanged } from '../lib/events';
 
 const DEFAULT_LIMIT = 50;
@@ -48,8 +47,10 @@ export async function getById(id) {
 
 export async function delDia() {
   const orgId = await getOrgId();
-  const inicio = startOfDay(new Date()).toISOString();
-  const fin = endOfDay(new Date()).toISOString();
+  // Límites del día LOCAL convertidos a UTC (evita desfase de toISOString en UTC-6).
+  const now = new Date();
+  const inicio = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).toISOString();
+  const fin = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).toISOString();
   const { data, error } = await supabase
     .from('cobros')
     .select('*')
@@ -89,9 +90,22 @@ export async function delPrestamo(prestamoId) {
   return (data ?? []).map(normalizeCobro);
 }
 
+/** Lista TODOS los cobros paginando (el resumen no debe truncar en 500). */
+export async function listAll({ pageSize = 500 } = {}) {
+  const all = [];
+  let offset = 0;
+  for (;;) {
+    const page = await list({ limit: pageSize, offset });
+    all.push(...page);
+    if (page.length < pageSize) break;
+    offset += pageSize;
+  }
+  return all;
+}
+
 export async function resumen() {
   const [all, hoy, count] = await Promise.all([
-    list({ limit: 500, offset: 0 }),
+    listAll({ pageSize: 500 }),
     delDia(),
     (async () => {
       const orgId = await getOrgId();
@@ -151,7 +165,10 @@ export class CuotasAgotadasError extends Error {
   }
 }
 
-export async function create({ prestamoId, cuotaNumero, monto, tipo, incluirInteres = false, cobradorId: _cobradorId, nota }) {
+// Los cobros son un libro inmutable: no hay update/delete intencionalmente.
+// El cobrador se deriva de auth.uid() dentro del RPC (no se acepta por parámetro
+// para evitar suplantación).
+export async function create({ prestamoId, cuotaNumero, monto, tipo, incluirInteres = false, nota }) {
   const { data, error } = await supabase.rpc('create_cobro_with_updates', {
     p_prestamo_id: prestamoId,
     p_cuota_numero: Number(cuotaNumero),
@@ -185,6 +202,9 @@ export async function create({ prestamoId, cuotaNumero, monto, tipo, incluirInte
     throwIfError(error, 'cobros.create', { prestamoId, cuotaNumero, monto, tipo });
   }
   if (!data) throw new Error('No se creó el cobro');
+  // El RPC muta prestamos.saldo_capital/estado y cuotas.estado: invalidar todo.
   emitDataChanged('cobros');
+  emitDataChanged('prestamos');
+  emitDataChanged('cuotas');
   return await getById(data);
 }

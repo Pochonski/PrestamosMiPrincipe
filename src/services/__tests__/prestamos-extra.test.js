@@ -172,8 +172,8 @@ describe('prestamos agregaciones async', () => {
 describe('prestamos delCliente y getById normalize', () => {
   it('delCliente hydrate', async () => {
     const data = [{ id: 'p1', cliente_id: 'c1', monto: 1000 }];
-    const orgChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis() };
-    orgChain.select.mockReturnValue(orgChain); orgChain.eq.mockReturnValue(orgChain);
+    const orgChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis() };
+    orgChain.select.mockReturnValue(orgChain); orgChain.eq.mockReturnValue(orgChain); orgChain.order.mockReturnValue(orgChain);
     orgChain.then = (res) => Promise.resolve({ data, error: null }).then(res);
     const cuotasChain = { select: vi.fn().mockReturnThis(), in: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis(), range: vi.fn().mockReturnThis() };
     cuotasChain.then = (res) => Promise.resolve({ data: [], error: null }).then(res);

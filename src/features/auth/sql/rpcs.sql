@@ -86,8 +86,8 @@ grant execute on function public.create_prestamo_with_cuotas(
 -- ---------------------------------------------------------------------
 -- 2) extender_prestamo_cuotas
 -- ---------------------------------------------------------------------
--- Agrega N cuotas al final del cronograma. No recalcula saldo ni marca
--- cuotas existentes como pagadas.
+-- Agrega N cuotas al final del cronograma y sincroniza prestamos.n_cuotas
+-- en la DB. No recalcula saldo ni marca cuotas existentes como pagadas.
 -- Devuelve: void.
 -- ---------------------------------------------------------------------
 create or replace function public.extender_prestamo_cuotas(
@@ -100,6 +100,7 @@ set search_path = public
 as $$
 declare
   v_org_id uuid;
+  v_count int;
 begin
   select p.org_id into v_org_id
     from public.prestamos p
@@ -110,6 +111,11 @@ begin
   if not public.is_org_member(v_org_id) then
     raise exception 'No autorizado';
   end if;
+  if public.my_role(v_org_id) = 'viewer' then
+    raise exception 'Viewers no pueden extender préstamos';
+  end if;
+
+  v_count := coalesce(jsonb_array_length(p_nuevas_cuotas), 0);
 
   insert into public.cuotas (prestamo_id, numero, fecha, monto)
   select p_prestamo_id,
@@ -117,6 +123,13 @@ begin
          (c->>'fecha')::date,
          (c->>'monto')::numeric
     from jsonb_array_elements(p_nuevas_cuotas) c;
+
+  -- Sincronizar el préstamo en la DB (antes solo se reflejaba en memoria).
+  update public.prestamos
+     set n_cuotas = n_cuotas + v_count,
+         estado = case when estado = 'cancelado' then 'vigente' else estado end,
+         updated_at = now()
+   where id = p_prestamo_id;
 end;
 $$;
 

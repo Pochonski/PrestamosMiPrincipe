@@ -56,8 +56,8 @@ describe('clientes update', () => {
 describe('prestamosDelCliente y tiene', () => {
   it('prestamosActivos filtra', async () => {
     const data = [{ estado: 'vigente' }, { estado: 'cancelado' }, { estado: 'atrasado' }];
-    const chain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis() };
-    chain.select.mockReturnValue(chain); chain.eq.mockReturnValue(chain);
+    const chain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis() };
+    chain.select.mockReturnValue(chain); chain.eq.mockReturnValue(chain); chain.order.mockReturnValue(chain);
     chain.then = (res) => Promise.resolve({ data, error: null }).then(res);
     vi.mocked(supabase.from).mockReturnValue(chain);
     const r = await clientesService.prestamosActivosDelCliente('c1');

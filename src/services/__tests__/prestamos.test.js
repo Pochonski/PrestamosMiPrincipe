@@ -23,7 +23,7 @@ describe('prestamos.remove bloquea con cobros', () => {
   it('lanza si tiene cobros', async () => {
     const prestamo = { id: 'p1', n_cuotas: 10 };
     const loadSingle = vi.fn().mockResolvedValue({ data: prestamo, error: null });
-    const loadChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), single: loadSingle };
+    const loadChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), single: loadSingle, maybeSingle: loadSingle };
     loadChain.eq.mockReturnValue(loadChain); loadChain.select.mockReturnValue(loadChain);
     const cobrosChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis() };
     cobrosChain.then = (res) => Promise.resolve({ data: [{ id: 'c1' }], error: null }).then(res);
@@ -97,7 +97,7 @@ describe('prestamos.remove success', () => {
   it('elimina si no tiene cobros', async () => {
     const prestamo = { id: 'p1', n_cuotas: 5 };
     const loadSingle = vi.fn().mockResolvedValue({ data: prestamo, error: null });
-    const loadChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), single: loadSingle };
+    const loadChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), single: loadSingle, maybeSingle: loadSingle };
     loadChain.select.mockReturnValue(loadChain); loadChain.eq.mockReturnValue(loadChain);
     const cobrosChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis() };
     cobrosChain.then = (res) => Promise.resolve({ data: [], error: null }).then(res);

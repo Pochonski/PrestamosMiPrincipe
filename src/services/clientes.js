@@ -97,9 +97,17 @@ export async function update(id, patch) {
 }
 
 export async function remove(id) {
-  const activos = await prestamosActivosDelCliente(id);
+  const all = await prestamosDelCliente(id);
+  const activos = all.filter((p) => p.estado !== 'cancelado');
   if (activos.length > 0) {
     throw new ClienteTienePrestamosError(id, activos.length);
+  }
+  if (all.length > 0) {
+    // prestamos.cliente_id es ON DELETE CASCADE: borrar el cliente borraría
+    // historial de préstamos/cuotas/cobros. Se bloquea para no perder datos.
+    throw new Error(
+      `El cliente tiene ${all.length} préstamo(s) en historial y no se puede eliminar para no perder datos.`,
+    );
   }
   const orgId = await getOrgId();
   const { error } = await supabase.from('clientes').delete().eq('id', id).eq('org_id', orgId);
@@ -114,16 +122,18 @@ export async function prestamosDelCliente(clienteId) {
     .from('prestamos')
     .select('*')
     .eq('org_id', orgId)
-    .eq('cliente_id', clienteId);
+    .eq('cliente_id', clienteId)
+    .order('created_at', { ascending: false });
   if (error) throw error;
   return data ?? [];
 }
 
 export async function prestamosActivosDelCliente(clienteId) {
   const all = await prestamosDelCliente(clienteId);
-  return all.filter(
-    (p) => p.estado === 'vigente' || p.estado === 'atrasado',
-  );
+  // Criterio amplio: todo lo no-cancelado cuenta como activo. La columna
+  // estado puede quedar desactualizada (atrasado se computa en cliente),
+  // así que no filtramos solo vigente/atrasado.
+  return all.filter((p) => p.estado !== 'cancelado');
 }
 
 export async function tienePrestamosActivos(clienteId) {

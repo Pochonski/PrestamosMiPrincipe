@@ -10,6 +10,14 @@ function startOfDay(d = new Date()) {
   return x;
 }
 
+function toLocalDateString(d) {
+  const x = d instanceof Date ? d : new Date(d);
+  const y = x.getFullYear();
+  const m = String(x.getMonth() + 1).padStart(2, '0');
+  const day = String(x.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function normalizePrestamo(p) {
   if (!p) return p;
   const { cliente_id, ...rest } = p;
@@ -91,14 +99,28 @@ export async function delCliente(clienteId) {
     .from('prestamos')
     .select('*')
     .eq('org_id', orgId)
-    .eq('cliente_id', clienteId);
+    .eq('cliente_id', clienteId)
+    .order('created_at', { ascending: false });
   if (error) throw error;
   const normalized = (data ?? []).map(normalizePrestamo);
   return hydratePrestamos(normalized);
 }
 
+/** Lista TODOS los préstamos paginando (las agregaciones no deben truncar en 50). */
+export async function listAll({ pageSize = 200 } = {}) {
+  const all = [];
+  let offset = 0;
+  for (;;) {
+    const page = await list({ limit: pageSize, offset });
+    all.push(...page);
+    if (page.length < pageSize) break;
+    offset += pageSize;
+  }
+  return all;
+}
+
 export function activos() {
-  return list().then((items) =>
+  return listAll().then((items) =>
     items.filter((p) => getStatus(p) === 'vigente' || getStatus(p) === 'atrasado'),
   );
 }
@@ -106,7 +128,7 @@ export function activos() {
 export async function cuotasAtrasadas(prestamoId = null) {
   const items = prestamoId
     ? [await getById(prestamoId)].filter(Boolean)
-    : await list();
+    : await listAll();
   const prestamoIds = items.filter(Boolean).map((p) => p.id);
   if (prestamoIds.length === 0) return [];
   const { data: cuotas, error } = await supabase
@@ -116,10 +138,11 @@ export async function cuotasAtrasadas(prestamoId = null) {
   throwIfError(error, 'prestamos.cuotasAtrasadas', { prestamoIds });
   if (!cuotas) return [];
   const hoy = startOfDay(new Date());
+  const hoyStr = toLocalDateString(hoy);
   const prestamoMap = new Map(items.filter(Boolean).map((p) => [p.id, p]));
   return cuotas
     .filter((c) => c.estado === 'pendiente')
-    .filter((c) => new Date(c.fecha) < hoy)
+    .filter((c) => String(c.fecha).slice(0, 10) < hoyStr)
     .map((c) => ({ prestamo: prestamoMap.get(c.prestamo_id), cuota: c }));
 }
 
@@ -140,7 +163,7 @@ export async function totalAtrasado() {
 }
 
 export async function carteraTotal() {
-  const items = await list();
+  const items = await listAll();
   return calcCarteraTotal(items);
 }
 
@@ -150,10 +173,12 @@ export async function cantidadActivos() {
 }
 
 export async function cobrarHoy() {
-  const items = await list();
+  const items = await listAll();
   const hoy = startOfDay(new Date());
   const manana = new Date(hoy);
   manana.setDate(manana.getDate() + 1);
+  const hoyStr = toLocalDateString(hoy);
+  const mananaStr = toLocalDateString(manana);
   const prestamoIds = items.map((p) => p.id);
   if (prestamoIds.length === 0) return [];
 
@@ -162,8 +187,8 @@ export async function cobrarHoy() {
     .select('*')
     .in('prestamo_id', prestamoIds)
     .eq('estado', 'pendiente')
-    .gte('fecha', hoy.toISOString().slice(0, 10))
-    .lt('fecha', manana.toISOString().slice(0, 10));
+    .gte('fecha', hoyStr)
+    .lt('fecha', mananaStr);
   throwIfError(error, 'prestamos.cobrarHoy', { prestamoIds });
   if (!cuotas) return [];
   const prestamoMap = new Map(items.map((p) => [p.id, p]));
@@ -196,10 +221,10 @@ export async function resumen() {
 export function getStatus(prestamo) {
   if (!prestamo) return 'cancelado';
   if (prestamo.estado === 'cancelado') return 'cancelado';
-  const hoy = startOfDay(new Date());
+  const hoyStr = toLocalDateString(startOfDay(new Date()));
   const tieneAtrasada = (prestamo.cuotas || []).some((c) => {
     if (c.estado === 'pagada' || c.estado === 'cancelada') return false;
-    return new Date(c.fecha) < hoy;
+    return String(c.fecha).slice(0, 10) < hoyStr;
   });
   if (tieneAtrasada) return 'atrasado';
   if (!prestamo.cuotas || prestamo.cuotas.length === 0) return 'vigente';
@@ -254,8 +279,6 @@ export function cuotasAgotadas(prestamo) {
 }
 
 export async function create({ clienteId, ruta, periodo, monto, tasa, nCuotas, fechaInicio }) {
-  const _orgId = await getOrgId();
-  const _user = (await supabase.auth.getUser()).data.user;
   const cuotaMonto = Math.round((Number(monto) * Number(tasa)) / 100);
   const cuotas = buildCuotasPayload({
     fechaInicio,
@@ -276,14 +299,19 @@ export async function create({ clienteId, ruta, periodo, monto, tasa, nCuotas, f
   });
   if (error) throw error;
   if (!data) throw new Error('No se creó el préstamo');
+  emitDataChanged('prestamos');
+  emitDataChanged('cuotas');
   return await getById(data);
 }
 
 export async function extenderCuotas(prestamoId, nCuotas) {
+  const n = Number(nCuotas);
+  if (!Number.isFinite(n) || n < 1 || n > 60) {
+    throw new Error('Cantidad de cuotas a extender inválida (1-60)');
+  }
   const prestamo = await getById(prestamoId);
   if (!prestamo) throw new PrestamoNoEncontradoError(prestamoId);
 
-  const orgId = prestamo.orgId || prestamo.org_id || (await getOrgId());
   const cuotaMonto = Math.round((getSaldoCapital(prestamo) * Number(prestamo.tasa || 0)) / 100);
   const startDate = (prestamo.cuotas && prestamo.cuotas.length > 0)
     ? prestamo.cuotas[prestamo.cuotas.length - 1].fecha
@@ -306,11 +334,29 @@ export async function extenderCuotas(prestamoId, nCuotas) {
   });
   if (error) throw error;
 
+  // Sincronizar n_cuotas en la DB: el RPC antiguo solo insertaba cuotas sin
+  // actualizar prestamos.n_cuotas (dejaba la DB inconsistente y provocaba
+  // choques de unique(prestamo_id, numero) en la próxima extensión).
+  // El RPC nuevo ya lo incrementa; este update es auto-reparador e idempotente.
+  const esperado = Number(prestamo.n_cuotas) + n;
+  try {
+    const orgId = await getOrgId();
+    await supabase
+      .from('prestamos')
+      .update({ n_cuotas: esperado, updated_at: new Date().toISOString() })
+      .eq('id', prestamoId)
+      .eq('org_id', orgId);
+  } catch {
+    // No bloquear: el getById siguiente expone el estado real.
+  }
+
   emitDataChanged('prestamos');
+  emitDataChanged('cuotas');
   return await getById(prestamoId);
 }
 
 export async function update(id, patch) {
+  if (!patch || typeof patch !== 'object') patch = {};
   const prestamo = await getById(id);
   if (!prestamo) throw new PrestamoNoEncontradoError(id);
 
@@ -402,7 +448,7 @@ export async function remove(id) {
     .select('id, n_cuotas')
     .eq('id', id)
     .eq('org_id', orgId)
-    .single();
+    .maybeSingle();
   throwIfError(e1, 'prestamos.remove.load', { id });
   if (!prestamo) throw new PrestamoNoEncontradoError(id);
 
@@ -431,6 +477,7 @@ export async function remove(id) {
     .eq('org_id', orgId);
   throwIfError(error, 'prestamos.remove', { id });
   emitDataChanged('prestamos');
+  emitDataChanged('cuotas');
   return true;
 }
 
