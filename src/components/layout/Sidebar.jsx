@@ -6,7 +6,6 @@ import { Logo } from '../ui/Logo';
 import { NAV_ITEMS, findItemById } from './nav-config';
 
 const PREFETCH_MAP = {
-  reportes: () => import('../../features/reportes'),
   resumen: () => import('../../features/resumen'),
   'cobrar-hoy': () => import('../../features/cobrar-hoy'),
   atrasados: () => import('../../features/atrasados'),
@@ -88,16 +87,6 @@ export const Sidebar = memo(function Sidebar({ open, page, onNavigate, onClose }
             ))}
           </ul>
         </nav>
-
-        <div className="border-t border-slate-200 px-4 py-4 dark:border-navy-700">
-          <div className="relative overflow-hidden rounded-card bg-gold-gradient p-4 text-navy-900 shadow-glow">
-            <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-white/15 blur-xl" />
-            <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Mi Príncipe</p>
-            <p className="mt-1 text-sm font-semibold leading-snug">
-              Tu información está respaldada y segura.
-            </p>
-          </div>
-        </div>
       </aside>
     </>
   );

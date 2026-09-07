@@ -31,9 +31,9 @@ import { formatCRC, formatDateTime } from '../../lib/format';
 import { useResumenData } from './selectors';
 import { ResumenFilters } from './components/ResumenFilters';
 import { Sparkline } from './components/Sparkline';
-import { BarChart } from '../reportes/components/BarChart';
-import { DonutChart } from '../reportes/components/DonutChart';
-import { HorizontalBars } from '../reportes/components/HorizontalBars';
+import { BarChart } from './components/BarChart';
+import { DonutChart } from './components/DonutChart';
+import { HorizontalBars } from './components/HorizontalBars';
 import { withOrgPrefix } from '../../components/layout/nav-config';
 import { useAuth } from '../auth/useAuth';
 
@@ -61,7 +61,7 @@ function useResumenFilters() {
 }
 
 function exportResumenCSV(data) {
-  const { kpis, topClientes, ultimosCobros } = data;
+  const { kpis, topClientes, ultimosCobros, saldoPorRuta = [], conteoPorRuta = [], cobros6m = [], porEstado = {} } = data;
   const rows = [
     ['KPI', 'Valor'],
     ['Clientes', kpis.totalClientes],
@@ -74,6 +74,20 @@ function exportResumenCSV(data) {
     ['Tasa morosidad %', kpis.tasaMorosidad.toFixed(2)],
     ['Eficiencia hoy %', kpis.eficienciaCobroHoy ?? '—'],
     ['Prestamo promedio', kpis.prestamoPromedio],
+    [],
+    ['Cobros 6m', 'Monto'],
+    ...cobros6m.map((d) => [d.label, d.value]),
+    [],
+    ['Por estado', 'Cantidad'],
+    ['Vigente', porEstado.vigente ?? 0],
+    ['Atrasado', porEstado.atrasado ?? 0],
+    ['Cancelado', porEstado.cancelado ?? 0],
+    [],
+    ['Saldo por ruta', 'Saldo'],
+    ...saldoPorRuta.map((r) => [r.ruta, r.saldo]),
+    [],
+    ['Cantidad por ruta', 'Prestamos'],
+    ...conteoPorRuta.map((r) => [r.ruta, r.count]),
     [],
     ['Top clientes', 'Total prestado', 'Saldo'],
     ...topClientes.map((c) => [c.nombre, c.totalPrestado, c.saldoPendiente]),
@@ -96,6 +110,7 @@ export function ResumenPage({ onNavigate }) {
   const { data, loading, isError, error, hasMore, refetch } = useResumenData(filters);
   const { currentOrg } = useAuth();
   const navigate = useNavigate();
+  const [vistaRuta, setVistaRuta] = useState('saldo');
 
   function go(path, params = {}) {
     if (onNavigate && (path === '/clientes' || path === '/cobros/nuevo' || path === '/cobrar-hoy')) {
@@ -158,6 +173,17 @@ export function ResumenPage({ onNavigate }) {
   }
 
   const k = data.kpis;
+  const totalCobros6m = (data.cobros6m || []).reduce((s, x) => s + Number(x.value || 0), 0);
+  const porEstadoTotal = data.porEstado.vigente + data.porEstado.atrasado + data.porEstado.cancelado;
+  const donutData = [
+    { label: 'Vigente', value: data.porEstado.vigente, color: '#D4AF37' },
+    { label: 'Atrasado', value: data.porEstado.atrasado, color: '#ef4444' },
+    { label: 'Cancelado', value: data.porEstado.cancelado, color: '#10b981' },
+  ];
+  const rutaData =
+    vistaRuta === 'saldo'
+      ? (data.saldoPorRuta || []).map((r) => ({ label: r.ruta, value: r.saldo }))
+      : (data.conteoPorRuta || []).map((r) => ({ label: r.ruta, value: r.count }));
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
@@ -269,29 +295,31 @@ export function ResumenPage({ onNavigate }) {
         </div>
       </section>
 
-      {/* Charts */}
+      {/* Charts unificados (ex-Reportes absorbido) */}
       <section className="grid gap-4 lg:grid-cols-2">
         <Card>
           <SectionTitle title="Cobros últimos 6 meses" />
+          <p className="mt-1 text-sm text-neutral-600 dark:text-navy-300">
+            Últimos 6 meses · total {formatCRC(totalCobros6m)}
+          </p>
           <div className="mt-3">
             <BarChart data={data.cobros6m} />
           </div>
         </Card>
         <Card>
           <SectionTitle title="Préstamos por estado" />
-          <div className="mt-3 flex justify-center">
-            <DonutChart
-              data={[
-                { label: 'Vigente', value: data.porEstado.vigente, color: '#D4AF37' },
-                { label: 'Atrasado', value: data.porEstado.atrasado, color: '#ef4444' },
-                { label: 'Cancelado', value: data.porEstado.cancelado, color: '#10b981' },
-              ]}
-              total={data.porEstado.vigente + data.porEstado.atrasado + data.porEstado.cancelado}
-            />
-            <div className="mt-3 flex justify-center gap-4 text-xs">
-              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-gold-400" /> Vigente {data.porEstado.vigente}</span>
-              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-danger-500" /> Atrasado {data.porEstado.atrasado}</span>
-              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Cancelado {data.porEstado.cancelado}</span>
+          <div className="mt-3 flex flex-col items-center gap-4">
+            <DonutChart data={donutData} total={porEstadoTotal} />
+            <div className="flex flex-wrap justify-center gap-4 text-xs">
+              {donutData.map((d) => {
+                const pct = porEstadoTotal > 0 ? Math.round((d.value / porEstadoTotal) * 100) : 0;
+                return (
+                  <span key={d.label} className="inline-flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: d.color }} />
+                    {d.label} {d.value} ({pct}%)
+                  </span>
+                );
+              })}
             </div>
           </div>
         </Card>
@@ -299,9 +327,45 @@ export function ResumenPage({ onNavigate }) {
 
       <section>
         <Card>
-          <SectionTitle title="Saldo por ruta (top 5)" />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <SectionTitle title={`Distribución por ruta (top ${rutaData.length})`} />
+            <div className="flex gap-1 rounded-input bg-slate-100 p-1 dark:bg-navy-800" role="tablist" aria-label="Vista de distribución por ruta">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={vistaRuta === 'saldo'}
+                onClick={() => setVistaRuta('saldo')}
+                className={vistaRuta === 'saldo'
+                  ? 'rounded-input bg-white px-3 py-1 text-xs font-bold shadow-sm text-navy-900 dark:bg-navy-900 dark:text-white'
+                  : 'px-3 py-1 text-xs font-semibold text-neutral-500 dark:text-navy-300'}
+              >
+                Por saldo ₡
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={vistaRuta === 'cantidad'}
+                onClick={() => setVistaRuta('cantidad')}
+                className={vistaRuta === 'cantidad'
+                  ? 'rounded-input bg-white px-3 py-1 text-xs font-bold shadow-sm text-navy-900 dark:bg-navy-900 dark:text-white'
+                  : 'px-3 py-1 text-xs font-semibold text-neutral-500 dark:text-navy-300'}
+              >
+                Por cantidad
+              </button>
+            </div>
+          </div>
+          <p className="mt-1 text-sm text-neutral-600 dark:text-navy-300">
+            {vistaRuta === 'saldo' ? 'Top 5 rutas por saldo pendiente' : 'Top 5 rutas por cantidad de préstamos'}
+          </p>
           <div className="mt-3">
-            <HorizontalBars data={data.saldoPorRuta.map((r) => ({ label: r.ruta, value: r.saldo }))} />
+            {rutaData.length === 0 ? (
+              <p className="py-10 text-center text-sm text-neutral-500 dark:text-navy-300">Sin rutas registradas.</p>
+            ) : (
+              <HorizontalBars
+                data={rutaData}
+                formatValue={(v) => (vistaRuta === 'saldo' ? formatCRC(v) : String(v))}
+              />
+            )}
           </div>
         </Card>
       </section>

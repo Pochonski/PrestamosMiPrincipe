@@ -22,8 +22,8 @@ describe('Sidebar', () => {
     const close = vi.fn();
     const user = userEvent.setup();
     render(<Sidebar open={true} page="dashboard" onNavigate={nav} onClose={close} />);
-    await user.click(screen.getByText('Reportes'));
-    expect(nav).toHaveBeenCalledWith('reportes');
+    await user.click(screen.getByText('Resumen'));
+    expect(nav).toHaveBeenCalledWith('resumen');
     expect(close).toHaveBeenCalled();
   });
   it('overlay click cierra', async () => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  FileBarChart,
+  ClipboardList,
   Bell,
   CalendarClock,
   AlertTriangle,
@@ -9,7 +9,7 @@ import {
 import { QuickActionCard } from '../../../components/ui/QuickActionCard';
 
 const QUICK_ACTIONS = [
-  { icon: FileBarChart, label: 'Reportes', to: 'reportes', tone: 'info', badgeKey: null },
+  { icon: ClipboardList, label: 'Resumen', to: 'resumen', tone: 'info', badgeKey: null },
   { icon: Bell, label: 'Notificaciones', to: 'notificaciones', tone: 'gold', badgeKey: 'notificaciones' },
   { icon: CalendarClock, label: 'Cobrar hoy', to: 'cobrar-hoy', tone: 'emerald', badgeKey: 'cobrarHoy' },
   { icon: AlertTriangle, label: 'Atrasados', to: 'atrasados', tone: 'rose', badgeKey: 'atrasados' },

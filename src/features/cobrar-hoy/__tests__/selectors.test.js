@@ -16,12 +16,17 @@ import React from 'react';
 beforeEach(() => vi.clearAllMocks());
 
 describe('getCobrarHoyDetalle', () => {
-  it('mapea prestamoId/clienteId/cuota', async () => {
+  it('mapea y preserva prestamo/prestamoId/clienteId/cuota', async () => {
     vi.mocked(prestamosService.cobrarHoy).mockResolvedValue([
       { prestamo: { id: 'p1', clienteId: 'c1' }, cuota: { numero: 1 } },
     ]);
     const r = await getCobrarHoyDetalle();
-    expect(r[0]).toEqual({ prestamoId: 'p1', clienteId: 'c1', cuota: { numero: 1 } });
+    expect(r[0]).toEqual({
+      prestamo: { id: 'p1', clienteId: 'c1' },
+      prestamoId: 'p1',
+      clienteId: 'c1',
+      cuota: { numero: 1 },
+    });
   });
 });
 
@@ -48,6 +53,8 @@ describe('useCobrarHoy', () => {
     const { result } = renderHook(() => useCobrarHoy(), { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.items).toHaveLength(1);
+    expect(result.current.items[0].prestamo).toEqual({ id: 'p1', clienteId: 'c1' });
+    expect(result.current.items[0].clienteId).toBe('c1');
     expect(result.current.items[0].cliente.nombre).toBe('Ana');
   });
 });

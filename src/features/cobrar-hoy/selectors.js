@@ -6,10 +6,11 @@ const EMPTY_RESUMEN = { cantidad: 0, total: 0 };
 
 export function getCobrarHoyDetalle() {
   return prestamosService.cobrarHoy().then((items) =>
-    items.map((x) => ({
-      prestamoId: x.prestamo.id,
-      clienteId: x.prestamo.clienteId,
-      cuota: x.cuota,
+    items.map(({ prestamo, cuota }) => ({
+      prestamo,
+      prestamoId: prestamo.id,
+      clienteId: prestamo.clienteId,
+      cuota,
     })),
   );
 }

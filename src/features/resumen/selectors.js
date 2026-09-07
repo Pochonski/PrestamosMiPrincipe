@@ -167,7 +167,7 @@ export function computeResumen({ clientes, prestamos, cobros, hoy = new Date(), 
     .sort((a, b) => b.atrasado - a.atrasado)
     .slice(0, 5);
 
-  // Saldo por ruta
+  // Saldo por ruta + conteo por ruta (vista unificada ex-Reportes)
   const saldoPorRuta = (() => {
     const map = new Map();
     for (const p of prestamosFiltrados) {
@@ -177,6 +177,18 @@ export function computeResumen({ clientes, prestamos, cobros, hoy = new Date(), 
     return [...map.entries()]
       .map(([ruta, saldo]) => ({ ruta, saldo }))
       .sort((a, b) => b.saldo - a.saldo)
+      .slice(0, 5);
+  })();
+
+  const conteoPorRuta = (() => {
+    const map = new Map();
+    for (const p of prestamosFiltrados) {
+      const key = p.ruta || 'Sin ruta';
+      map.set(key, (map.get(key) || 0) + 1);
+    }
+    return [...map.entries()]
+      .map(([ruta, count]) => ({ ruta, count }))
+      .sort((a, b) => b.count - a.count)
       .slice(0, 5);
   })();
 
@@ -241,6 +253,7 @@ export function computeResumen({ clientes, prestamos, cobros, hoy = new Date(), 
     topMorosos,
     ultimosCobros,
     saldoPorRuta,
+    conteoPorRuta,
     porEstado,
     cobros6m,
     spark7,
@@ -274,6 +287,7 @@ export const EMPTY_RESUMEN = {
   topMorosos: [],
   ultimosCobros: [],
   saldoPorRuta: [],
+  conteoPorRuta: [],
   porEstado: { vigente: 0, atrasado: 0, cancelado: 0 },
   cobros6m: [],
   spark7: [],

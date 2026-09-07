@@ -1,5 +1,5 @@
 import React from 'react';
-export function HorizontalBars({ data, max }) {
+export function HorizontalBars({ data, max, formatValue }) {
   if (!data || data.length === 0) {
     return null;
   }
@@ -16,7 +16,7 @@ export function HorizontalBars({ data, max }) {
                 {d.label}
               </span>
               <span className="ml-2 shrink-0 font-bold tabular-nums text-slate-700 dark:text-navy-100">
-                {d.value}
+                {formatValue ? formatValue(d.value) : d.value}
               </span>
             </div>
             <div className="relative h-2.5 overflow-hidden rounded-full bg-slate-100 dark:bg-navy-700/60">
