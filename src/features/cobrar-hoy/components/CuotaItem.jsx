@@ -5,7 +5,7 @@ import { Badge } from '../../../components/ui/Badge';
 import { formatCRC, formatDate } from '../../../lib/format';
 
 export function CuotaItem({ item, onCobrar, variant = 'today' }) {
-  const { prestamo, cuota, cliente } = item;
+  const { prestamo, cuota, cliente, diasAtraso } = item;
   const isAtrasado = variant === 'atrasado';
 
   return (
@@ -19,7 +19,11 @@ export function CuotaItem({ item, onCobrar, variant = 'today' }) {
             <p className="truncate text-base font-bold text-navy-900 dark:text-white">
               {cliente.nombre}
             </p>
-            {isAtrasado && <Badge tone="danger">Atrasado</Badge>}
+            {isAtrasado && (
+              <Badge tone="danger">
+                {Number.isFinite(diasAtraso) && diasAtraso > 0 ? `Atrasado · ${diasAtraso}d` : 'Atrasado'}
+              </Badge>
+            )}
           </div>
           <p className="mt-0.5 truncate text-xs text-neutral-500 dark:text-navy-300">
             {cliente.cedula} · {cliente.telefono}
@@ -35,10 +39,21 @@ export function CuotaItem({ item, onCobrar, variant = 'today' }) {
           </p>
         </div>
         <div>
-          <p className="section-label">Fecha</p>
-          <p className="mt-0.5 text-sm font-semibold tabular-nums text-navy-900 dark:text-white">
+          <p className="section-label">{isAtrasado ? 'Debió pagar' : 'Fecha'}</p>
+          <p
+            className={`mt-0.5 text-sm font-semibold tabular-nums ${
+              isAtrasado
+                ? 'text-danger-600 dark:text-danger-500'
+                : 'text-navy-900 dark:text-white'
+            }`}
+          >
             {formatDate(cuota.fecha)}
           </p>
+          {isAtrasado && Number.isFinite(diasAtraso) && diasAtraso > 0 && (
+            <p className="text-xs font-medium text-danger-600 dark:text-danger-500">
+              hace {diasAtraso} {diasAtraso === 1 ? 'día' : 'días'}
+            </p>
+          )}
         </div>
         <div>
           <p className="section-label">Ruta</p>
