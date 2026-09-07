@@ -61,3 +61,38 @@ describe('cobros.recientes', () => {
     expect(all.slice(0, 3)).toHaveLength(3);
   });
 });
+
+describe('cobros.updateLast / removeLast', () => {
+  function mockGetById(row) {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: row, error: null });
+    const chain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle };
+    chain.eq.mockReturnValue(chain);
+    chain.select.mockReturnValue(chain);
+    vi.mocked(supabase.from).mockReturnValue(chain);
+  }
+  it('updateLast: solo-último -> SoloUltimoCobroError', async () => {
+    vi.mocked(supabase.rpc).mockResolvedValue({ data: null, error: { message: 'Solo se puede editar el último cobro' } });
+    await expect(cobrosService.updateLast('c1', { cuotaNumero: 1, monto: 100, tipo: 'interes' }))
+      .rejects.toHaveProperty('name', 'SoloUltimoCobroError');
+    expect(supabase.rpc).toHaveBeenCalledWith('update_last_cobro', expect.objectContaining({ p_cobro_id: 'c1' }));
+  });
+  it('updateLast: éxito emite eventos y devuelve cobro', async () => {
+    vi.mocked(supabase.rpc).mockResolvedValue({ data: 'c1', error: null });
+    mockGetById({ id: 'c1', monto: 5000 });
+    const r = await cobrosService.updateLast('c1', { cuotaNumero: 2, monto: 5000, tipo: 'capital', incluirInteres: true, nota: 'x' });
+    expect(r.id).toBe('c1');
+    expect(emitDataChanged).toHaveBeenCalledWith('cobros');
+    expect(emitDataChanged).toHaveBeenCalledWith('prestamos');
+  });
+  it('removeLast: no-último -> SoloUltimoCobroError', async () => {
+    vi.mocked(supabase.rpc).mockResolvedValue({ data: null, error: { message: 'Solo se puede eliminar el último cobro del préstamo' } });
+    await expect(cobrosService.removeLast('c9')).rejects.toHaveProperty('name', 'SoloUltimoCobroError');
+    expect(supabase.rpc).toHaveBeenCalledWith('delete_last_cobro', { p_cobro_id: 'c9' });
+  });
+  it('removeLast: éxito emite eventos y devuelve prestamo_id', async () => {
+    vi.mocked(supabase.rpc).mockResolvedValue({ data: 'p1', error: null });
+    const r = await cobrosService.removeLast('c1');
+    expect(r).toBe('p1');
+    expect(emitDataChanged).toHaveBeenCalledWith('cuotas');
+  });
+});

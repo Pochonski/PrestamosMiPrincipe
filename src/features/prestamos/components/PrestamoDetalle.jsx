@@ -33,6 +33,8 @@ import { PrestamoCalendar } from './PrestamoCalendar';
 import { ExtenderCuotasModal } from './ExtenderCuotasModal';
 import { DeletePrestamoConfirm } from './DeletePrestamoConfirm';
 import { PrestamoEditModal } from './PrestamoEditModal';
+import { CobroEditModal } from './CobroEditModal';
+import { DeleteCobroConfirm } from './DeleteCobroConfirm';
 
 const STATUS_META = {
   vigente: { tone: 'success', label: 'Vigente' },
@@ -54,6 +56,9 @@ export function PrestamoDetalle({ onNavigate, params }) {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [editCobro, setEditCobro] = useState(null);
+  const [deleteCobro, setDeleteCobro] = useState(null);
+  const [deletingCobro, setDeletingCobro] = useState(false);
   const [cliente, setCliente] = useState(null);
 
   useEffect(() => {
@@ -159,6 +164,23 @@ export function PrestamoDetalle({ onNavigate, params }) {
     } catch (err) {
       setDeleting(false);
       showToast(err.message || 'Error al eliminar', 'error');
+    }
+  }
+
+  // Los cobros llegan ordenados por fecha desc: el primero es el último.
+  const ultimoCobroId = cobros.length > 0 ? cobros[0].id : null;
+
+  async function handleDeleteCobro() {
+    if (!deleteCobro) return;
+    setDeletingCobro(true);
+    try {
+      await cobrosService.removeLast(deleteCobro.id);
+      setDeleteCobro(null);
+      showToast('Cobro eliminado y saldo revertido', 'success');
+    } catch (err) {
+      showToast(err.message || 'Error al eliminar cobro', 'error');
+    } finally {
+      setDeletingCobro(false);
     }
   }
 
@@ -323,6 +345,7 @@ export function PrestamoDetalle({ onNavigate, params }) {
           <Card className="divide-y divide-slate-100 p-0 dark:divide-navy-700/60">
             {cobros.map((c) => {
               const tipoMeta = COBRO_TIPO_META[c.tipo] || COBRO_TIPO_META.interes;
+              const isUltimo = c.id === ultimoCobroId;
               return (
                 <div key={c.id} className="flex items-center gap-3 p-4">
                   <IconBox icon={ArrowDownCircle} tone={tipoMeta.iconTone} size="sm" />
@@ -332,6 +355,7 @@ export function PrestamoDetalle({ onNavigate, params }) {
                         {formatCRC(c.monto)}
                       </p>
                       <Badge tone={tipoMeta.tone}>{tipoMeta.label}</Badge>
+                      {isUltimo && <Badge tone="gold">Último</Badge>}
                     </div>
                     <p className="text-xs text-neutral-500 dark:text-navy-300">
                       Cuota #{c.cuota_numero} · {formatDateTime(c.fecha)}
@@ -342,6 +366,28 @@ export function PrestamoDetalle({ onNavigate, params }) {
                       </p>
                     )}
                   </div>
+                  {isUltimo && (
+                    <div className="flex shrink-0 items-center gap-1">
+                      <button
+                        type="button"
+                        title="Editar cobro"
+                        aria-label="Editar cobro"
+                        onClick={() => setEditCobro(c)}
+                        className="rounded-input p-2 text-neutral-400 transition-colors hover:bg-slate-100 hover:text-navy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 dark:text-navy-300 dark:hover:bg-navy-700 dark:hover:text-white"
+                      >
+                        <Pencil className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        title="Eliminar cobro"
+                        aria-label="Eliminar cobro"
+                        onClick={() => setDeleteCobro(c)}
+                        className="rounded-input p-2 text-neutral-400 transition-colors hover:bg-danger-50 hover:text-danger-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-500 dark:text-navy-300 dark:hover:bg-danger-500/10 dark:hover:text-danger-500"
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -371,6 +417,24 @@ export function PrestamoDetalle({ onNavigate, params }) {
           loading={deleting}
           onConfirm={handleDelete}
           onCancel={() => setDeleteOpen(false)}
+        />
+      )}
+
+      {editCobro && (
+        <CobroEditModal
+          cobro={editCobro}
+          prestamo={prestamo}
+          onClose={() => setEditCobro(null)}
+          onSaved={() => setEditCobro(null)}
+        />
+      )}
+
+      {deleteCobro && (
+        <DeleteCobroConfirm
+          cobro={deleteCobro}
+          loading={deletingCobro}
+          onConfirm={handleDeleteCobro}
+          onCancel={() => (deletingCobro ? null : setDeleteCobro(null))}
         />
       )}
     </div>

@@ -165,6 +165,40 @@ export class CuotasAgotadasError extends Error {
   }
 }
 
+export class SoloUltimoCobroError extends Error {
+  constructor(accion = 'editar') {
+    super(`Solo se puede ${accion} el último cobro del préstamo`);
+    this.name = 'SoloUltimoCobroError';
+  }
+}
+
+function mapCobroRpcError(error, { cuotaNumero, prestamoId, monto, tipo, accion = 'registrar' } = {}) {
+  const msg = String(error?.message || '').toLowerCase();
+  if (msg.includes('último cobro') || msg.includes('ultimo cobro')) {
+    throw new SoloUltimoCobroError(accion === 'registrar' ? 'registrar' : accion);
+  }
+  if (msg.includes('cobro no encontrado')) {
+    throw new Error('El cobro ya no existe');
+  }
+  if (msg.includes('monto menor')) {
+    throw new MontoInvalidoError('El monto es menor que el interés del período');
+  }
+  if (msg.includes('cuota') && msg.includes('not pending')) {
+    throw new CuotaInvalidaError(cuotaNumero, 'no está pendiente');
+  }
+  if (msg.includes('cuota') && msg.includes('no existe')) {
+    throw new CuotaInvalidaError(cuotaNumero, 'no existe');
+  }
+  if (msg.includes('intereses atrasados') || msg.includes('atrasado')) {
+    const match = msg.match(/(\d+)/);
+    throw new InteresesAtrasadosError(match ? Number(match[1]) : 1);
+  }
+  if (msg.includes('cuotas agotadas') || msg.includes('agotad')) {
+    throw new CuotasAgotadasError(0);
+  }
+  throwIfError(error, `cobros.${accion}`, { prestamoId, cuotaNumero, monto, tipo });
+}
+
 // Los cobros son un libro inmutable: no hay update/delete intencionalmente.
 // El cobrador se deriva de auth.uid() dentro del RPC (no se acepta por parámetro
 // para evitar suplantación).
@@ -207,4 +241,48 @@ export async function create({ prestamoId, cuotaNumero, monto, tipo, incluirInte
   emitDataChanged('prestamos');
   emitDataChanged('cuotas');
   return await getById(data);
+}
+
+/**
+ * Edita el ÚLTIMO cobro del préstamo (tipo, cuota, monto, nota).
+ * El RPC revierte el cobro viejo y aplica el nuevo en una transacción,
+ * dejando préstamo y cuotas como si el cobro original nunca hubiera existido.
+ * Requiere aplicar la migración 20260909000000_cobro_edit_delete.sql.
+ */
+export async function updateLast(cobroId, { cuotaNumero, monto, tipo, incluirInteres = false, nota }) {
+  const { data, error } = await supabase.rpc('update_last_cobro', {
+    p_cobro_id: cobroId,
+    p_cuota_numero: Number(cuotaNumero),
+    p_monto: Number(monto),
+    p_tipo: tipo,
+    p_incluir_interes: Boolean(incluirInteres),
+    p_nota: nota || null,
+  });
+  if (error) {
+    mapCobroRpcError(error, { cuotaNumero, monto, tipo, accion: 'editar' });
+  }
+  if (!data) throw new Error('No se actualizó el cobro');
+  emitDataChanged('cobros');
+  emitDataChanged('prestamos');
+  emitDataChanged('cuotas');
+  return await getById(data);
+}
+
+/**
+ * Elimina el ÚLTIMO cobro del préstamo y revierte sus efectos
+ * (cuota → pendiente, saldo restaurado, préstamo reabierto si corresponde).
+ * Requiere aplicar la migración 20260909000000_cobro_edit_delete.sql.
+ * Devuelve el prestamo_id afectado.
+ */
+export async function removeLast(cobroId) {
+  const { data, error } = await supabase.rpc('delete_last_cobro', {
+    p_cobro_id: cobroId,
+  });
+  if (error) {
+    mapCobroRpcError(error, { accion: 'eliminar' });
+  }
+  emitDataChanged('cobros');
+  emitDataChanged('prestamos');
+  emitDataChanged('cuotas');
+  return data;
 }
