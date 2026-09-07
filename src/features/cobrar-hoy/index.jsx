@@ -1,29 +1,24 @@
-import React from 'react';
-import { CalendarClock, Wallet, CheckCircle2 } from 'lucide-react';
+import React, { useState } from 'react';
+import clsx from 'clsx';
+import { CalendarClock, HandCoins, Wallet, CheckCircle2 } from 'lucide-react';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { IconBox } from '../../components/ui/IconBox';
 import { SectionTitle } from '../../components/ui/SectionTitle';
 import { StatCard } from '../../components/ui/StatCard';
 import { CuotaItem } from './components/CuotaItem';
+import { CobrosMes } from './components/CobrosMes';
 import { useCobrarHoy } from './selectors';
 import { formatCRCCompact } from '../../lib/format';
 
-export function CobrarHoyPage({ onNavigate }) {
-  const { items, resumen, loading } = useCobrarHoy();
+const TABS = [
+  { id: 'hoy', label: 'Cobrar hoy' },
+  { id: 'mes', label: 'Cobrado del mes' },
+];
 
-  if (loading) {
-    return (
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
-        <Skeleton className="h-20 w-full" />
-        <div className="grid grid-cols-2 gap-3 sm:gap-4">
-          <Skeleton className="h-28 w-full" />
-          <Skeleton className="h-28 w-full" />
-        </div>
-        <Skeleton className="h-40 w-full" />
-      </div>
-    );
-  }
+export function CobrarHoyPage({ onNavigate }) {
+  const [tab, setTab] = useState('hoy');
+  const { items, resumen, loading } = useCobrarHoy();
 
   function handleCobrar(item) {
     onNavigate?.('cobro', {
@@ -36,57 +31,91 @@ export function CobrarHoyPage({ onNavigate }) {
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
       <header>
         <div className="flex items-center gap-3">
-          <IconBox icon={CalendarClock} tone="info" size="md" />
+          <IconBox icon={HandCoins} tone="gold" size="md" />
           <div>
             <h1 className="text-xl font-extrabold tracking-tight text-navy-900 sm:text-2xl dark:text-white">
-              Cobrar hoy
+              Cobros
             </h1>
             <p className="mt-0.5 text-sm text-neutral-600 dark:text-navy-300">
-              Cuotas con vencimiento el día de hoy.
+              Lo que toca cobrar hoy y lo ya cobrado en el mes, cliente por cliente.
             </p>
           </div>
         </div>
+        <div className="mt-4 flex flex-wrap gap-2" role="tablist" aria-label="Secciones de cobros">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.id}
+              onClick={() => setTab(t.id)}
+              className={clsx(
+                'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold transition-all',
+                tab === t.id
+                  ? 'bg-navy-900 text-white shadow-card dark:bg-gold-500 dark:text-navy-900'
+                  : 'bg-slate-100 text-navy-700 hover:bg-slate-200 dark:bg-navy-800 dark:text-navy-200 dark:hover:bg-navy-700',
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </header>
 
-      <section className="space-y-2">
-        <SectionTitle title="Resumen" />
-        <div className="grid grid-cols-2 gap-3 sm:gap-4">
-          <StatCard
-            label="Cuotas hoy"
-            value={resumen.cantidad}
-            sub={resumen.cantidad === 1 ? 'cuota vence hoy' : 'cuotas vencen hoy'}
-            icon={CalendarClock}
-            tone="info"
-          />
-          <StatCard
-            label="Total a cobrar"
-            value={formatCRCCompact(resumen.total)}
-            sub="solo intereses"
-            icon={Wallet}
-            tone="gold"
-          />
-        </div>
-      </section>
+      {tab === 'mes' ? (
+        <CobrosMes onNavigate={onNavigate} />
+      ) : loading ? (
+        <>
+          <Skeleton className="h-20 w-full" />
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-28 w-full" />
+          </div>
+          <Skeleton className="h-40 w-full" />
+        </>
+      ) : (
+        <>
+          <section className="space-y-2">
+            <SectionTitle title="Resumen de hoy" />
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <StatCard
+                label="Cuotas hoy"
+                value={resumen.cantidad}
+                sub={resumen.cantidad === 1 ? 'cuota vence hoy' : 'cuotas vencen hoy'}
+                icon={CalendarClock}
+                tone="info"
+              />
+              <StatCard
+                label="Total a cobrar"
+                value={formatCRCCompact(resumen.total)}
+                sub="solo intereses"
+                icon={Wallet}
+                tone="gold"
+              />
+            </div>
+          </section>
 
-      <section className="space-y-3">
-        <SectionTitle title={`Pendientes (${items.length})`} />
-        {items.length === 0 ? (
-          <EmptyState
-            icon={CheckCircle2}
-            variant="success"
-            title="¡Al día!"
-            description="No hay cuotas con vencimiento hoy."
-          />
-        ) : (
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {items.map((item) => (
-              <li key={`${item.prestamo.id}-${item.cuota.numero}`} className="animate-fade-in">
-                <CuotaItem item={item} onCobrar={handleCobrar} variant="today" />
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+          <section className="space-y-3">
+            <SectionTitle title={`Pendientes (${items.length})`} />
+            {items.length === 0 ? (
+              <EmptyState
+                icon={CheckCircle2}
+                variant="success"
+                title="¡Al día!"
+                description="No hay cuotas con vencimiento hoy."
+              />
+            ) : (
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {items.map((item) => (
+                  <li key={`${item.prestamo.id}-${item.cuota.numero}`} className="animate-fade-in">
+                    <CuotaItem item={item} onCobrar={handleCobrar} variant="today" />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
+      )}
     </div>
   );
 }

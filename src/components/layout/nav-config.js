@@ -1,7 +1,6 @@
 import {
   LayoutDashboard,
   Bell,
-  CalendarClock,
   AlertTriangle,
   Download,
   PlusCircle,
@@ -25,7 +24,7 @@ import {
  */
 export const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/', mobile: true, section: 'principal' },
-  { id: 'cobrar-hoy', label: 'Cobrar hoy', icon: CalendarClock, path: '/cobrar-hoy', mobile: true, section: 'principal' },
+  { id: 'cobrar-hoy', label: 'Cobros', icon: HandCoins, path: '/cobrar-hoy', mobile: true, section: 'principal' },
   { id: 'prestamos', label: 'Préstamos', icon: Wallet, path: '/prestamos', mobile: false, section: 'principal' },
   { id: 'atrasados', label: 'Atrasados', icon: AlertTriangle, path: '/atrasados', mobile: true, section: 'principal' },
   { id: 'resumen', label: 'Resumen', icon: ClipboardList, path: '/resumen', mobile: true, section: 'principal' },
