@@ -22,6 +22,11 @@ vi.mock('../../../services/clientes', () => ({
 vi.mock('../../../services/notificaciones', () => ({
   countNoLeidas: vi.fn(),
 }));
+vi.mock('../../../services/totales', () => ({
+  resumenTotales: vi.fn(),
+  cobrosSerieDiaria: vi.fn(),
+  cobrosSerieMensual: vi.fn(),
+}));
 vi.mock('../../../lib/supabase', () => ({
   supabase: { from: vi.fn() },
 }));
@@ -31,6 +36,7 @@ vi.mock('../../resumen/selectors', () => ({
 
 import { deriveDeltas, getMetrics } from '../selectors';
 import * as carteraHistoryService from '../../../services/carteraHistory';
+import * as totalesService from '../../../services/totales';
 import * as cobrosService from '../../../services/cobros';
 import * as prestamosService from '../../../services/prestamos';
 import * as clientesService from '../../../services/clientes';
@@ -80,18 +86,18 @@ describe('getMetrics', () => {
   it('agrega métricas y snapshot', async () => {
     vi.mocked(carteraHistoryService.snapshot).mockResolvedValue({ cartera_total: 100 });
     vi.mocked(carteraHistoryService.history).mockResolvedValue([]);
-    vi.mocked(cobrosService.list).mockResolvedValue([]);
-    vi.mocked(prestamosService.list).mockResolvedValue([]);
-    vi.mocked(clientesService.list).mockResolvedValue([]);
-    vi.mocked(computeResumen).mockReturnValue({
-      cobros6m: [{ label: 'Ene', value: 10 }],
-      spark7: [1, 2, 3],
-      porEstado: { vigente: 1, atrasado: 0, cancelado: 0 },
-      kpis: { cobrosPrevMes: 0, cobrosMes: 0 },
-    });
+    vi.mocked(totalesService.cobrosSerieDiaria).mockResolvedValue([
+      { fecha: '2020-01-01', total: 1 },
+      { fecha: '2020-01-02', total: 2 },
+      { fecha: '2020-01-03', total: 3 },
+    ]);
+    vi.mocked(totalesService.cobrosSerieMensual).mockResolvedValue([
+      { mes: '2020-01', total: 10 },
+    ]);
 
     const m = await getMetrics();
     expect(m.cobros6m).toHaveLength(1);
+    expect(m.cobros6m[0].value).toBe(10);
     expect(m.spark7).toHaveLength(3);
     expect(m.cobradoAyer).toBe(0);
     expect(m.snapshotHoy).toBeNull();
@@ -100,12 +106,8 @@ describe('getMetrics', () => {
   it('si falla snapshot no rompe, usa history', async () => {
     vi.mocked(carteraHistoryService.snapshot).mockRejectedValue(new Error('x'));
     vi.mocked(carteraHistoryService.history).mockResolvedValue([]);
-    vi.mocked(cobrosService.list).mockResolvedValue([]);
-    vi.mocked(prestamosService.list).mockResolvedValue([]);
-    vi.mocked(clientesService.list).mockResolvedValue([]);
-    vi.mocked(computeResumen).mockReturnValue({
-      cobros6m: [], spark7: [], porEstado: {}, kpis: { cobrosPrevMes: 0, cobrosMes: 0 },
-    });
+    vi.mocked(totalesService.cobrosSerieDiaria).mockResolvedValue([]);
+    vi.mocked(totalesService.cobrosSerieMensual).mockResolvedValue([]);
 
     await expect(getMetrics()).resolves.toHaveProperty('cobros6m');
   });

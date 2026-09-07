@@ -16,6 +16,11 @@ vi.mock('../../../services/clientes', () => ({
 vi.mock('../../../services/notificaciones', () => ({
   countNoLeidas: vi.fn(),
 }));
+vi.mock('../../../services/totales', () => ({
+  resumenTotales: vi.fn(),
+  cobrosSerieDiaria: vi.fn(),
+  cobrosSerieMensual: vi.fn(),
+}));
 vi.mock('../../../lib/supabase', () => ({
   supabase: { from: vi.fn() },
 }));
@@ -25,27 +30,30 @@ import * as prestamosService from '../../../services/prestamos';
 import * as cobrosService from '../../../services/cobros';
 import * as clientesService from '../../../services/clientes';
 import * as notifService from '../../../services/notificaciones';
+import * as totalesService from '../../../services/totales';
 import { supabase } from '../../../lib/supabase';
 
 beforeEach(() => vi.clearAllMocks());
 
 describe('getKpis', () => {
-  it('agrega kpis', async () => {
-    vi.mocked(prestamosService.resumen).mockResolvedValue({ carteraTotal: 100, totalAtrasado: 10, cantidadAtrasados: 1, cantidadActivos: 2, totalCobrarHoy: 50, cantidadCobrarHoy: 1 });
-    vi.mocked(cobrosService.resumen).mockResolvedValue({ totalDelDia: 20, cantidadDelDia: 2 });
-    vi.mocked(clientesService.count).mockResolvedValue(5);
+  it('agrega kpis desde resumenTotales', async () => {
+    vi.mocked(totalesService.resumenTotales).mockResolvedValue({
+      carteraTotal: 100, totalAtrasado: 10, cantidadAtrasados: 1, prestamosActivos: 2,
+      totalCobrarHoy: 50, cantidadCobrarHoy: 1, totalCobradoHoy: 20, cantidadCobradoHoy: 2,
+      totalClientes: 5,
+    });
     const r = await getKpis();
     expect(r.carteraTotal).toBe(100);
     expect(r.totalClientes).toBe(5);
     expect(r.totalCobradoHoy).toBe(20);
+    expect(r.cantidadActivos).toBe(2);
   });
 });
 
 describe('getQuickBadges', () => {
-  it('suma notifs y listas', async () => {
+  it('suma notifs y totales', async () => {
     vi.mocked(notifService.countNoLeidas).mockResolvedValue(3);
-    vi.mocked(prestamosService.cuotasAtrasadas).mockResolvedValue([{}, {}]);
-    vi.mocked(prestamosService.cobrarHoy).mockResolvedValue([{}]);
+    vi.mocked(totalesService.resumenTotales).mockResolvedValue({ cantidadAtrasados: 2, cantidadCobrarHoy: 1 });
     const r = await getQuickBadges();
     expect(r.notificaciones).toBe(3);
     expect(r.atrasados).toBe(2);

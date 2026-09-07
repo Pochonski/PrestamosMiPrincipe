@@ -4,38 +4,39 @@ import * as cobrosService from '../../services/cobros';
 import * as clientesService from '../../services/clientes';
 import * as notificacionesService from '../../services/notificaciones';
 import * as carteraHistoryService from '../../services/carteraHistory';
+import { resumenTotales, cobrosSerieDiaria, cobrosSerieMensual } from '../../services/totales';
 import { startOfDay } from '../../lib/format';
-import { computeResumen } from '../resumen/selectors';
 
 export async function getKpis() {
-  const [prestamos, cobros, totalClientes] = await Promise.all([
-    prestamosService.resumen(),
-    cobrosService.resumen(),
-    clientesService.count(),
-  ]);
+  const t = await resumenTotales();
   return {
-    carteraTotal: prestamos.carteraTotal,
-    totalAtrasado: prestamos.totalAtrasado,
-    cantidadAtrasados: prestamos.cantidadAtrasados,
-    cantidadActivos: prestamos.cantidadActivos,
-    totalCobrarHoy: prestamos.totalCobrarHoy,
-    cantidadCobrarHoy: prestamos.cantidadCobrarHoy,
-    totalCobradoHoy: cobros.totalDelDia,
-    cantidadCobradoHoy: cobros.cantidadDelDia,
-    totalClientes,
+    carteraTotal: Number(t.carteraTotal ?? 0),
+    totalAtrasado: Number(t.totalAtrasado ?? 0),
+    cantidadAtrasados: Number(t.cantidadAtrasados ?? 0),
+    cantidadActivos: Number(t.prestamosActivos ?? 0),
+    totalCobrarHoy: Number(t.totalCobrarHoy ?? 0),
+    cantidadCobrarHoy: Number(t.cantidadCobrarHoy ?? 0),
+    totalCobradoHoy: Number(t.totalCobradoHoy ?? 0),
+    cantidadCobradoHoy: Number(t.cantidadCobradoHoy ?? 0),
+    totalClientes: Number(t.totalClientes ?? 0),
   };
 }
 
 export async function getQuickBadges() {
-  const [notifs, atrasadas, hoy] = await Promise.all([
+  const [notifs, t] = await Promise.all([
     notificacionesService.countNoLeidas(),
-    prestamosService.cuotasAtrasadas(),
-    prestamosService.cobrarHoy(),
+    (async () => {
+      try {
+        return await resumenTotales();
+      } catch {
+        return {};
+      }
+    })(),
   ]);
   return {
     notificaciones: notifs,
-    atrasados: atrasadas.length,
-    cobrarHoy: hoy.length,
+    atrasados: Number(t.cantidadAtrasados ?? 0),
+    cobrarHoy: Number(t.cantidadCobrarHoy ?? 0),
   };
 }
 
@@ -89,39 +90,39 @@ function isSameDay(a, b) {
 }
 
 export async function getMetrics() {
-  const [snapshotResult, historyRows, cobros, prestamos, clientes] = await Promise.all([
+  const [snapshotResult, historyRows, serieDiaria, serieMensual] = await Promise.all([
     carteraHistoryService.snapshot().catch(() => null),
     carteraHistoryService.history(35).catch(() => []),
-    cobrosService.list({ limit: 1000, offset: 0 }),
-    prestamosService.list({ limit: 500, offset: 0 }),
-    clientesService.list({ limit: 500, offset: 0 }),
+    cobrosSerieDiaria(7).catch(() => []),
+    cobrosSerieMensual(6).catch(() => []),
   ]);
 
-  const resumen = computeResumen({ clientes, prestamos, cobros });
+  // Label de mes abreviado para cada bucket mensual.
+  const cobros6m = serieMensual.map((r) => ({
+    label: new Date(`${r.mes}T00:00:00`).toLocaleDateString('es-CR', { month: 'short' }),
+    value: Number(r.total || 0),
+  }));
 
-  const cobradoAyer = cobros
-    .filter((c) => {
-      const ayer = startOfDay(new Date());
-      ayer.setDate(ayer.getDate() - 1);
-      return isSameDay(c.fecha, ayer);
-    })
-    .reduce((s, c) => s + Number(c.monto || 0), 0);
+  // Sparkline de 7 días: map por fecha (los días sin cobros aparecen en 0).
+  const spark7 = serieDiaria.map((r) => Number(r.total || 0));
 
   const hoy = startOfDay(new Date());
+  const ayer = new Date(hoy);
+  ayer.setDate(ayer.getDate() - 1);
+  const hoyDiario = serieDiaria.find((r) => isSameDay(r.fecha, hoy));
+  const ayerDiario = serieDiaria.find((r) => isSameDay(r.fecha, ayer));
+  const cobradoAyer = Number(ayerDiario?.total || 0);
+
   const snapshotHoy = (historyRows || []).find((r) => isSameDay(r.fecha, hoy)) || null;
   const snapshotMesAnterior = findSnapshotMesAnterior(historyRows || []);
-  const snapshotAyer = (historyRows || []).find((r) => {
-    const ayer = startOfDay(new Date());
-    ayer.setDate(ayer.getDate() - 1);
-    return isSameDay(r.fecha, ayer);
-  }) || null;
+  const snapshotAyer = (historyRows || []).find((r) => isSameDay(r.fecha, ayer)) || null;
 
   return {
-    cobros6m: resumen.cobros6m || [],
-    spark7: resumen.spark7 || [],
-    porEstado: resumen.porEstado,
-    cobrosPrevMes: resumen.kpis.cobrosPrevMes,
-    cobrosMes: resumen.kpis.cobrosMes,
+    cobros6m,
+    spark7,
+    porEstado: { vigente: 0, atrasado: 0, cancelado: 0 },
+    cobrosPrevMes: 0,
+    cobrosMes: Number(hoyDiario?.total || 0),
     cobradoAyer,
     snapshotHoy,
     snapshotMesAnterior,
