@@ -105,6 +105,32 @@ function exportResumenCSV(data) {
   URL.revokeObjectURL(url);
 }
 
+function ClickableCard({ to, label, onNavigate, go, children }) {
+  function handleClick() {
+    if (onNavigate) onNavigate(to);
+    else {
+      const pathMap = {
+        clientes: '/clientes',
+        prestamos: '/prestamos',
+        'cobrar-hoy': '/cobrar-hoy',
+        atrasados: '/atrasados',
+        exportar: '/exportar',
+      };
+      go(pathMap[to] || '/');
+    }
+  }
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      aria-label={label}
+      className="block min-h-[44px] w-full min-w-0 touch-manipulation rounded-card text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
+    >
+      {children}
+    </button>
+  );
+}
+
 export function ResumenPage({ onNavigate }) {
   const [filters, setFilters] = useResumenFilters();
   const { data, loading, isError, error, hasMore, refetch } = useResumenData(filters);
@@ -113,9 +139,9 @@ export function ResumenPage({ onNavigate }) {
   const [vistaRuta, setVistaRuta] = useState('saldo');
 
   function go(path, params = {}) {
-    if (onNavigate && (path === '/clientes' || path === '/cobros/nuevo' || path === '/cobrar-hoy')) {
+    if (onNavigate) {
       // map path to nav id for AppShell's controlled navigation
-      const idMap = { '/clientes': 'clientes', '/cobros/nuevo': 'cobro', '/cobrar-hoy': 'cobrar-hoy' };
+      const idMap = { '/clientes': 'clientes', '/cobros/nuevo': 'cobro', '/cobrar-hoy': 'cobrar-hoy', '/prestamos': 'prestamos', '/atrasados': 'atrasados', '/exportar': 'exportar' };
       const id = idMap[path];
       if (id) {
         onNavigate(id, params);
@@ -214,84 +240,120 @@ export function ResumenPage({ onNavigate }) {
       <section className="space-y-3">
         <SectionTitle title="Indicadores clave" />
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          <div className="relative">
-            <StatCard label="Clientes" value={k.totalClientes} sub={k.totalClientes === 1 ? 'cliente registrado' : 'clientes registrados'} icon={Users} tone="navy" />
-          </div>
-          <StatCard label="Préstamos activos" value={k.prestamosActivos} sub="vigentes + atrasados" icon={Wallet} tone="gold" />
-          <div className="relative">
-            <StatCard
-              label="Cobrado hoy"
-              value={formatCRC(k.totalCobradoHoy)}
-              sub={`${k.cobrosHoyCount} cobros · por cobrar ${formatCRC(k.totalPorCobrarHoy)}`}
-              icon={HandCoins}
-              tone="success"
-              delta={k.eficienciaCobroHoy != null ? k.eficienciaCobroHoy - 100 : undefined}
-            />
-            <div className="absolute bottom-2 right-2 hidden sm:block">
-              <Sparkline data={data.spark7} color="#16a34a" />
+          <ClickableCard to="clientes" label="Ver clientes" onNavigate={onNavigate} go={go}>
+            <div className="relative">
+              <StatCard label="Clientes" value={k.totalClientes} sub={k.totalClientes === 1 ? 'cliente registrado' : 'clientes registrados'} icon={Users} tone="navy" />
             </div>
-          </div>
-          <StatCard
-            label="En mora"
-            value={formatCRC(k.totalAtrasado)}
-            sub={`${k.cantidadAtrasados} préstamos · ${k.tasaMorosidad.toFixed(1)}% cartera`}
-            icon={AlertTriangle}
-            tone={k.totalAtrasado > 0 ? 'danger' : 'neutral'}
-          />
+          </ClickableCard>
+          <ClickableCard to="prestamos" label="Ver préstamos activos" onNavigate={onNavigate} go={go}>
+            <StatCard label="Préstamos activos" value={k.prestamosActivos} sub="vigentes + atrasados" icon={Wallet} tone="gold" />
+          </ClickableCard>
+          <ClickableCard to="cobrar-hoy" label="Ir a cobrar hoy" onNavigate={onNavigate} go={go}>
+            <div className="relative">
+              <StatCard
+                label="Cobrado hoy"
+                value={formatCRC(k.totalCobradoHoy)}
+                sub={`${k.cobrosHoyCount} cobros · por cobrar ${formatCRC(k.totalPorCobrarHoy)}`}
+                icon={HandCoins}
+                tone="success"
+                delta={k.eficienciaCobroHoy != null ? k.eficienciaCobroHoy - 100 : undefined}
+              />
+              <div className="absolute bottom-2 right-2 hidden sm:block" aria-hidden="true">
+                <Sparkline data={data.spark7} color="#16a34a" />
+              </div>
+            </div>
+          </ClickableCard>
+          <ClickableCard to="atrasados" label="Ver atrasados" onNavigate={onNavigate} go={go}>
+            <StatCard
+              label="En mora"
+              value={formatCRC(k.totalAtrasado)}
+              sub={`${k.cantidadAtrasados} préstamos · ${k.tasaMorosidad.toFixed(1)}% cartera`}
+              icon={AlertTriangle}
+              tone={k.totalAtrasado > 0 ? 'danger' : 'neutral'}
+            />
+          </ClickableCard>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-          <StatCard label="Cartera activa" value={formatCRC(k.carteraActiva)} sub="saldo pendiente" icon={Banknote} tone="info" />
-          <StatCard
-            label="Cobrado este mes"
-            value={formatCRC(k.cobrosMes)}
-            sub={`prev ${formatCRC(k.cobrosPrevMes)}`}
-            icon={Calendar}
-            tone="navy"
-            delta={k.deltaCobrosMes}
-          />
-          <StatCard label="Cancelados (30d)" value={k.cancelados30} sub="préstamos liquidados" icon={CheckCircle2} tone="emerald" />
+          <ClickableCard to="prestamos" label="Ver cartera activa" onNavigate={onNavigate} go={go}>
+            <StatCard label="Cartera activa" value={formatCRC(k.carteraActiva)} sub="saldo pendiente" icon={Banknote} tone="info" />
+          </ClickableCard>
+          <ClickableCard to="exportar" label="Exportar cobrado del mes" onNavigate={onNavigate} go={go}>
+            <StatCard
+              label="Cobrado este mes"
+              value={formatCRC(k.cobrosMes)}
+              sub={`prev ${formatCRC(k.cobrosPrevMes)}`}
+              icon={Calendar}
+              tone="navy"
+              delta={k.deltaCobrosMes}
+            />
+          </ClickableCard>
+          <ClickableCard to="prestamos" label="Ver préstamos cancelados" onNavigate={onNavigate} go={go}>
+            <StatCard label="Cancelados (30d)" value={k.cancelados30} sub="préstamos liquidados" icon={CheckCircle2} tone="emerald" />
+          </ClickableCard>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3">
-          <Card hover className="flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Tasa morosidad</p>
-              <p className={`mt-1 text-2xl font-bold tabular-nums ${k.tasaMorosidad > 10 ? 'text-danger-600' : 'text-navy-800 dark:text-navy-50'}`}>{k.tasaMorosidad.toFixed(1)}%</p>
-              <p className="mt-1 text-xs text-neutral-500">{formatCRC(k.totalAtrasado)} / {formatCRC(k.carteraActiva)}</p>
-            </div>
-            <IconBox icon={Percent} tone={k.tasaMorosidad > 10 ? 'danger' : 'neutral'} size="md" />
-          </Card>
-          <Card hover className="flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Eficiencia cobro hoy</p>
-              <p className="mt-1 text-2xl font-bold tabular-nums text-navy-800 dark:text-navy-50">{k.eficienciaCobroHoy == null ? '—' : `${k.eficienciaCobroHoy.toFixed(0)}%`}</p>
-              <p className="mt-1 text-xs text-neutral-500">{formatCRC(k.totalCobradoHoy)} / {formatCRC(k.totalPorCobrarHoy)} por cobrar</p>
-            </div>
-            <IconBox icon={Target} tone="success" size="md" />
-          </Card>
-          <Card hover className="flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Préstamo promedio</p>
-              <p className="mt-1 text-2xl font-bold tabular-nums text-navy-800 dark:text-navy-50">{formatCRC(Math.round(k.prestamoPromedio))}</p>
-              <p className="mt-1 text-xs text-neutral-500">{k.prestamosActivos} activos</p>
-            </div>
-            <IconBox icon={BarChart3} tone="gold" size="md" />
-          </Card>
+          <ClickableCard to="atrasados" label="Ver atrasados por tasa de morosidad" onNavigate={onNavigate} go={go}>
+            <Card hover interactive className="flex min-h-[44px] items-center justify-between active:bg-slate-50 dark:active:bg-navy-700/40">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Tasa morosidad</p>
+                <p className={`mt-1 break-words text-2xl font-bold tabular-nums ${k.tasaMorosidad > 10 ? 'text-danger-600' : 'text-navy-800 dark:text-navy-50'}`}>{k.tasaMorosidad.toFixed(1)}%</p>
+                <p className="mt-1 line-clamp-2 text-xs text-neutral-500">{formatCRC(k.totalAtrasado)} / {formatCRC(k.carteraActiva)}</p>
+              </div>
+              <span className="flex shrink-0 items-center gap-1">
+                <IconBox icon={Percent} tone={k.tasaMorosidad > 10 ? 'danger' : 'neutral'} size="md" />
+                <ArrowUpRight className="h-5 w-5 text-neutral-400" aria-hidden="true" />
+              </span>
+            </Card>
+          </ClickableCard>
+          <ClickableCard to="cobrar-hoy" label="Ir a cobrar hoy por eficiencia" onNavigate={onNavigate} go={go}>
+            <Card hover interactive className="flex min-h-[44px] items-center justify-between active:bg-slate-50 dark:active:bg-navy-700/40">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Eficiencia cobro hoy</p>
+                <p className="mt-1 break-words text-2xl font-bold tabular-nums text-navy-800 dark:text-navy-50">{k.eficienciaCobroHoy == null ? '—' : `${k.eficienciaCobroHoy.toFixed(0)}%`}</p>
+                <p className="mt-1 line-clamp-2 text-xs text-neutral-500">{formatCRC(k.totalCobradoHoy)} / {formatCRC(k.totalPorCobrarHoy)} por cobrar</p>
+              </div>
+              <span className="flex shrink-0 items-center gap-1">
+                <IconBox icon={Target} tone="success" size="md" />
+                <ArrowUpRight className="h-5 w-5 text-neutral-400" aria-hidden="true" />
+              </span>
+            </Card>
+          </ClickableCard>
+          <ClickableCard to="prestamos" label="Ver préstamos por promedio" onNavigate={onNavigate} go={go}>
+            <Card hover interactive className="flex min-h-[44px] items-center justify-between active:bg-slate-50 dark:active:bg-navy-700/40">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Préstamo promedio</p>
+                <p className="mt-1 break-words text-2xl font-bold tabular-nums text-navy-800 dark:text-navy-50">{formatCRC(Math.round(k.prestamoPromedio))}</p>
+                <p className="mt-1 text-xs text-neutral-500">{k.prestamosActivos} activos</p>
+              </div>
+              <span className="flex shrink-0 items-center gap-1">
+                <IconBox icon={BarChart3} tone="gold" size="md" />
+                <ArrowUpRight className="h-5 w-5 text-neutral-400" aria-hidden="true" />
+              </span>
+            </Card>
+          </ClickableCard>
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-2">
-          <Card hover className="flex items-center justify-between cursor-pointer" onClick={() => (onNavigate ? onNavigate('cobrar-hoy') : go('/cobrar-hoy'))}>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Por cobrar hoy</p>
-              <p className="mt-1 text-xl font-bold tabular-nums text-navy-800 dark:text-navy-50">{k.cantidadCobrarHoy} cuotas · {formatCRC(k.totalPorCobrarHoy)}</p>
-            </div>
-            <ArrowUpRight className="h-4 w-4 text-neutral-400" />
-          </Card>
-          <Card hover className="flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Cobros en rango</p>
-              <p className="mt-1 text-xl font-bold tabular-nums text-navy-800 dark:text-navy-50">{data.cobrosEnRangoCount} cobros</p>
-            </div>
-            <Sparkline data={data.spark30.slice(-14)} color="#0ea5e9" height={24} />
-          </Card>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-2">
+          <ClickableCard to="cobrar-hoy" label="Ver por cobrar hoy" onNavigate={onNavigate} go={go}>
+            <Card hover interactive className="flex min-h-[44px] items-center justify-between active:bg-slate-50 dark:active:bg-navy-700/40">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Por cobrar hoy</p>
+                <p className="mt-1 break-words text-xl font-bold tabular-nums text-navy-800 dark:text-navy-50">{k.cantidadCobrarHoy} cuotas · {formatCRC(k.totalPorCobrarHoy)}</p>
+              </div>
+              <ArrowUpRight className="h-5 w-5 shrink-0 text-neutral-400" aria-hidden="true" />
+            </Card>
+          </ClickableCard>
+          <ClickableCard to="exportar" label="Exportar cobros en rango" onNavigate={onNavigate} go={go}>
+            <Card hover interactive className="flex min-h-[44px] items-center justify-between active:bg-slate-50 dark:active:bg-navy-700/40">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Cobros en rango</p>
+                <p className="mt-1 text-xl font-bold tabular-nums text-navy-800 dark:text-navy-50">{data.cobrosEnRangoCount} cobros</p>
+              </div>
+              <span className="flex shrink-0 items-center gap-1">
+                <Sparkline data={data.spark30.slice(-14)} color="#0ea5e9" height={24} />
+                <ArrowUpRight className="h-5 w-5 text-neutral-400" aria-hidden="true" />
+              </span>
+            </Card>
+          </ClickableCard>
         </div>
       </section>
 
@@ -339,8 +401,8 @@ export function ResumenPage({ onNavigate }) {
                 aria-selected={vistaRuta === 'saldo'}
                 onClick={() => setVistaRuta('saldo')}
                 className={vistaRuta === 'saldo'
-                  ? 'rounded-input bg-white px-3 py-1 text-xs font-bold shadow-sm text-navy-900 dark:bg-navy-900 dark:text-white'
-                  : 'px-3 py-1 text-xs font-semibold text-neutral-500 dark:text-navy-300'}
+                  ? 'rounded-input bg-white px-3 py-2.5 text-xs font-bold shadow-sm touch-manipulation text-navy-900 dark:bg-navy-900 dark:text-white'
+                  : 'px-3 py-2.5 text-xs font-semibold touch-manipulation text-neutral-500 dark:text-navy-300'}
               >
                 Por saldo ₡
               </button>
@@ -350,8 +412,8 @@ export function ResumenPage({ onNavigate }) {
                 aria-selected={vistaRuta === 'cantidad'}
                 onClick={() => setVistaRuta('cantidad')}
                 className={vistaRuta === 'cantidad'
-                  ? 'rounded-input bg-white px-3 py-1 text-xs font-bold shadow-sm text-navy-900 dark:bg-navy-900 dark:text-white'
-                  : 'px-3 py-1 text-xs font-semibold text-neutral-500 dark:text-navy-300'}
+                  ? 'rounded-input bg-white px-3 py-2.5 text-xs font-bold shadow-sm touch-manipulation text-navy-900 dark:bg-navy-900 dark:text-white'
+                  : 'px-3 py-2.5 text-xs font-semibold touch-manipulation text-neutral-500 dark:text-navy-300'}
               >
                 Por cantidad
               </button>
@@ -374,9 +436,9 @@ export function ResumenPage({ onNavigate }) {
       </section>
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <SectionTitle title={`Top clientes (${data.topClientes.length})`} />
-          <Button variant="ghost" size="sm" onClick={() => (onNavigate ? onNavigate('clientes') : go('/clientes'))}>
+          <Button variant="ghost" size="sm" className="min-h-[44px] touch-manipulation sm:min-h-0" onClick={() => (onNavigate ? onNavigate('clientes') : go('/clientes'))}>
             Ver todos
           </Button>
         </div>
@@ -422,7 +484,12 @@ export function ResumenPage({ onNavigate }) {
 
       {data.topMorosos.length > 0 && (
         <section className="space-y-3">
-          <SectionTitle title={`Top morosos (${data.topMorosos.length})`} />
+          <div className="flex items-center justify-between gap-2">
+            <SectionTitle title={`Top morosos (${data.topMorosos.length})`} />
+            <Button variant="ghost" size="sm" className="min-h-[44px] touch-manipulation sm:min-h-0" onClick={() => (onNavigate ? onNavigate('atrasados') : go('/atrasados'))}>
+              Ver todos
+            </Button>
+          </div>
           <Card className="overflow-hidden p-0">
             <div className="overflow-x-auto scrollbar-thin">
               <table className="w-full text-sm">
@@ -452,9 +519,9 @@ export function ResumenPage({ onNavigate }) {
       )}
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <SectionTitle title={`Últimos cobros (${data.ultimosCobros.length})`} />
-          <Button variant="ghost" size="sm" onClick={() => (onNavigate ? onNavigate('cobro') : go('/cobros/nuevo'))}>
+          <Button variant="ghost" size="sm" className="min-h-[44px] touch-manipulation sm:min-h-0" onClick={() => (onNavigate ? onNavigate('exportar') : go('/exportar'))}>
             Ver más
           </Button>
         </div>
