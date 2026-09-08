@@ -49,3 +49,47 @@ describe('ErrorBoundary', () => {
     expect(reload).toHaveBeenCalled();
   });
 });
+
+describe('ErrorBoundary chunk auto-reload', () => {
+  function ChunkThrower() {
+    throw new Error('Failed to load module script: Expected a JavaScript-or-Wasm module script');
+  }
+
+  function mockReload() {
+    const reload = vi.fn();
+    Object.defineProperty(window, 'location', { value: { reload }, writable: true, configurable: true });
+    return reload;
+  }
+
+  it('error MIME de chunk dispara una recarga y usa clave fija', () => {
+    sessionStorage.clear();
+    const reload = mockReload();
+    render(
+      <ErrorBoundary>
+        <ChunkThrower />
+      </ErrorBoundary>
+    );
+    expect(reload).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('Nueva versión disponible')).toBeInTheDocument();
+    expect(sessionStorage.getItem('pmp:chunk-retry')).toContain('"count":1');
+    const legacy = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const k = sessionStorage.key(i);
+      if (/^pmp:chunk-retry-\d+$/.test(k || '')) legacy.push(k);
+    }
+    expect(legacy).toEqual([]);
+  });
+
+  it('no entra en loop: tras el máximo no recarga y muestra pantalla manual', () => {
+    sessionStorage.clear();
+    sessionStorage.setItem('pmp:chunk-retry', JSON.stringify({ count: 2, ts: Date.now() }));
+    const reload = mockReload();
+    render(
+      <ErrorBoundary>
+        <ChunkThrower />
+      </ErrorBoundary>
+    );
+    expect(reload).not.toHaveBeenCalled();
+    expect(screen.getByText('Nueva versión disponible')).toBeInTheDocument();
+  });
+});

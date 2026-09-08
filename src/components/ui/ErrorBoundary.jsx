@@ -9,10 +9,62 @@ function isChunkLoadError(err) {
   const msg = String(err.message || '');
   return (
     msg.includes('Failed to fetch dynamically imported module') ||
+    msg.includes('Failed to load module script') ||
     msg.includes('Importing a module script failed') ||
     msg.includes('Loading chunk') ||
     msg.includes('Loading CSS chunk')
   );
+}
+
+// Auto-reload con guard: si la recarga no resuelve (deploy a medio propagar,
+// HTML cacheado), no entrar en loop infinito. Permite hasta MAX_RETRIES
+// recargas dentro de la ventana, después muestra pantalla manual.
+const RETRY_KEY = 'pmp:chunk-retry';
+const RETRY_WINDOW_MS = 60_000;
+const MAX_RETRIES = 2;
+
+function cleanupLegacyRetryKeys() {
+  try {
+    if (typeof sessionStorage === 'undefined') return;
+    const drop = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const k = sessionStorage.key(i);
+      if (k && /^pmp:chunk-retry-\d+$/.test(k)) drop.push(k);
+    }
+    drop.forEach((k) => sessionStorage.removeItem(k));
+  } catch {
+    // ignore storage errors (private mode, quota, etc.)
+  }
+}
+
+function consumeChunkRetry() {
+  try {
+    if (typeof sessionStorage === 'undefined' || typeof Date === 'undefined') return true;
+    const now = Date.now();
+    const raw = sessionStorage.getItem(RETRY_KEY);
+    if (raw) {
+      try {
+        const { count = 0, ts = 0 } = JSON.parse(raw);
+        if (now - ts < RETRY_WINDOW_MS) {
+          if (count >= MAX_RETRIES) return false;
+          sessionStorage.setItem(RETRY_KEY, JSON.stringify({ count: count + 1, ts: now }));
+          return true;
+        }
+      } catch {
+        // valor corrupto: empezar de nuevo
+      }
+    }
+    sessionStorage.setItem(RETRY_KEY, JSON.stringify({ count: 1, ts: now }));
+    return true;
+  } catch {
+    return true;
+  }
+}
+
+try {
+  cleanupLegacyRetryKeys();
+} catch {
+  // ignore
 }
 
 export class ErrorBoundary extends Component {
@@ -30,13 +82,9 @@ export class ErrorBoundary extends Component {
       console.error('[ErrorBoundary]', error, info?.componentStack);
     }
     if (isChunkLoadError(error) && typeof window !== 'undefined') {
-      const key = `pmp:chunk-retry-${Date.now()}`;
-      try {
-        sessionStorage.setItem(key, '1');
-      } catch {
-        // ignore storage errors (private mode, quota, etc.)
+      if (consumeChunkRetry()) {
+        window.location.reload();
       }
-      window.location.reload();
     }
   }
 
