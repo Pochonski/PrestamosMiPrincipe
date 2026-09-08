@@ -2,7 +2,7 @@ import { supabase, getOrgId } from '../lib/supabase';
 import { throwIfError } from '../lib/supabase-errors';
 import { emitDataChanged } from '../lib/events';
 import { parseLocalDate } from '../lib/format';
-import { firstCuotaDate, nextCuotaDate } from '../lib/dates';
+import { firstCuotaDate, nextCuotaDate, addDays } from '../lib/dates';
 
 function startOfDay(d = new Date()) {
   const x = new Date(d);
@@ -407,6 +407,20 @@ export async function update(id, patch) {
     : null;
   const pendingCount = Math.max(0, p_n_cuotas - pagadas.length);
   const montoPorCuota = Math.round((p_monto * p_tasa) / 100);
+  // Si cambió la fecha de inicio y hay cuotas pagadas, las pendientes se
+  // desplazan por el mismo delta (las pagadas/canceladas quedan intactas
+  // como historial). Sin esto, en préstamos con cobros la nueva fecha se
+  // ignoraba por completo porque el cronograma se anclaba a la última
+  // cuota pagada. Sin pagadas no se aplica: el cronograma ya nace de la
+  // fecha nueva y el delta lo duplicaría.
+  let deltaDias = 0;
+  if (fechaChanged && lastPagada) {
+    const oldFecha = parseLocalDate(prestamo.fecha_inicio);
+    const newFecha = parseLocalDate(p_fecha_inicio);
+    if (oldFecha && newFecha) {
+      deltaDias = Math.round((newFecha - oldFecha) / 86400000);
+    }
+  }
   const pendingCuotas = [];
   if (pendingCount > 0) {
     const cursor = lastPagada
@@ -415,9 +429,10 @@ export async function update(id, patch) {
     const startNumero = lastPagada ? Number(lastPagada.numero) + 1 : 1;
     let c = cursor;
     for (let i = 0; i < pendingCount; i++) {
+      const f = deltaDias !== 0 ? addDays(c, deltaDias) : c;
       pendingCuotas.push({
         numero: startNumero + i,
-        fecha: c.toISOString().slice(0, 10),
+        fecha: f.toISOString().slice(0, 10),
         monto: montoPorCuota,
       });
       c = nextCuotaDate(c, p_periodo);

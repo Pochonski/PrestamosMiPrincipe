@@ -19,6 +19,17 @@ import { supabase } from '../../lib/supabase';
 
 beforeEach(() => vi.clearAllMocks());
 
+// Día local YYYY-MM-DD (evita la ventana donde UTC ya cambió de día pero
+// local aún no; la app compara siempre en hora local).
+function localDay(offset = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 describe('prestamos calc puros', () => {
   it('calcCarteraTotal suma no cancelados', () => {
     expect(prestamosService.calcCarteraTotal([
@@ -103,6 +114,64 @@ describe('prestamos.update', () => {
     expect(r.saldo_capital).toBe(2000);
     expect(supabase.rpc).toHaveBeenCalledWith('update_prestamo_with_cuotas', expect.objectContaining({ p_monto: 2000 }));
   });
+  it('cambio de fecha_inicio desplaza pendientes por el delta (con pagadas)', async () => {
+    const prestamo = {
+      id: 'p1', cliente_id: 'c1', monto: 45000, n_cuotas: 3, saldo_capital: 45000,
+      periodo: { tipo: 'semanal' }, fecha_inicio: '2026-09-01', tasa: 10, ruta: 'A',
+      cuotas: [],
+    };
+    const cuotasRows = [
+      { prestamo_id: 'p1', numero: 1, fecha: '2026-09-08', monto: 4500, estado: 'pagada' },
+      { prestamo_id: 'p1', numero: 2, fecha: '2026-09-15', monto: 4500, estado: 'pendiente' },
+      { prestamo_id: 'p1', numero: 3, fecha: '2026-09-22', monto: 4500, estado: 'pendiente' },
+    ];
+    const maybeSingle = vi.fn().mockResolvedValue({ data: prestamo, error: null });
+    const getChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle };
+    getChain.select.mockReturnValue(getChain); getChain.eq.mockReturnValue(getChain);
+    const cuotasChain = { select: vi.fn().mockReturnThis(), in: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis(), range: vi.fn().mockReturnThis() };
+    cuotasChain.then = (res) => Promise.resolve({ data: cuotasRows, error: null }).then(res);
+    cuotasChain.select.mockReturnValue(cuotasChain); cuotasChain.in.mockReturnValue(cuotasChain); cuotasChain.order.mockReturnValue(cuotasChain);
+    cuotasChain.range = cuotasChain.range || require("vitest").vi.fn().mockReturnThis();
+    cuotasChain.range.mockReturnValue(cuotasChain);
+    vi.mocked(supabase.rpc).mockResolvedValue({ data: 'p1', error: null });
+    vi.mocked(supabase.from).mockImplementation((t) => (t === 'cuotas' ? cuotasChain : getChain));
+    // fecha 2026-09-01 -> 2026-09-10: delta +9 días; #2 era 2026-09-15 -> 2026-09-24
+    await prestamosService.update('p1', { fecha_inicio: '2026-09-10' });
+    const payload = vi.mocked(supabase.rpc).mock.calls[0][1];
+    expect(payload.p_fecha_inicio).toBe('2026-09-10');
+    expect(payload.p_cuotas.map((c) => [c.numero, c.fecha])).toEqual([
+      [2, '2026-09-24'],
+      [3, '2026-10-01'],
+    ]);
+  });
+  it('sin cambio de fecha las pendientes no se desplazan', async () => {
+    const prestamo = {
+      id: 'p1', cliente_id: 'c1', monto: 45000, n_cuotas: 3, saldo_capital: 45000,
+      periodo: { tipo: 'semanal' }, fecha_inicio: '2026-09-01', tasa: 10, ruta: 'A',
+      cuotas: [],
+    };
+    const cuotasRows = [
+      { prestamo_id: 'p1', numero: 1, fecha: '2026-09-08', monto: 4500, estado: 'pagada' },
+      { prestamo_id: 'p1', numero: 2, fecha: '2026-09-15', monto: 4500, estado: 'pendiente' },
+      { prestamo_id: 'p1', numero: 3, fecha: '2026-09-22', monto: 4500, estado: 'pendiente' },
+    ];
+    const maybeSingle = vi.fn().mockResolvedValue({ data: prestamo, error: null });
+    const getChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle };
+    getChain.select.mockReturnValue(getChain); getChain.eq.mockReturnValue(getChain);
+    const cuotasChain = { select: vi.fn().mockReturnThis(), in: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis(), range: vi.fn().mockReturnThis() };
+    cuotasChain.then = (res) => Promise.resolve({ data: cuotasRows, error: null }).then(res);
+    cuotasChain.select.mockReturnValue(cuotasChain); cuotasChain.in.mockReturnValue(cuotasChain); cuotasChain.order.mockReturnValue(cuotasChain);
+    cuotasChain.range = cuotasChain.range || require("vitest").vi.fn().mockReturnThis();
+    cuotasChain.range.mockReturnValue(cuotasChain);
+    vi.mocked(supabase.rpc).mockResolvedValue({ data: 'p1', error: null });
+    vi.mocked(supabase.from).mockImplementation((t) => (t === 'cuotas' ? cuotasChain : getChain));
+    await prestamosService.update('p1', { monto: 50000 });
+    const payload = vi.mocked(supabase.rpc).mock.calls[0][1];
+    expect(payload.p_cuotas.map((c) => [c.numero, c.fecha])).toEqual([
+      [2, '2026-09-15'],
+      [3, '2026-09-22'],
+    ]);
+  });
 });
 
 describe('prestamos agregaciones async', () => {
@@ -122,7 +191,7 @@ describe('prestamos agregaciones async', () => {
   };
 
   it('totalAtrasado', async () => {
-    const past = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const past = localDay(-1);
     const cuotasData = [{ prestamo_id: 'p1', estado: 'pendiente', fecha: past, monto: 100 }];
     let call = 0;
     vi.mocked(supabase.from).mockImplementation((t) => {
@@ -145,7 +214,7 @@ describe('prestamos agregaciones async', () => {
 
   it('cantidadActivos', async () => {
     const items = [
-      { id: 'p1', cliente_id: 'c1', saldo_capital: 1000, estado: 'vigente', monto: 1000, n_cuotas: 1, periodo: 'semanal', fecha_inicio: '2024-01-01', cuotas: [{ numero: 1, fecha: new Date(Date.now() + 86400000).toISOString().slice(0, 10), estado: 'pendiente', monto: 100 }] },
+      { id: 'p1', cliente_id: 'c1', saldo_capital: 1000, estado: 'vigente', monto: 1000, n_cuotas: 1, periodo: 'semanal', fecha_inicio: '2024-01-01', cuotas: [{ numero: 1, fecha: localDay(1), estado: 'pendiente', monto: 100 }] },
     ];
     vi.mocked(supabase.from).mockImplementation((t) => t === 'cuotas' ? makeCuotasChain([]) : makeListChain(items));
     const r = await prestamosService.cantidadActivos();
@@ -153,7 +222,7 @@ describe('prestamos agregaciones async', () => {
   });
 
   it('totalCobrarHoy', async () => {
-    const hoy = new Date().toISOString().slice(0, 10);
+    const hoy = localDay();
     const cuotasData = [{ prestamo_id: 'p1', estado: 'pendiente', fecha: hoy, monto: 300 }];
     let call = 0;
     const listData = [{ id: 'p1', cliente_id: 'c1', saldo_capital: 1000, monto: 1000, n_cuotas: 1, periodo: 'semanal', fecha_inicio: hoy, estado: 'vigente' }];
@@ -251,8 +320,8 @@ describe('cuotasAtrasadas / cobrarHoy', () => {
     listChain.range = listChain.range || require("vitest").vi.fn().mockReturnThis();
     listChain.range.mockReturnValue(listChain);
     listChain.then = (res) => Promise.resolve({ data: listData, error: null }).then(res);
-    const past = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-    const future = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+    const past = localDay(-1);
+    const future = localDay(1);
     const cuotasData = [
       { prestamo_id: 'p1', estado: 'pendiente', fecha: past, monto: 100 },
       { prestamo_id: 'p1', estado: 'pendiente', fecha: future, monto: 200 },
@@ -288,7 +357,7 @@ describe('cuotasAtrasadas / cobrarHoy', () => {
     expect(await prestamosService.cobrarHoy()).toEqual([]);
   });
   it('cobrarHoy con datos', async () => {
-    const hoy = new Date().toISOString().slice(0, 10);
+    const hoy = localDay();
     const prestamo = { id: 'p1', cliente_id: 'c1', clienteId: 'c1' };
     const listChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis(), range: vi.fn().mockReturnThis() };
     listChain.select.mockReturnValue(listChain); listChain.eq.mockReturnValue(listChain); listChain.order.mockReturnValue(listChain);
@@ -346,7 +415,7 @@ describe('cuotasAtrasadas / cobrarHoy', () => {
     hydrateChain.range = hydrateChain.range || require("vitest").vi.fn().mockReturnThis();
     hydrateChain.range.mockReturnValue(hydrateChain);
     hydrateChain.then = (res) => Promise.resolve({ data: [], error: null }).then(res);
-    const past = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const past = localDay(-1);
     const cuotasData = [{ prestamo_id: 'p1', estado: 'pendiente', fecha: past, monto: 777 }];
     const cuotasChain = { select: vi.fn().mockReturnThis(), in: vi.fn().mockReturnThis() };
     cuotasChain.select.mockReturnValue(cuotasChain); cuotasChain.in.mockReturnValue(cuotasChain);
