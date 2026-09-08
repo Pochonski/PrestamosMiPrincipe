@@ -91,5 +91,6 @@ describe('ErrorBoundary chunk auto-reload', () => {
     );
     expect(reload).not.toHaveBeenCalled();
     expect(screen.getByText('Nueva versión disponible')).toBeInTheDocument();
+    expect(screen.getByText(/recarga forzada/)).toBeInTheDocument();
   });
 });

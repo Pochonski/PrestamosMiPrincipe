@@ -70,7 +70,7 @@ try {
 export class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { error: null };
+    this.state = { error: null, autoReloading: false, manualNeeded: false };
   }
 
   static getDerivedStateFromError(error) {
@@ -83,7 +83,10 @@ export class ErrorBoundary extends Component {
     }
     if (isChunkLoadError(error) && typeof window !== 'undefined') {
       if (consumeChunkRetry()) {
+        this.setState({ autoReloading: true });
         window.location.reload();
+      } else {
+        this.setState({ manualNeeded: true });
       }
     }
   }
@@ -102,6 +105,9 @@ export class ErrorBoundary extends Component {
 
     const { fallbackTitle = 'Algo salió mal', fallbackMessage } = this.props;
     const chunk = isChunkLoadError(this.state.error);
+    const chunkMessage = this.state.manualNeeded
+      ? 'La recarga automática no pudo traer la actualización (puede ser caché del navegador). Tocá «Recargar página» y si sigue igual hacé una recarga forzada: Ctrl+Shift+R.'
+      : 'Hay una actualización de la app. Estamos recargando automáticamente…';
 
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-4">
@@ -114,7 +120,7 @@ export class ErrorBoundary extends Component {
           </h2>
           <p className="mt-2 text-sm text-neutral-600 dark:text-navy-300">
             {chunk
-              ? 'Hay una actualización de la app. Estamos recargando automáticamente…'
+              ? chunkMessage
               : fallbackMessage || 'Ocurrió un error inesperado al mostrar esta sección.'}
           </p>
           {this.state.error?.message && (
