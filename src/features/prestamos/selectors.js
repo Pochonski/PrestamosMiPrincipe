@@ -89,6 +89,18 @@ export function validateTasa(v) {
   return null;
 }
 
+export function validateTasaAcreedor(v, tasaCliente) {
+  if (v === '' || v == null) return null;
+  const err = validateTasa(v);
+  if (err) return err;
+  const acreedor = Number(v);
+  const cliente = Number(tasaCliente);
+  if (Number.isFinite(cliente) && cliente > 0 && acreedor > cliente) {
+    return 'La tasa del acreedor no puede superar la del cliente';
+  }
+  return null;
+}
+
 export function validateFechaInicio(v) {
   if (!v) return 'La fecha inicial es obligatoria';
   const d = new Date(v);
@@ -105,6 +117,7 @@ export function buildInitialPrestamo(clienteId) {
     periodo: null,
     monto: '',
     tasa: '',
+    tasaAcreedor: '',
     nCuotas: '',
     fechaInicio: new Date().toISOString().slice(0, 10),
   };

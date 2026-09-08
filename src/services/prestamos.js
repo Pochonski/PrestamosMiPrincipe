@@ -278,7 +278,7 @@ export function cuotasAgotadas(prestamo) {
   return getSaldoCapital(prestamo) > 0;
 }
 
-export async function create({ clienteId, ruta, periodo, monto, tasa, nCuotas, fechaInicio }) {
+export async function create({ clienteId, ruta, periodo, monto, tasa, tasaAcreedor, nCuotas, fechaInicio }) {
   const cuotaMonto = Math.round((Number(monto) * Number(tasa)) / 100);
   const cuotas = buildCuotasPayload({
     fechaInicio,
@@ -296,6 +296,7 @@ export async function create({ clienteId, ruta, periodo, monto, tasa, nCuotas, f
     p_n_cuotas: Number(nCuotas),
     p_fecha_inicio: fechaInicio,
     p_cuotas: cuotas,
+    p_tasa_acreedor: tasaAcreedor == null || tasaAcreedor === '' ? null : Number(tasaAcreedor),
   });
   if (error) throw error;
   if (!data) throw new Error('No se creó el préstamo');
@@ -365,6 +366,10 @@ export async function update(id, patch) {
   const p_periodo = patch.periodo !== undefined ? patch.periodo : prestamo.periodo || { tipo: 'mensual' };
   const p_monto = patch.monto !== undefined ? Number(patch.monto) : Number(prestamo.monto);
   const p_tasa = patch.tasa !== undefined ? Number(patch.tasa) : Number(prestamo.tasa ?? 0);
+  const p_tasa_acreedor =
+    patch.tasa_acreedor !== undefined
+      ? (patch.tasa_acreedor == null || patch.tasa_acreedor === '' ? null : Number(patch.tasa_acreedor))
+      : (prestamo.tasa_acreedor ?? null);
   const p_n_cuotas = patch.n_cuotas !== undefined ? Number(patch.n_cuotas) : Number(prestamo.n_cuotas);
   const p_fecha_inicio = patch.fecha_inicio !== undefined ? patch.fecha_inicio : prestamo.fecha_inicio || new Date().toISOString().slice(0, 10);
 
@@ -374,25 +379,33 @@ export async function update(id, patch) {
   const tasaChanged = patch.tasa !== undefined && p_tasa !== Number(prestamo.tasa ?? 0);
   const nCuotasChanged = patch.n_cuotas !== undefined && p_n_cuotas !== Number(prestamo.n_cuotas);
   const fechaChanged = patch.fecha_inicio !== undefined && p_fecha_inicio !== prestamo.fecha_inicio;
+  const normTasaAcreedor = (v) => (v == null || v === '' ? null : Number(v));
+  const tasaAcreedorChanged =
+    patch.tasa_acreedor !== undefined &&
+    normTasaAcreedor(p_tasa_acreedor) !== normTasaAcreedor(prestamo.tasa_acreedor);
+
+  if (p_tasa_acreedor != null && p_tasa_acreedor > p_tasa) {
+    throw new Error('La tasa del acreedor no puede superar la del cliente');
+  }
 
   const cuotasAfectadas = montoChanged || tasaChanged || nCuotasChanged || periodoChanged || fechaChanged;
 
   // Nada que actualizar
-  if (!cuotasAfectadas && !rutaChanged) {
+  if (!cuotasAfectadas && !rutaChanged && !tasaAcreedorChanged) {
     return prestamo;
   }
 
-  // Solo ruta: update simple, sin tocar cuotas
-  if (!cuotasAfectadas && rutaChanged) {
+  // Solo ruta y/o tasa_acreedor: update simple, sin tocar cuotas
+  if (!cuotasAfectadas && (rutaChanged || tasaAcreedorChanged)) {
     const orgId = await getOrgId();
     const { data, error } = await supabase
       .from('prestamos')
-      .update({ ruta: p_ruta, updated_at: new Date().toISOString() })
+      .update({ ruta: p_ruta, tasa_acreedor: p_tasa_acreedor, updated_at: new Date().toISOString() })
       .eq('id', id)
       .eq('org_id', orgId)
       .select()
       .single();
-    throwIfError(error, 'prestamos.update.ruta', { id });
+    throwIfError(error, 'prestamos.update.simple', { id });
     emitDataChanged('prestamos');
     return hydrateOne(normalizePrestamo(data));
   }
@@ -448,6 +461,7 @@ export async function update(id, patch) {
     p_n_cuotas: p_n_cuotas,
     p_fecha_inicio: p_fecha_inicio,
     p_cuotas: pendingCuotas,
+    p_tasa_acreedor: p_tasa_acreedor,
   });
   throwIfError(error, 'prestamos.update.rpc', { id, patch });
   if (!updatedId) throw new Error('No se actualizó el préstamo');

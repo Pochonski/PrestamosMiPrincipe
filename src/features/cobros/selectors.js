@@ -128,6 +128,17 @@ export function buildResumenCobro({ prestamo, cuotaNumero, monto, tipo, incluirI
 
   const willCancel = nuevoSaldo === 0 && tipo === 'capital';
 
+  // Split acreedor / comisión sobre el interés de este cobro.
+  const tasaCliente = Number(prestamo.tasa ?? 0);
+  const tasaAcreedor =
+    prestamo.tasa_acreedor == null || prestamo.tasa_acreedor === ''
+      ? null
+      : Number(prestamo.tasa_acreedor);
+  let comision = 0;
+  if (tasaAcreedor != null && tasaCliente > 0 && tasaAcreedor < tasaCliente) {
+    comision = Math.round((interesPagado * (tasaCliente - tasaAcreedor)) / tasaCliente);
+  }
+
   return {
     cliente: cliente?.nombre,
     prestamoMonto: prestamo.monto,
@@ -136,6 +147,9 @@ export function buildResumenCobro({ prestamo, cuotaNumero, monto, tipo, incluirI
     interes,
     capitalPagado,
     interesPagado,
+    interesAcreedor: interesPagado - comision,
+    comision,
+    tieneComision: tasaAcreedor != null,
     willCancel,
     tipo,
     incluirInteres: Boolean(incluirInteres),

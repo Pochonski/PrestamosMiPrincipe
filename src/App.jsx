@@ -28,6 +28,7 @@ const NotificacionesPage = lazy(() => import('./features/notificaciones').then((
 const ExportarPage = lazy(() => import('./features/exportar').then((m) => ({ default: m.ExportarPage })));
 const RespaldoPage = lazy(() => import('./features/respaldo').then((m) => ({ default: m.RespaldoPage })));
 const ResumenPage = lazy(() => import('./features/resumen').then((m) => ({ default: m.ResumenPage })));
+const ComisionesPage = lazy(() => import('./features/comisiones').then((m) => ({ default: m.ComisionesPage })));
 const SettingsPage = lazy(() => import('./features/organizations/pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const InviteAcceptPage = lazy(() => import('./features/organizations/pages/InviteAcceptPage').then((m) => ({ default: m.InviteAcceptPage })));
 
@@ -45,6 +46,7 @@ const pages = {
   exportar: ExportarPage,
   respaldar: RespaldoPage,
   resumen: ResumenPage,
+  comisiones: ComisionesPage,
   settings: SettingsPage,
 };
 

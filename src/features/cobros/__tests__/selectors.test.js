@@ -130,6 +130,19 @@ describe('buildResumenCobro', () => {
     const r = buildResumenCobro({ prestamo: p, cuotaNumero: 1, monto: 5000, tipo: 'capital', incluirInteres: false });
     expect(r.willCancel).toBe(true);
   });
+  it('split acreedor/comisión con tasa_acreedor', () => {
+    const p = makePrestamo({ monto: 100000, saldo_capital: 100000, tasa: 25, tasa_acreedor: 20, cuotas: [makeCuota({ numero: 1, monto: 25000 })] });
+    const r = buildResumenCobro({ prestamo: p, cuotaNumero: 1, monto: 25000, tipo: 'interes', incluirInteres: false });
+    expect(r.tieneComision).toBe(true);
+    expect(r.comision).toBe(5000);
+    expect(r.interesAcreedor).toBe(20000);
+  });
+  it('sin tasa_acreedor no hay split', () => {
+    const p = makePrestamo({ monto: 100000, saldo_capital: 100000, tasa: 25, cuotas: [makeCuota({ numero: 1, monto: 25000 })] });
+    const r = buildResumenCobro({ prestamo: p, cuotaNumero: 1, monto: 25000, tipo: 'interes', incluirInteres: false });
+    expect(r.tieneComision).toBe(false);
+    expect(r.comision).toBe(0);
+  });
 });
 
 describe('getResumenPrestamo', () => {

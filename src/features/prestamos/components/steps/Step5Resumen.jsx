@@ -59,6 +59,12 @@ export function Step5Resumen({ values, cliente }) {
   const cuota = cuotaDelPeriodo(prestamoPreview);
   const totalInt = totalIntereses(prestamoPreview);
   const totalPag = totalAPagar(prestamoPreview);
+  const tasaAcreedor =
+    values.tasaAcreedor === '' || values.tasaAcreedor == null ? null : Number(values.tasaAcreedor);
+  const comisionTotal =
+    tasaAcreedor != null && tasaAcreedor <= prestamoPreview.tasa
+      ? Math.round((totalInt * (prestamoPreview.tasa - tasaAcreedor)) / prestamoPreview.tasa)
+      : null;
 
   return (
     <div className="space-y-5">
@@ -89,8 +95,12 @@ export function Step5Resumen({ values, cliente }) {
         <Row label="Capital" value={formatCRC(prestamoPreview.monto)} />
         <Row label="N° de cuotas" value={prestamoPreview.nCuotas} />
         <Row label="Tasa por cuota" value={`${prestamoPreview.tasa}%`} />
+        {tasaAcreedor != null && <Row label="Tasa acreedor" value={`${tasaAcreedor}%`} />}
         <Row label="Cuota por período" value={formatCRC(cuota)} />
         <Row label="Total intereses" value={formatCRC(totalInt)} />
+        {comisionTotal != null && (
+          <Row label="Tu comisión total" value={formatCRC(comisionTotal)} />
+        )}
         <Row label="Total a pagar" value={formatCRC(totalPag)} />
         <Row label="Fecha inicial" value={formatDate(values.fechaInicio)} />
         {prestamoPreview.cuotas.length > 0 && (

@@ -11,6 +11,7 @@ import {
   UserPlus,
   Settings,
   Wallet,
+  BadgePercent,
 } from 'lucide-react';
 
 /**
@@ -29,6 +30,7 @@ export const NAV_ITEMS = [
   { id: 'atrasados', label: 'Atrasados', icon: AlertTriangle, path: '/atrasados', mobile: true, section: 'principal' },
   { id: 'resumen', label: 'Resumen', icon: ClipboardList, path: '/resumen', mobile: true, section: 'principal' },
   { id: 'clientes', label: 'Clientes', icon: Users, path: '/clientes', mobile: false, section: 'acciones' },
+  { id: 'comisiones', label: 'Mis comisiones', icon: BadgePercent, path: '/comisiones', mobile: false, section: 'acciones' },
   { id: 'registrar-prestamo', label: 'Registrar préstamo', icon: PlusCircle, path: '/prestamos/nuevo', mobile: false, section: 'acciones', parent: 'clientes' },
   { id: 'cobro', label: 'Realizar cobro', icon: HandCoins, path: '/cobros/nuevo', mobile: false, section: 'acciones', parent: 'clientes' },
   { id: 'respaldar', label: 'Respaldar datos', icon: Database, path: '/respaldar', mobile: false, section: 'acciones' },

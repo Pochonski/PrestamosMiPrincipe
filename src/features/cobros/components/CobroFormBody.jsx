@@ -30,6 +30,7 @@ export function CobroFormBody({ form }) {
   const atrasadas = form?.atrasadas || [];
   const cuotasQueImpidenCapital = form?.cuotasQueImpidenCapital || [];
   const error = form?.error;
+  const resumen = form?.resumen || null;
 
   const [showNota, setShowNota] = useState(Boolean(nota));
 
@@ -121,6 +122,14 @@ export function CobroFormBody({ form }) {
               </p>
             </div>
           </div>
+          {resumen?.tieneComision && (
+            <p className="mt-2 text-xs text-neutral-500 dark:text-navy-300">
+              De este interés: {formatCRC(resumen.interesAcreedor)} acreedor ·{' '}
+              <strong className="tabular-nums text-gold-600 dark:text-gold-300">
+                {formatCRC(resumen.comision)} tuyo
+              </strong>
+            </p>
+          )}
         </div>
       )}
 
@@ -146,6 +155,14 @@ export function CobroFormBody({ form }) {
             <p className="mt-2 text-[11px] text-neutral-500 dark:text-navy-300">
               Al abonar a capital, las cuotas futuras se recalculan con el saldo restante.
             </p>
+            {resumen?.tieneComision && resumen.interesPagado > 0 && (
+              <p className="text-[11px] text-neutral-500 dark:text-navy-300">
+                Interés de este cobro: {formatCRC(resumen.interesAcreedor)} acreedor ·{' '}
+                <strong className="tabular-nums text-gold-600 dark:text-gold-300">
+                  {formatCRC(resumen.comision)} tuyo
+                </strong>
+              </p>
+            )}
           </div>
 
           <Input
