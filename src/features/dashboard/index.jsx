@@ -1,14 +1,12 @@
 import React from 'react';
 import { WelcomeHeader } from './components/WelcomeHeader';
 import { KpiRow } from './components/KpiRow';
-import { CobrosChart } from './components/CobrosChart';
 import { QuickActionsRow } from './components/QuickActionsRow';
 import { PrimaryActions } from './components/PrimaryActions';
 import { RecentActivity } from './components/RecentActivity';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { Alert } from '../../components/ui/Alert';
 import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
 import { useDashboardData } from './hooks/useDashboardData';
 import { useAuth } from '../auth/useAuth';
 
@@ -71,13 +69,6 @@ export function DashboardPage({ onNavigate }) {
       <section className="space-y-2">
         <h2 className="section-label">Acciones principales</h2>
         <PrimaryActions onNavigate={onNavigate} />
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="section-label">Cobros últimos 6 meses</h2>
-        <Card className="p-4 sm:p-5">
-          <CobrosChart data={data.metrics?.cobros6m} />
-        </Card>
       </section>
 
       <RecentActivity items={data.recent} />
