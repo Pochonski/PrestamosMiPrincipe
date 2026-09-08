@@ -22,6 +22,7 @@ export function useCobroEditForm({ cobro, prestamo }) {
     cobro?.incluir_interes ?? cobro?.incluirInteres ?? true,
   );
   const [nota, setNota] = useState(cobro?.nota || '');
+  const [aceptaAtrasados, setAceptaAtrasados] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Préstamo en estado base: revierte los efectos del cobro que se edita.
@@ -69,8 +70,9 @@ export function useCobroEditForm({ cobro, prestamo }) {
       prestamo: basePrestamo,
       cuotaNumero,
       incluirInteres,
+      aceptaAtrasados,
     });
-  }, [monto, tipo, basePrestamo, cuotaNumero, incluirInteres]);
+  }, [monto, tipo, basePrestamo, cuotaNumero, incluirInteres, aceptaAtrasados]);
 
   const resumen = useMemo(() => {
     if (!basePrestamo || !cuotaActual) return null;
@@ -130,6 +132,8 @@ export function useCobroEditForm({ cobro, prestamo }) {
     setMonto,
     incluirInteres,
     setIncluirInteres,
+    aceptaAtrasados,
+    setAceptaAtrasados,
     nota,
     setNota,
     cuotaActual,

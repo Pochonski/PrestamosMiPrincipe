@@ -70,7 +70,7 @@ export function getCuotasQueImpidenCapital(prestamo, { cuotaNumero, incluirInter
   return atrasadas;
 }
 
-export function validateMontoCobro({ monto, tipo, prestamo, cuotaNumero, incluirInteres }) {
+export function validateMontoCobro({ monto, tipo, prestamo, cuotaNumero, incluirInteres, aceptaAtrasados }) {
   if (tipo === 'interes') return null;
 
   const n = Number(String(monto).replace(/\D/g, ''));
@@ -83,9 +83,12 @@ export function validateMontoCobro({ monto, tipo, prestamo, cuotaNumero, incluir
       return `Cuotas agotadas y saldo pendiente (${saldo.toLocaleString('es-CR')}). Extendé las cuotas para poder hacer un abono.`;
     }
 
+    // Abonar a capital con intereses atrasados está permitido, pero exige
+    // confirmación explícita (checkbox en el formulario).
     const queImpiden = getCuotasQueImpidenCapital(prestamo, { cuotaNumero, incluirInteres });
-    if (queImpiden.length > 0) {
-      return `Tenés ${queImpiden.length} interés(es) atrasado(s). Pagalos antes de abonar a capital.`;
+    if (queImpiden.length > 0 && !aceptaAtrasados) {
+      const total = queImpiden.reduce((s, c) => s + Number(c.monto || 0), 0);
+      return `Tenés ${queImpiden.length} interés(es) atrasado(s) por ${total.toLocaleString('es-CR')}. Marcá que lo entendés para abonar a capital.`;
     }
 
     const saldo = prestamosService.getSaldoCapital(prestamo);

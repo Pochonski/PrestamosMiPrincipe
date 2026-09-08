@@ -31,6 +31,7 @@ export function useCobroForm({ prestamoId }) {
   const [monto, setMontoState] = useState('');
   const [incluirInteres, setIncluirInteres] = useState(true);
   const [nota, setNota] = useState('');
+  const [aceptaAtrasados, setAceptaAtrasados] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loadingPrestamo, setLoadingPrestamo] = useState(true);
 
@@ -89,8 +90,9 @@ export function useCobroForm({ prestamoId }) {
       prestamo,
       cuotaNumero,
       incluirInteres,
+      aceptaAtrasados,
     });
-  }, [monto, tipo, prestamo, cuotaNumero, incluirInteres]);
+  }, [monto, tipo, prestamo, cuotaNumero, incluirInteres, aceptaAtrasados]);
 
   const resumen = useMemo(() => {
     if (!prestamo || !cuotaActual) return null;
@@ -166,6 +168,8 @@ export function useCobroForm({ prestamoId }) {
     setMonto,
     incluirInteres,
     setIncluirInteres: setIncluirInteresValue,
+    aceptaAtrasados,
+    setAceptaAtrasados,
     nota,
     setNota,
     showError,

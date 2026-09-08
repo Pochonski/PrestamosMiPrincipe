@@ -71,7 +71,7 @@ describe('validateMontoCobro', () => {
     const err = validateMontoCobro({ monto: '10000', tipo: 'capital', prestamo: p, cuotaNumero: 1, incluirInteres: false });
     expect(err).toContain('Máximo');
   });
-  it('capital con atrasos bloquea', () => {
+  it('capital con atrasos exige confirmación', () => {
     const { past } = withDates();
     const p = makePrestamo({
       monto: 10000, saldo_capital: 10000, tasa: 10,
@@ -79,6 +79,14 @@ describe('validateMontoCobro', () => {
     });
     const err = validateMontoCobro({ monto: '1000', tipo: 'capital', prestamo: p, cuotaNumero: 1, incluirInteres: false });
     expect(err).toContain('atrasado');
+  });
+  it('capital con atrasos y confirmación pasa', () => {
+    const { past, future } = withDates();
+    const p = makePrestamo({
+      monto: 10000, saldo_capital: 10000, tasa: 10,
+      cuotas: [makeCuota({ numero: 2, fecha: past, estado: 'pendiente', monto: 1000 }), makeCuota({ numero: 1, fecha: future, estado: 'pendiente', monto: 1000 })],
+    });
+    expect(validateMontoCobro({ monto: '1000', tipo: 'capital', prestamo: p, cuotaNumero: 1, incluirInteres: false, aceptaAtrasados: true })).toBeNull();
   });
   it('cuotas agotadas bloquea capital', () => {
     const past = withDates().past;

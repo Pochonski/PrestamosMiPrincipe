@@ -18,6 +18,8 @@ export function CobroFormBody({ form }) {
     setMonto,
     incluirInteres,
     setIncluirInteres,
+    aceptaAtrasados,
+    setAceptaAtrasados,
     nota,
     setNota,
     prestamo,
@@ -42,8 +44,11 @@ export function CobroFormBody({ form }) {
   const saldo = prestamosService.getSaldoCapital(prestamo);
   const liquidar = prestamosService.liquidarTotal(prestamo);
   const agotadas = prestamosService.cuotasAgotadas(prestamo);
-  const capitalBloqueado =
-    tipo === 'capital' && (cuotasQueImpidenCapital.length > 0 || agotadas);
+  // Solo las cuotas agotadas bloquean el capital. Con intereses atrasados se
+  // muestra aviso + checkbox de confirmación (ya no bloquea).
+  const capitalBloqueado = tipo === 'capital' && agotadas;
+  const hayAtrasadas =
+    tipo === 'capital' && cuotasQueImpidenCapital.length > 0 && !agotadas;
 
   const cuotasPendientes = (prestamo.cuotas || []).filter((c) => c.estado === 'pendiente');
   const showCuotaSelector = cuotasPendientes.length > 1 && setCuotaNumero && cuotaNumero;
@@ -81,16 +86,17 @@ export function CobroFormBody({ form }) {
 
       <CobroTipoPicker value={tipo} onChange={setTipo} />
 
-      {capitalBloqueado &&
-        (agotadas ? (
-          <CuotasAgotadasWarning saldo={saldo} />
-        ) : (
-          <AtrasadasWarning
-            cuotas={cuotasQueImpidenCapital}
-            incluirInteres={incluirInteres}
-            onSwitchToInteres={() => setTipo('interes')}
-          />
-        ))}
+      {capitalBloqueado && <CuotasAgotadasWarning saldo={saldo} />}
+
+      {hayAtrasadas && (
+        <AtrasadasWarning
+          cuotas={cuotasQueImpidenCapital}
+          incluirInteres={incluirInteres}
+          aceptaAtrasados={Boolean(aceptaAtrasados)}
+          onAceptaChange={setAceptaAtrasados}
+          onSwitchToInteres={() => setTipo('interes')}
+        />
+      )}
 
       {tipo === 'interes' && cuotaActual && (
         <div className="rounded-card border border-slate-200 bg-slate-50 p-4 dark:border-navy-700 dark:bg-navy-700/40">
@@ -137,6 +143,9 @@ export function CobroFormBody({ form }) {
                 {formatCRC(liquidar)}
               </span>
             </div>
+            <p className="mt-2 text-[11px] text-neutral-500 dark:text-navy-300">
+              Al abonar a capital, las cuotas futuras se recalculan con el saldo restante.
+            </p>
           </div>
 
           <Input
@@ -227,7 +236,7 @@ export function CobroFormBody({ form }) {
   );
 }
 
-function AtrasadasWarning({ cuotas, incluirInteres, onSwitchToInteres }) {
+function AtrasadasWarning({ cuotas, incluirInteres, aceptaAtrasados, onAceptaChange, onSwitchToInteres }) {
   const total = cuotas.reduce((s, c) => s + c.monto, 0);
   return (
     <div className="rounded-card border border-warning-500/40 bg-warning-50 p-4 dark:bg-warning-500/10">
@@ -238,10 +247,11 @@ function AtrasadasWarning({ cuotas, incluirInteres, onSwitchToInteres }) {
             Intereses atrasados
           </p>
           <p className="mt-0.5 text-xs text-warning-700 dark:text-warning-500">
-            No podés abonar a capital hasta pagar{' '}
-            {cuotas.length === 1 ? 'el interés atrasado' : `los ${cuotas.length} intereses atrasados`}
-            .
-            {incluirInteres ? ' Activá "Incluir interés" en la cuota actual o pagá los atrasos abajo.' : ''}
+            Hay{' '}
+            {cuotas.length === 1 ? '1 interés atrasado' : `${cuotas.length} intereses atrasados`}{' '}
+            por <strong className="tabular-nums">{formatCRC(total)}</strong> que siguen
+            pendientes.
+            {incluirInteres ? ' Podés abonar a capital igual marcando la casilla de abajo.' : ''}
           </p>
         </div>
       </div>
@@ -263,7 +273,20 @@ function AtrasadasWarning({ cuotas, incluirInteres, onSwitchToInteres }) {
         ))}
       </ul>
 
-      <div className="mt-3 flex items-center justify-between gap-2 border-t border-warning-500/30 pt-3">
+      <label className="mt-3 flex cursor-pointer items-start gap-2.5 border-t border-warning-500/30 pt-3">
+        <input
+          type="checkbox"
+          checked={Boolean(aceptaAtrasados)}
+          onChange={(e) => onAceptaChange?.(e.target.checked)}
+          className="mt-0.5 h-5 w-5 shrink-0 rounded border-warning-500/50 text-warning-600 focus:ring-warning-500"
+        />
+        <span className="text-xs font-semibold text-warning-700 dark:text-warning-500">
+          Entiendo que quedan {formatCRC(total)} en intereses atrasados pendientes y quiero
+          abonar a capital igual.
+        </span>
+      </label>
+
+      <div className="mt-3 flex items-center justify-between gap-2">
         <p className="text-xs font-medium text-warning-700 dark:text-warning-500">
           Total atrasado: <strong className="tabular-nums">{formatCRC(total)}</strong>
         </p>
