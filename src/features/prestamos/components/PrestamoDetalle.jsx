@@ -199,19 +199,19 @@ export function PrestamoDetalle({ onNavigate, params }) {
       <Card className="relative overflow-hidden p-0">
         <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-gold-200/40 blur-3xl dark:bg-gold-500/10" />
         <div className="relative p-5 sm:p-6">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="flex h-12 w-12 items-center justify-center rounded-card bg-gold-gradient text-navy-900 shadow-glow">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-card bg-gold-gradient text-navy-900 shadow-glow">
                 <Wallet className="h-6 w-6" aria-hidden="true" />
               </span>
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-extrabold tabular-nums text-navy-900 sm:text-2xl dark:text-white">
+                  <h1 className="truncate text-xl font-extrabold tabular-nums text-navy-900 sm:text-2xl dark:text-white">
                     {formatCRC(prestamo.monto)}
                   </h1>
                   <Badge tone={meta.tone}>{meta.label}</Badge>
                 </div>
-                <p className="mt-1 text-sm text-neutral-600 dark:text-navy-300">
+                <p className="mt-1 truncate text-sm text-neutral-600 dark:text-navy-300">
                   {prestamo.ruta} · {labelPeriodoValue} · {prestamo.tasa}% por cuota
                 </p>
               </div>

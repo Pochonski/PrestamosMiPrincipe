@@ -179,14 +179,14 @@ export function ClienteDetalle({ onNavigate, params }) {
       <Card className="relative overflow-hidden p-0">
         <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-gold-200/40 blur-3xl dark:bg-gold-500/10" />
         <div className="relative p-5 sm:p-6">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
               <Avatar nombre={cliente.nombre} size="lg" />
-              <div>
-                <h1 className="text-xl font-extrabold tracking-tight text-navy-900 sm:text-2xl dark:text-white">
+              <div className="min-w-0">
+                <h1 className="truncate text-xl font-extrabold tracking-tight text-navy-900 sm:text-2xl dark:text-white">
                   {cliente.nombre}
                 </h1>
-                <p className="text-sm text-neutral-600 dark:text-navy-300">{cliente.cedula}</p>
+                <p className="truncate text-sm text-neutral-600 dark:text-navy-300">{cliente.cedula}</p>
               </div>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
