@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import {
   LayoutDashboard,
   Users,
+  Wallet,
   AlertTriangle,
   PlusCircle,
 } from 'lucide-react';
@@ -12,6 +13,7 @@ import { findItemById } from './nav-config';
 const ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, page: 'dashboard' },
   { id: 'clientes', label: 'Clientes', icon: Users, page: 'clientes' },
+  { id: 'prestamos', label: 'Préstamos', icon: Wallet, page: 'prestamos' },
   { id: 'atrasados', label: 'Atrasados', icon: AlertTriangle, page: 'atrasados' },
   {
     id: 'registrar-prestamo',
@@ -24,6 +26,7 @@ const ITEMS = [
 function getActiveId(page) {
   if (page === 'registrar-prestamo') return 'registrar-prestamo';
   if (page === 'cliente-detalle') return 'clientes';
+  if (page === 'prestamo-detalle') return 'prestamos';
   const current = findItemById(page);
   const parentId = current?.parent ?? current?.id;
   return parentId;

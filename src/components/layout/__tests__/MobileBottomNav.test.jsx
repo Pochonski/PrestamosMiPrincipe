@@ -5,12 +5,13 @@ import userEvent from '@testing-library/user-event';
 import { MobileBottomNav } from '../MobileBottomNav';
 
 describe('MobileBottomNav', () => {
-  it('renderiza los 4 items en orden y marca activo', () => {
+  it('renderiza los 5 items en orden y marca activo', () => {
     render(<MobileBottomNav page="dashboard" onNavigate={() => {}} />);
     const items = screen.getAllByRole('button');
     expect(items.map((b) => b.textContent)).toEqual([
       'Dashboard',
       'Clientes',
+      'Préstamos',
       'Atrasados',
       'Registrar préstamo',
     ]);
@@ -49,6 +50,14 @@ describe('MobileBottomNav', () => {
       <MobileBottomNav page="inexistente" onNavigate={() => {}} />,
     );
     expect(container.querySelector('nav')).toBeInTheDocument();
+  });
+
+  it('prestamo-detalle marca Préstamos como activo', () => {
+    render(<MobileBottomNav page="prestamo-detalle" onNavigate={() => {}} />);
+    expect(screen.getByText('Préstamos').closest('button')).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
   });
 
   it('onNavigate llama con el id correcto al click', async () => {
