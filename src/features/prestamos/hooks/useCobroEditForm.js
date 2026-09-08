@@ -6,7 +6,7 @@ import {
   getCuotasAtrasadas,
   getCuotasQueImpidenCapital,
 } from '../../cobros/selectors';
-import { validateTasaAcreedor } from '../selectors';
+import { validateTasaComision } from '../selectors';
 import * as cobrosService from '../../../services/cobros';
 import * as prestamosService from '../../../services/prestamos';
 
@@ -27,8 +27,8 @@ export function useCobroEditForm({ cobro, prestamo }) {
   const [aceptaAtrasados, setAceptaAtrasados] = useState(false);
   // Tasa del acreedor: se guarda en el préstamo (permite agregarla a
   // préstamos viejos desde la edición del último cobro).
-  const [tasaAcreedor, setTasaAcreedorState] = useState(
-    prestamo?.tasa_acreedor != null ? String(prestamo.tasa_acreedor) : '',
+  const [comision, setComisionState] = useState(
+    prestamo?.tasa_comision != null ? String(prestamo.tasa_comision) : '',
   );
   const [submitting, setSubmitting] = useState(false);
 
@@ -69,14 +69,14 @@ export function useCobroEditForm({ cobro, prestamo }) {
     [basePrestamo, cuotaNumero, incluirInteres],
   );
 
-  const tasaAcreedorError = useMemo(
-    () => validateTasaAcreedor(tasaAcreedor, basePrestamo?.tasa),
-    [tasaAcreedor, basePrestamo],
+  const comisionError = useMemo(
+    () => validateTasaComision(comision, basePrestamo?.tasa),
+    [comision, basePrestamo],
   );
 
   const error = useMemo(() => {
     if (!basePrestamo) return 'Préstamo no disponible';
-    if (tasaAcreedorError) return tasaAcreedorError;
+    if (comisionError) return comisionError;
     return validateMontoCobro({
       monto,
       tipo,
@@ -85,37 +85,37 @@ export function useCobroEditForm({ cobro, prestamo }) {
       incluirInteres,
       aceptaAtrasados,
     });
-  }, [monto, tipo, basePrestamo, cuotaNumero, incluirInteres, aceptaAtrasados, tasaAcreedorError]);
+  }, [monto, tipo, basePrestamo, cuotaNumero, incluirInteres, aceptaAtrasados, comisionError]);
 
   const resumen = useMemo(() => {
     if (!basePrestamo || !cuotaActual) return null;
     const n = Number(String(monto).replace(/\D/g, '')) || 0;
     // El split se previsualiza con la tasa editada (se guarda al confirmar).
-    const tasaEditada = tasaAcreedor === '' || tasaAcreedor == null ? null : Number(tasaAcreedor);
+    const tasaEditada = comision === '' || comision == null ? null : Number(comision);
     return buildResumenCobro({
-      prestamo: { ...basePrestamo, tasa_acreedor: tasaEditada },
+      prestamo: { ...basePrestamo, tasa_comision: tasaEditada },
       cuotaNumero,
       monto: n,
       tipo,
       incluirInteres,
       cliente: null,
     });
-  }, [basePrestamo, cuotaActual, monto, tipo, incluirInteres, cuotaNumero, tasaAcreedor]);
+  }, [basePrestamo, cuotaActual, monto, tipo, incluirInteres, cuotaNumero, comision]);
 
   function setMonto(value) {
     setMontoState(formatMontoLive(value));
   }
 
-  function setTasaAcreedor(value) {
+  function setComision(value) {
     let t = String(value ?? '').replace(/[^0-9.]/g, '');
     const parts = t.split('.');
     if (parts.length > 1) t = parts[0] + '.' + parts.slice(1).join('').slice(0, 2);
-    setTasaAcreedorState(t);
+    setComisionState(t);
   }
 
-  function tasaAcreedorChanged() {
+  function comisionChanged() {
     const norm = (v) => (v == null || v === '' ? null : Number(v));
-    return norm(tasaAcreedor) !== norm(prestamo?.tasa_acreedor);
+    return norm(comision) !== norm(prestamo?.tasa_comision);
   }
 
   async function submit() {
@@ -131,9 +131,9 @@ export function useCobroEditForm({ cobro, prestamo }) {
         incluirInteres: tipo === 'capital' ? incluirInteres : false,
         nota: nota || null,
       });
-      if (tasaAcreedorChanged()) {
+      if (comisionChanged()) {
         await prestamosService.update(prestamo.id, {
-          tasa_acreedor: tasaAcreedor === '' ? null : Number(tasaAcreedor),
+          tasa_comision: comision === '' ? null : Number(comision),
         });
       }
       return { ok: true, cobro: updated };
@@ -166,8 +166,8 @@ export function useCobroEditForm({ cobro, prestamo }) {
     setIncluirInteres,
     aceptaAtrasados,
     setAceptaAtrasados,
-    tasaAcreedor,
-    setTasaAcreedor,
+    comision,
+    setComision,
     nota,
     setNota,
     cuotaActual,

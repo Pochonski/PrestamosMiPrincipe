@@ -240,9 +240,25 @@ export function getSaldoCapital(prestamo) {
   return Number(prestamo.saldo_capital ?? prestamo.monto ?? 0);
 }
 
+// Modelo aditivo: el cliente paga tasa base (acreedor) + comisión.
+// tasa = base del acreedor, tasa_comision = extra propio (0 si no hay).
+export function tasaBase(prestamo) {
+  return Number(prestamo?.tasa ?? 0);
+}
+
+export function tasaComision(prestamo) {
+  const v = prestamo?.tasa_comision;
+  if (v == null || v === '') return 0;
+  return Number(v);
+}
+
+export function tasaTotal(prestamo) {
+  return tasaBase(prestamo) + tasaComision(prestamo);
+}
+
 export function cuotaDelPeriodo(prestamo) {
   if (!prestamo) return 0;
-  return Math.round((getSaldoCapital(prestamo) * Number(prestamo.tasa ?? 0)) / 100);
+  return Math.round((getSaldoCapital(prestamo) * tasaTotal(prestamo)) / 100);
 }
 
 export function totalIntereses(prestamo) {
@@ -278,8 +294,8 @@ export function cuotasAgotadas(prestamo) {
   return getSaldoCapital(prestamo) > 0;
 }
 
-export async function create({ clienteId, ruta, periodo, monto, tasa, tasaAcreedor, nCuotas, fechaInicio }) {
-  const cuotaMonto = Math.round((Number(monto) * Number(tasa)) / 100);
+export async function create({ clienteId, ruta, periodo, monto, tasa, tasaComision, nCuotas, fechaInicio }) {
+  const cuotaMonto = Math.round((Number(monto) * (Number(tasa) + Number(tasaComision || 0))) / 100);
   const cuotas = buildCuotasPayload({
     fechaInicio,
     periodo,
@@ -296,7 +312,7 @@ export async function create({ clienteId, ruta, periodo, monto, tasa, tasaAcreed
     p_n_cuotas: Number(nCuotas),
     p_fecha_inicio: fechaInicio,
     p_cuotas: cuotas,
-    p_tasa_acreedor: tasaAcreedor == null || tasaAcreedor === '' ? null : Number(tasaAcreedor),
+    p_tasa_comision: tasaComision == null || tasaComision === '' ? null : Number(tasaComision),
   });
   if (error) throw error;
   if (!data) throw new Error('No se creó el préstamo');
@@ -313,7 +329,7 @@ export async function extenderCuotas(prestamoId, nCuotas) {
   const prestamo = await getById(prestamoId);
   if (!prestamo) throw new PrestamoNoEncontradoError(prestamoId);
 
-  const cuotaMonto = Math.round((getSaldoCapital(prestamo) * Number(prestamo.tasa || 0)) / 100);
+  const cuotaMonto = Math.round((getSaldoCapital(prestamo) * tasaTotal(prestamo)) / 100);
   const startDate = (prestamo.cuotas && prestamo.cuotas.length > 0)
     ? prestamo.cuotas[prestamo.cuotas.length - 1].fecha
     : prestamo.fecha_inicio;
@@ -366,10 +382,10 @@ export async function update(id, patch) {
   const p_periodo = patch.periodo !== undefined ? patch.periodo : prestamo.periodo || { tipo: 'mensual' };
   const p_monto = patch.monto !== undefined ? Number(patch.monto) : Number(prestamo.monto);
   const p_tasa = patch.tasa !== undefined ? Number(patch.tasa) : Number(prestamo.tasa ?? 0);
-  const p_tasa_acreedor =
-    patch.tasa_acreedor !== undefined
-      ? (patch.tasa_acreedor == null || patch.tasa_acreedor === '' ? null : Number(patch.tasa_acreedor))
-      : (prestamo.tasa_acreedor ?? null);
+  const p_tasa_comision =
+    patch.tasa_comision !== undefined
+      ? (patch.tasa_comision == null || patch.tasa_comision === '' ? null : Number(patch.tasa_comision))
+      : (prestamo.tasa_comision ?? null);
   const p_n_cuotas = patch.n_cuotas !== undefined ? Number(patch.n_cuotas) : Number(prestamo.n_cuotas);
   const p_fecha_inicio = patch.fecha_inicio !== undefined ? patch.fecha_inicio : prestamo.fecha_inicio || new Date().toISOString().slice(0, 10);
 
@@ -379,28 +395,32 @@ export async function update(id, patch) {
   const tasaChanged = patch.tasa !== undefined && p_tasa !== Number(prestamo.tasa ?? 0);
   const nCuotasChanged = patch.n_cuotas !== undefined && p_n_cuotas !== Number(prestamo.n_cuotas);
   const fechaChanged = patch.fecha_inicio !== undefined && p_fecha_inicio !== prestamo.fecha_inicio;
-  const normTasaAcreedor = (v) => (v == null || v === '' ? null : Number(v));
-  const tasaAcreedorChanged =
-    patch.tasa_acreedor !== undefined &&
-    normTasaAcreedor(p_tasa_acreedor) !== normTasaAcreedor(prestamo.tasa_acreedor);
+  const normTasaComision = (v) => (v == null || v === '' ? null : Number(v));
+  const tasaComisionChanged =
+    patch.tasa_comision !== undefined &&
+    normTasaComision(p_tasa_comision) !== normTasaComision(prestamo.tasa_comision);
 
-  if (p_tasa_acreedor != null && p_tasa_acreedor > p_tasa) {
-    throw new Error('La tasa del acreedor no puede superar la del cliente');
+  const total = p_tasa + (p_tasa_comision ?? 0);
+  if (p_tasa < 0 || (p_tasa_comision ?? 0) < 0) {
+    throw new Error('Las tasas no pueden ser negativas');
+  }
+  if (total > 100) {
+    throw new Error('La suma de tasas parece muy alta (máximo 100%)');
   }
 
   const cuotasAfectadas = montoChanged || tasaChanged || nCuotasChanged || periodoChanged || fechaChanged;
 
   // Nada que actualizar
-  if (!cuotasAfectadas && !rutaChanged && !tasaAcreedorChanged) {
+  if (!cuotasAfectadas && !rutaChanged && !tasaComisionChanged) {
     return prestamo;
   }
 
-  // Solo ruta y/o tasa_acreedor: update simple, sin tocar cuotas
-  if (!cuotasAfectadas && (rutaChanged || tasaAcreedorChanged)) {
+  // Solo ruta y/o tasa_comision: update simple, sin tocar cuotas
+  if (!cuotasAfectadas && (rutaChanged || tasaComisionChanged)) {
     const orgId = await getOrgId();
     const { data, error } = await supabase
       .from('prestamos')
-      .update({ ruta: p_ruta, tasa_acreedor: p_tasa_acreedor, updated_at: new Date().toISOString() })
+      .update({ ruta: p_ruta, tasa_comision: p_tasa_comision, updated_at: new Date().toISOString() })
       .eq('id', id)
       .eq('org_id', orgId)
       .select()
@@ -419,7 +439,7 @@ export async function update(id, patch) {
     ? pagadas.reduce((max, c) => (Number(c.numero) > Number(max.numero) ? c : max), pagadas[0])
     : null;
   const pendingCount = Math.max(0, p_n_cuotas - pagadas.length);
-  const montoPorCuota = Math.round((p_monto * p_tasa) / 100);
+  const montoPorCuota = Math.round((p_monto * (p_tasa + (p_tasa_comision ?? 0))) / 100);
   // Si cambió la fecha de inicio y hay cuotas pagadas, las pendientes se
   // desplazan por el mismo delta (las pagadas/canceladas quedan intactas
   // como historial). Sin esto, en préstamos con cobros la nueva fecha se
@@ -461,7 +481,7 @@ export async function update(id, patch) {
     p_n_cuotas: p_n_cuotas,
     p_fecha_inicio: p_fecha_inicio,
     p_cuotas: pendingCuotas,
-    p_tasa_acreedor: p_tasa_acreedor,
+    p_tasa_comision: p_tasa_comision,
   });
   throwIfError(error, 'prestamos.update.rpc', { id, patch });
   if (!updatedId) throw new Error('No se actualizó el préstamo');

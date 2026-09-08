@@ -114,9 +114,9 @@ describe('prestamos.update', () => {
     expect(r.saldo_capital).toBe(2000);
     expect(supabase.rpc).toHaveBeenCalledWith('update_prestamo_with_cuotas', expect.objectContaining({ p_monto: 2000 }));
   });
-  it('solo tasa_acreedor: update simple sin RPC ni tocar cuotas', async () => {
-    const prestamo = { id: 'p1', cliente_id: 'c1', monto: 1000, n_cuotas: 10, saldo_capital: 1000, cuotas: [], periodo: { tipo: 'mensual' }, fecha_inicio: '2024-01-01', tasa: 25, tasa_acreedor: null, ruta: 'A' };
-    const updated = { ...prestamo, tasa_acreedor: 20 };
+  it('solo tasa_comision: update simple sin RPC ni tocar cuotas', async () => {
+    const prestamo = { id: 'p1', cliente_id: 'c1', monto: 1000, n_cuotas: 10, saldo_capital: 1000, cuotas: [], periodo: { tipo: 'mensual' }, fecha_inicio: '2024-01-01', tasa: 20, tasa_comision: null, ruta: 'A' };
+    const updated = { ...prestamo, tasa_comision: 2 };
     let prestamosCalls = 0;
     const maybeSingle = vi.fn().mockResolvedValue({ data: prestamo, error: null });
     const getChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle };
@@ -133,13 +133,13 @@ describe('prestamos.update', () => {
       // 1ª llamada: getById inicial; 2ª: update simple
       return prestamosCalls === 1 ? getChain : updateChain;
     });
-    const r = await prestamosService.update('p1', { tasa_acreedor: 20 });
+    const r = await prestamosService.update('p1', { tasa_comision: 2 });
     expect(supabase.rpc).not.toHaveBeenCalled();
-    expect(updateChain.update).toHaveBeenCalledWith(expect.objectContaining({ tasa_acreedor: 20 }));
-    expect(r.tasa_acreedor).toBe(20);
+    expect(updateChain.update).toHaveBeenCalledWith(expect.objectContaining({ tasa_comision: 2 }));
+    expect(r.tasa_comision).toBe(2);
   });
-  it('tasa_acreedor mayor que tasa falla', async () => {
-    const prestamo = { id: 'p1', cliente_id: 'c1', monto: 1000, n_cuotas: 10, saldo_capital: 1000, cuotas: [], periodo: { tipo: 'mensual' }, fecha_inicio: '2024-01-01', tasa: 20, tasa_acreedor: null, ruta: 'A' };
+  it('tasa total mayor que 100 falla', async () => {
+    const prestamo = { id: 'p1', cliente_id: 'c1', monto: 1000, n_cuotas: 10, saldo_capital: 1000, cuotas: [], periodo: { tipo: 'mensual' }, fecha_inicio: '2024-01-01', tasa: 98, tasa_comision: null, ruta: 'A' };
     const maybeSingle = vi.fn().mockResolvedValue({ data: prestamo, error: null });
     const getChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle };
     getChain.select.mockReturnValue(getChain); getChain.eq.mockReturnValue(getChain);
@@ -147,7 +147,7 @@ describe('prestamos.update', () => {
     cuotasChain.then = (res) => Promise.resolve({ data: [], error: null }).then(res);
     cuotasChain.select.mockReturnValue(cuotasChain); cuotasChain.in.mockReturnValue(cuotasChain); cuotasChain.order.mockReturnValue(cuotasChain);
     vi.mocked(supabase.from).mockImplementation((t) => (t === 'cuotas' ? cuotasChain : getChain));
-    await expect(prestamosService.update('p1', { tasa_acreedor: 25 })).rejects.toThrow('acreedor');
+    await expect(prestamosService.update('p1', { tasa_comision: 5 })).rejects.toThrow('100');
   });
   it('cambio de fecha_inicio desplaza pendientes por el delta (con pagadas)', async () => {
     const prestamo = {

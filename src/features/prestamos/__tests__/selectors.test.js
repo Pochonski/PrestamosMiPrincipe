@@ -6,7 +6,7 @@ import {
   validateMonto,
   validateNCoutas,
   validateTasa,
-  validateTasaAcreedor,
+  validateTasaComision,
   validateFechaInicio,
   buildInitialPrestamo,
   getStatus,
@@ -66,15 +66,17 @@ describe('validateTasa', () => {
   it('10 ok', () => expect(validateTasa(10)).toBeNull());
 });
 
-describe('validateTasaAcreedor', () => {
+describe('validateTasaComision', () => {
   it('vacía ok (sin comisión)', () => {
-    expect(validateTasaAcreedor('', 25)).toBeNull();
-    expect(validateTasaAcreedor(null, 25)).toBeNull();
+    expect(validateTasaComision('', 20)).toBeNull();
+    expect(validateTasaComision(null, 20)).toBeNull();
   });
-  it('menor que cliente ok', () => expect(validateTasaAcreedor(20, 25)).toBeNull());
-  it('igual que cliente ok', () => expect(validateTasaAcreedor(20, 20)).toBeNull());
-  it('mayor que cliente falla', () => expect(validateTasaAcreedor(30, 25)).toContain('acreedor'));
-  it('negativa falla', () => expect(validateTasaAcreedor(-1, 25)).toBe('La tasa no puede ser negativa'));
+  it('suma <= 100 ok', () => {
+    expect(validateTasaComision(2, 20)).toBeNull();
+    expect(validateTasaComision(0, 20)).toBeNull();
+  });
+  it('suma > 100 falla', () => expect(validateTasaComision(5, 98)).toContain('100'));
+  it('negativa falla', () => expect(validateTasaComision(-1, 20)).toBe('La tasa no puede ser negativa'));
 });
 
 describe('validateFechaInicio', () => {

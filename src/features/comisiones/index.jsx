@@ -98,7 +98,7 @@ export function ComisionesPage({ onNavigate }) {
                     {clientes.get(row.clienteId) || row.ruta || 'Préstamo'}
                   </p>
                   <p className="text-xs text-neutral-500 dark:text-navy-300">
-                    Cliente {row.tasaCliente}% · Acreedor {row.tasaAcreedor}% · {row.pendientes} pendiente(s)
+                    Base {row.tasaBase}% + comisión {row.tasaComision}% · {row.pendientes} pendiente(s)
                   </p>
                 </div>
                 <div className="shrink-0 text-right">

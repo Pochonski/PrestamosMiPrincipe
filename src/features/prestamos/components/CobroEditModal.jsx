@@ -48,16 +48,16 @@ export function CobroEditModal({ cobro, prestamo, onClose, onSaved }) {
       <div className="mt-5">
         <Input
           type="text"
-          name="tasaAcreedor"
+          name="comision"
           size="md"
-          label="Tasa acreedor (% por cuota, opcional)"
-          hint="Se guarda en el préstamo: sirve para agregar tu comisión a préstamos viejos"
+          label="Tu comisión (% extra, opcional)"
+          hint="Se guarda en el préstamo: el cliente paga tasa + comisión"
           icon={Percent}
           trailing={<Percent className="h-4 w-4 text-neutral-400 dark:text-navy-300" aria-hidden="true" />}
           inputMode="decimal"
-          value={form.tasaAcreedor ?? ''}
-          onChange={(e) => form.setTasaAcreedor(e.target.value)}
-          placeholder={`Cliente paga ${prestamo?.tasa ?? '—'}%`}
+          value={form.comision ?? ''}
+          onChange={(e) => form.setComision(e.target.value)}
+          placeholder="0 = sin comisión"
         />
       </div>
     </ModalShell>

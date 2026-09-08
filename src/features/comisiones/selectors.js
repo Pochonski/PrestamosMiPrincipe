@@ -1,31 +1,34 @@
 /**
- * Selectores puros de comisiones.
- * El cliente paga tasa_cliente; la diferencia con tasa_acreedor es la comisión
- * del cobrador, solo sobre intereses. tasa_acreedor null = sin comisión.
+ * Selectores puros de comisiones (modelo aditivo).
+ * El cliente paga tasa base (acreedor) + comisión; la comisión es solo
+ * sobre intereses. tasa_comision ausente o 0 = sin comisión.
  */
 
-export function spreadRatio(prestamo) {
-  if (!prestamo) return 0;
-  const tasaCliente = Number(prestamo.tasa ?? 0);
-  const tasaAcreedor =
-    prestamo.tasa_acreedor == null || prestamo.tasa_acreedor === ''
-      ? null
-      : Number(prestamo.tasa_acreedor);
-  if (tasaAcreedor == null) return 0;
-  if (!(tasaCliente > 0)) return 0;
-  if (tasaAcreedor >= tasaCliente) return 0;
-  if (tasaAcreedor <= 0) return 1;
-  return (tasaCliente - tasaAcreedor) / tasaCliente;
+export function tasaBase(prestamo) {
+  return Number(prestamo?.tasa ?? 0);
+}
+
+export function tasaComision(prestamo) {
+  const v = prestamo?.tasa_comision;
+  if (v == null || v === '') return 0;
+  return Number(v);
+}
+
+export function tasaTotal(prestamo) {
+  return tasaBase(prestamo) + tasaComision(prestamo);
 }
 
 export function tieneComision(prestamo) {
-  return prestamo?.tasa_acreedor != null && prestamo?.tasa_acreedor !== '';
+  return tasaComision(prestamo) > 0;
 }
 
 export function comisionDeInteres(interesPagado, prestamo) {
   const interes = Number(interesPagado || 0);
   if (interes <= 0) return 0;
-  return Math.round(interes * spreadRatio(prestamo));
+  const total = tasaTotal(prestamo);
+  const com = tasaComision(prestamo);
+  if (com <= 0 || total <= 0) return 0;
+  return Math.round((interes * com) / total);
 }
 
 function interesDeCobro(c) {
@@ -39,7 +42,14 @@ export function comisionCobro(cobro, prestamo) {
 
 export function comisionCuotaPendiente(cuota, prestamo) {
   if (!cuota || cuota.estado !== 'pendiente') return 0;
-  return Math.round(Number(cuota.monto || 0) * spreadRatio(prestamo));
+  return comisionDeInteres(cuota.monto, prestamo);
+}
+
+// Mantenido por compatibilidad: fracción de la cuota que es comisión.
+export function spreadRatio(prestamo) {
+  const total = tasaTotal(prestamo);
+  if (total <= 0) return 0;
+  return tasaComision(prestamo) / total;
 }
 
 export function resumenComisiones({ prestamos = [], cobros = [] } = {}) {
@@ -53,8 +63,8 @@ export function resumenComisiones({ prestamos = [], cobros = [] } = {}) {
         clienteId: prestamo.clienteId ?? prestamo.cliente_id,
         ruta: prestamo.ruta,
         monto: Number(prestamo.monto || 0),
-        tasaCliente: Number(prestamo.tasa ?? 0),
-        tasaAcreedor: Number(prestamo.tasa_acreedor ?? 0),
+        tasaBase: tasaBase(prestamo),
+        tasaComision: tasaComision(prestamo),
         cobrada: 0,
         acreedorCobrada: 0,
         porCobrar: 0,

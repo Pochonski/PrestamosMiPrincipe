@@ -7,17 +7,16 @@ import { formatCRC } from '../../../../lib/format';
 export function Step3CuotasTasa({ values, errors, showError, set, touch }) {
   const capital = Number(String(values.monto).replace(/\D/g, ''));
   const tasa = Number(values.tasa);
-  const tasaAcreedor = values.tasaAcreedor === '' || values.tasaAcreedor == null ? null : Number(values.tasaAcreedor);
+  const comision = values.comision === '' || values.comision == null ? 0 : Number(values.comision);
   const nCuotas = Number(values.nCuotas);
 
-  const cuota = capital > 0 && tasa > 0 ? Math.round((capital * tasa) / 100) : 0;
-  const totalIntereses = cuota * (nCuotas || 0);
+  const cuotaTotal = capital > 0 && tasa + comision > 0 ? Math.round((capital * (tasa + comision)) / 100) : 0;
+  const cuotaBase = capital > 0 && tasa > 0 ? Math.round((capital * tasa) / 100) : 0;
+  const comisionCuota = cuotaTotal - cuotaBase;
+  const totalIntereses = cuotaTotal * (nCuotas || 0);
   const totalAPagar = capital + totalIntereses;
-  const showPreview = capital > 0 && tasa > 0 && nCuotas > 0;
-  const comisionCuota =
-    showPreview && tasaAcreedor != null && tasaAcreedor >= 0 && tasaAcreedor <= tasa
-      ? cuota - Math.round((capital * tasaAcreedor) / 100)
-      : null;
+  const showPreview = capital > 0 && tasa + comision > 0 && nCuotas > 0;
+  const tieneComision = comision > 0;
 
   return (
     <div className="space-y-5">
@@ -57,7 +56,7 @@ export function Step3CuotasTasa({ values, errors, showError, set, touch }) {
           size="lg"
           label={
             <>
-              Tasa cliente (% por cuota) <span className="text-danger-500">*</span>
+              Tasa acreedor (% por cuota) <span className="text-danger-500">*</span>
             </>
           }
           icon={Percent}
@@ -73,18 +72,18 @@ export function Step3CuotasTasa({ values, errors, showError, set, touch }) {
 
       <Input
         type="text"
-        name="tasaAcreedor"
+        name="comision"
         size="lg"
-        label="Tasa acreedor (% por cuota, opcional)"
-        hint="Si el dinero es de un acreedor, poné su tasa para ver tu comisión (diferencia)"
+        label="Tu comisión (% extra, opcional)"
+        hint="Se suma a la tasa: el cliente paga ambas y esa diferencia es tuya"
         icon={Percent}
         trailing={<Percent className="h-4 w-4 text-neutral-400 dark:text-navy-300" aria-hidden="true" />}
         inputMode="decimal"
-        value={values.tasaAcreedor ?? ''}
-        onChange={(e) => set('tasaAcreedor', e.target.value)}
-        onBlur={() => touch('tasaAcreedor')}
-        placeholder="Igual que cliente = sin comisión"
-        error={showError('tasaAcreedor') && errors.tasaAcreedor}
+        value={values.comision ?? ''}
+        onChange={(e) => set('comision', e.target.value)}
+        onBlur={() => touch('comision')}
+        placeholder="0 = sin comisión"
+        error={showError('comision') && errors.comision}
       />
 
       <div className="rounded-card border border-slate-200 bg-slate-50 p-4 dark:border-navy-700 dark:bg-navy-700/40">
@@ -94,7 +93,7 @@ export function Step3CuotasTasa({ values, errors, showError, set, touch }) {
         </div>
         {showPreview ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <PreviewItem label="Cuota por período" value={formatCRC(cuota)} highlight />
+            <PreviewItem label="Cuota por período" value={formatCRC(cuotaTotal)} highlight />
             <PreviewItem label="Total intereses" value={formatCRC(totalIntereses)} />
             <PreviewItem label="Total a pagar" value={formatCRC(totalAPagar)} />
           </div>
@@ -103,9 +102,10 @@ export function Step3CuotasTasa({ values, errors, showError, set, touch }) {
             Completá los campos para ver el cálculo.
           </p>
         )}
-        {comisionCuota != null && (
+        {showPreview && tieneComision && (
           <p className="mt-3 text-xs font-semibold text-gold-600 dark:text-gold-300">
-            Tu comisión por cuota: {formatCRC(comisionCuota)} (acreedor {formatCRC(cuota - comisionCuota)})
+            El cliente paga {formatCRC(cuotaTotal)} por cuota: {formatCRC(cuotaBase)} acreedor +{' '}
+            {formatCRC(comisionCuota)} tuyo
           </p>
         )}
       </div>

@@ -10,10 +10,10 @@ import { firstCuotaDate, nextCuotaDate } from '../../../../lib/dates';
 import { labelPeriodo, cuotaDelPeriodo, totalIntereses, totalAPagar } from '../../selectors';
 import { PrestamoCalendar } from '../PrestamoCalendar';
 
-function buildCuotas({ fechaInicio, periodo, nCuotas, monto, tasa }) {
+function buildCuotas({ fechaInicio, periodo, nCuotas, monto, tasa, comision }) {
   const first = firstCuotaDate(fechaInicio, periodo);
   if (!first) return [];
-  const cuota = Math.round((Number(monto) * Number(tasa)) / 100);
+  const cuota = Math.round((Number(monto) * (Number(tasa) + Number(comision || 0))) / 100);
   const out = [];
   let cursor = new Date(first);
   for (let i = 0; i < Number(nCuotas); i++) {
@@ -39,11 +39,17 @@ function Row({ label, value }) {
 
 export function Step5Resumen({ values, cliente }) {
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showAcreedor, setShowAcreedor] = useState(false);
+
+  const capital = Number(String(values.monto).replace(/\D/g, ''));
+  const tasaBase = Number(values.tasa);
+  const comision = values.comision === '' || values.comision == null ? 0 : Number(values.comision);
+  const nCuotas = Number(values.nCuotas);
 
   const prestamoPreview = {
-    monto: Number(String(values.monto).replace(/\D/g, '')),
-    tasa: Number(values.tasa),
-    nCuotas: Number(values.nCuotas),
+    monto: capital,
+    tasa: tasaBase + comision,
+    nCuotas,
     periodo: values.periodo,
     fechaInicio: values.fechaInicio,
     ruta: values.ruta,
@@ -52,19 +58,18 @@ export function Step5Resumen({ values, cliente }) {
       periodo: values.periodo,
       nCuotas: values.nCuotas,
       monto: values.monto,
-      tasa: values.tasa,
+      tasa: tasaBase,
+      comision,
     }),
   };
 
   const cuota = cuotaDelPeriodo(prestamoPreview);
   const totalInt = totalIntereses(prestamoPreview);
   const totalPag = totalAPagar(prestamoPreview);
-  const tasaAcreedor =
-    values.tasaAcreedor === '' || values.tasaAcreedor == null ? null : Number(values.tasaAcreedor);
-  const comisionTotal =
-    tasaAcreedor != null && tasaAcreedor <= prestamoPreview.tasa
-      ? Math.round((totalInt * (prestamoPreview.tasa - tasaAcreedor)) / prestamoPreview.tasa)
-      : null;
+  const tieneComision = comision > 0;
+  const cuotaBase = capital > 0 && tasaBase > 0 ? Math.round((capital * tasaBase) / 100) : 0;
+  const totalIntBase = cuotaBase * (nCuotas || 0);
+  const totalPagBase = capital + totalIntBase;
 
   return (
     <div className="space-y-5">
@@ -94,13 +99,13 @@ export function Step5Resumen({ values, cliente }) {
         <Row label="Período" value={labelPeriodo(values.periodo)} />
         <Row label="Capital" value={formatCRC(prestamoPreview.monto)} />
         <Row label="N° de cuotas" value={prestamoPreview.nCuotas} />
-        <Row label="Tasa por cuota" value={`${prestamoPreview.tasa}%`} />
-        {tasaAcreedor != null && <Row label="Tasa acreedor" value={`${tasaAcreedor}%`} />}
+        <Row label="Tasa acreedor" value={`${tasaBase}%`} />
+        {tieneComision && <Row label="Tu comisión" value={`+${comision}%`} />}
         <Row label="Cuota por período" value={formatCRC(cuota)} />
-        <Row label="Total intereses" value={formatCRC(totalInt)} />
-        {comisionTotal != null && (
-          <Row label="Tu comisión total" value={formatCRC(comisionTotal)} />
+        {tieneComision && (
+          <Row label="Split por cuota" value={`${formatCRC(cuotaBase)} + ${formatCRC(cuota - cuotaBase)}`} />
         )}
+        <Row label="Total intereses" value={formatCRC(totalInt)} />
         <Row label="Total a pagar" value={formatCRC(totalPag)} />
         <Row label="Fecha inicial" value={formatDate(values.fechaInicio)} />
         {prestamoPreview.cuotas.length > 0 && (
@@ -120,6 +125,28 @@ export function Step5Resumen({ values, cliente }) {
       >
         {showCalendar ? 'Ocultar' : 'Ver'} calendario de cuotas
       </Button>
+
+      {tieneComision && (
+        <Button
+          variant="secondary"
+          icon={showAcreedor ? EyeOff : Eye}
+          onClick={() => setShowAcreedor((v) => !v)}
+          fullWidth
+        >
+          {showAcreedor ? 'Ocultar' : 'Mostrar'} con datos del acreedor
+        </Button>
+      )}
+
+      {showAcreedor && tieneComision && (
+        <Card className="p-4 sm:p-5">
+          <p className="section-label">Vista acreedor (sin tu comisión)</p>
+          <div className="mt-1">
+            <Row label="Cuota por período" value={formatCRC(cuotaBase)} />
+            <Row label="Total intereses" value={formatCRC(totalIntBase)} />
+            <Row label="Total a pagar" value={formatCRC(totalPagBase)} />
+          </div>
+        </Card>
+      )}
 
       {showCalendar && prestamoPreview.cuotas.length > 0 && (
         <PrestamoCalendar cuotas={prestamoPreview.cuotas} total={totalInt} />
