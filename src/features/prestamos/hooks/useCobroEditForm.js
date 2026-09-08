@@ -6,7 +6,9 @@ import {
   getCuotasAtrasadas,
   getCuotasQueImpidenCapital,
 } from '../../cobros/selectors';
+import { validateTasaAcreedor } from '../selectors';
 import * as cobrosService from '../../../services/cobros';
+import * as prestamosService from '../../../services/prestamos';
 
 /**
  * Form para EDITAR el último cobro.
@@ -23,6 +25,11 @@ export function useCobroEditForm({ cobro, prestamo }) {
   );
   const [nota, setNota] = useState(cobro?.nota || '');
   const [aceptaAtrasados, setAceptaAtrasados] = useState(false);
+  // Tasa del acreedor: se guarda en el préstamo (permite agregarla a
+  // préstamos viejos desde la edición del último cobro).
+  const [tasaAcreedor, setTasaAcreedorState] = useState(
+    prestamo?.tasa_acreedor != null ? String(prestamo.tasa_acreedor) : '',
+  );
   const [submitting, setSubmitting] = useState(false);
 
   // Préstamo en estado base: revierte los efectos del cobro que se edita.
@@ -62,8 +69,14 @@ export function useCobroEditForm({ cobro, prestamo }) {
     [basePrestamo, cuotaNumero, incluirInteres],
   );
 
+  const tasaAcreedorError = useMemo(
+    () => validateTasaAcreedor(tasaAcreedor, basePrestamo?.tasa),
+    [tasaAcreedor, basePrestamo],
+  );
+
   const error = useMemo(() => {
     if (!basePrestamo) return 'Préstamo no disponible';
+    if (tasaAcreedorError) return tasaAcreedorError;
     return validateMontoCobro({
       monto,
       tipo,
@@ -72,23 +85,37 @@ export function useCobroEditForm({ cobro, prestamo }) {
       incluirInteres,
       aceptaAtrasados,
     });
-  }, [monto, tipo, basePrestamo, cuotaNumero, incluirInteres, aceptaAtrasados]);
+  }, [monto, tipo, basePrestamo, cuotaNumero, incluirInteres, aceptaAtrasados, tasaAcreedorError]);
 
   const resumen = useMemo(() => {
     if (!basePrestamo || !cuotaActual) return null;
     const n = Number(String(monto).replace(/\D/g, '')) || 0;
+    // El split se previsualiza con la tasa editada (se guarda al confirmar).
+    const tasaEditada = tasaAcreedor === '' || tasaAcreedor == null ? null : Number(tasaAcreedor);
     return buildResumenCobro({
-      prestamo: basePrestamo,
+      prestamo: { ...basePrestamo, tasa_acreedor: tasaEditada },
       cuotaNumero,
       monto: n,
       tipo,
       incluirInteres,
       cliente: null,
     });
-  }, [basePrestamo, cuotaActual, monto, tipo, incluirInteres, cuotaNumero]);
+  }, [basePrestamo, cuotaActual, monto, tipo, incluirInteres, cuotaNumero, tasaAcreedor]);
 
   function setMonto(value) {
     setMontoState(formatMontoLive(value));
+  }
+
+  function setTasaAcreedor(value) {
+    let t = String(value ?? '').replace(/[^0-9.]/g, '');
+    const parts = t.split('.');
+    if (parts.length > 1) t = parts[0] + '.' + parts.slice(1).join('').slice(0, 2);
+    setTasaAcreedorState(t);
+  }
+
+  function tasaAcreedorChanged() {
+    const norm = (v) => (v == null || v === '' ? null : Number(v));
+    return norm(tasaAcreedor) !== norm(prestamo?.tasa_acreedor);
   }
 
   async function submit() {
@@ -104,6 +131,11 @@ export function useCobroEditForm({ cobro, prestamo }) {
         incluirInteres: tipo === 'capital' ? incluirInteres : false,
         nota: nota || null,
       });
+      if (tasaAcreedorChanged()) {
+        await prestamosService.update(prestamo.id, {
+          tasa_acreedor: tasaAcreedor === '' ? null : Number(tasaAcreedor),
+        });
+      }
       return { ok: true, cobro: updated };
     } catch (err) {
       const msg = String(err.message || '').toLowerCase();
@@ -134,6 +166,8 @@ export function useCobroEditForm({ cobro, prestamo }) {
     setIncluirInteres,
     aceptaAtrasados,
     setAceptaAtrasados,
+    tasaAcreedor,
+    setTasaAcreedor,
     nota,
     setNota,
     cuotaActual,

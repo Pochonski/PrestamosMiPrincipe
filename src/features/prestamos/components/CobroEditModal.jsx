@@ -1,7 +1,8 @@
 import React from 'react';
-import { Save } from 'lucide-react';
+import { Save, Percent } from 'lucide-react';
 import { ModalShell } from '../../../components/ui/ModalShell';
 import { Button } from '../../../components/ui/Button';
+import { Input } from '../../../components/ui/Input';
 import { CobroFormBody } from '../../cobros/components/CobroFormBody';
 import { useCobroEditForm } from '../hooks/useCobroEditForm';
 import { showToast } from '../../../components/ui/Toast';
@@ -44,6 +45,21 @@ export function CobroEditModal({ cobro, prestamo, onClose, onSaved }) {
       }
     >
       <CobroFormBody form={form} />
+      <div className="mt-5">
+        <Input
+          type="text"
+          name="tasaAcreedor"
+          size="md"
+          label="Tasa acreedor (% por cuota, opcional)"
+          hint="Se guarda en el préstamo: sirve para agregar tu comisión a préstamos viejos"
+          icon={Percent}
+          trailing={<Percent className="h-4 w-4 text-neutral-400 dark:text-navy-300" aria-hidden="true" />}
+          inputMode="decimal"
+          value={form.tasaAcreedor ?? ''}
+          onChange={(e) => form.setTasaAcreedor(e.target.value)}
+          placeholder={`Cliente paga ${prestamo?.tasa ?? '—'}%`}
+        />
+      </div>
     </ModalShell>
   );
 }
