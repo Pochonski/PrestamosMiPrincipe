@@ -67,7 +67,7 @@ export function MiniCalendar({ value, onChange }) {
           type="button"
           onClick={() => shift(-1)}
           aria-label="Mes anterior"
-          className="flex h-8 w-8 items-center justify-center rounded-input text-neutral-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 dark:text-navy-300 dark:hover:bg-navy-700"
+          className="flex h-11 w-11 items-center justify-center rounded-input text-neutral-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 dark:text-navy-300 dark:hover:bg-navy-700"
         >
           <ChevronLeft className="h-4 w-4" aria-hidden="true" />
         </button>
@@ -78,7 +78,7 @@ export function MiniCalendar({ value, onChange }) {
           type="button"
           onClick={() => shift(1)}
           aria-label="Mes siguiente"
-          className="flex h-8 w-8 items-center justify-center rounded-input text-neutral-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 dark:text-navy-300 dark:hover:bg-navy-700"
+          className="flex h-11 w-11 items-center justify-center rounded-input text-neutral-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 dark:text-navy-300 dark:hover:bg-navy-700"
         >
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </button>
@@ -103,7 +103,7 @@ export function MiniCalendar({ value, onChange }) {
               aria-label={d.toLocaleDateString('es-CR')}
               aria-pressed={selected}
               className={clsx(
-                'flex h-9 w-full items-center justify-center rounded-input text-sm font-semibold transition-colors',
+                'flex min-h-[44px] w-full items-center justify-center rounded-input text-sm font-semibold transition-colors',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400',
                 !inMonth && 'text-neutral-300 dark:text-navy-700',
                 inMonth && !selected && 'text-navy-700 hover:bg-slate-100 dark:text-navy-100 dark:hover:bg-navy-700',

@@ -131,7 +131,7 @@ export function ModalShell({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-input text-neutral-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-navy-300 dark:hover:bg-navy-700 dark:focus-visible:ring-offset-navy-800"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-input text-neutral-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-navy-300 dark:hover:bg-navy-700 dark:focus-visible:ring-offset-navy-800"
             aria-label="Cerrar"
           >
             <X className="h-5 w-5" aria-hidden="true" />

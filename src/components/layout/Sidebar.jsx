@@ -50,7 +50,7 @@ export const Sidebar = memo(function Sidebar({ open, page, onNavigate, onClose }
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-input text-neutral-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 dark:text-navy-300 dark:hover:bg-navy-800 lg:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-input text-neutral-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 dark:text-navy-300 dark:hover:bg-navy-800 lg:hidden"
             aria-label="Cerrar menú"
           >
             <X className="h-5 w-5" aria-hidden="true" />

@@ -23,7 +23,7 @@ export const TopBar = memo(function TopBar({ page, onNavigate, onOpenSidebar, th
         type="button"
         onClick={onOpenSidebar}
         className={clsx(
-          'flex h-10 w-10 items-center justify-center rounded-input border lg:hidden',
+          'flex h-11 w-11 items-center justify-center rounded-input border lg:hidden',
           'border-slate-200 bg-white text-navy-700 hover:bg-slate-50 hover:border-gold-300',
           'dark:border-navy-700 dark:bg-navy-800 dark:text-navy-100 dark:hover:bg-navy-700 dark:hover:border-gold-400',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-navy-900',
@@ -47,7 +47,7 @@ export const TopBar = memo(function TopBar({ page, onNavigate, onOpenSidebar, th
           type="button"
           onClick={() => onNavigate('notificaciones')}
           className={clsx(
-            'relative flex h-10 w-10 items-center justify-center rounded-input border transition-colors',
+            'relative flex h-11 w-11 items-center justify-center rounded-input border transition-colors',
             'border-slate-200 bg-white text-navy-700 hover:bg-slate-50 hover:border-gold-300',
             'dark:border-navy-700 dark:bg-navy-800 dark:text-navy-100 dark:hover:bg-navy-700 dark:hover:border-gold-400',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-navy-900',

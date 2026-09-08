@@ -18,7 +18,7 @@ export function Stepper({ steps, current, onJump }) {
               aria-current={active ? 'step' : undefined}
               aria-label={`Paso ${s.num}: ${s.label}${completed ? ' (completado)' : active ? ' (actual)' : ''}`}
               className={clsx(
-                'flex shrink-0 items-center gap-2 rounded-full transition-colors',
+                'flex min-h-[44px] shrink-0 items-center gap-2 rounded-full transition-colors',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-navy-900',
                 interactive ? 'cursor-pointer hover:opacity-90' : 'cursor-default',
               )}

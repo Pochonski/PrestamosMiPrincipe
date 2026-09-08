@@ -1,6 +1,6 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Plus, MapPin, Phone, Wallet, TrendingUp, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Plus, MapPin, Phone, Wallet, TrendingUp, AlertTriangle, Pencil, Trash2 } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
 import { Avatar } from '../../../components/ui/Avatar';
 import { Button } from '../../../components/ui/Button';
@@ -11,10 +11,13 @@ import { formatPhoneCR } from '../../../lib/format';
 import { useDataChange } from '../../../lib/hooks/useDataChange';
 import { showToast } from '../../../components/ui/Toast';
 import * as clientesService from '../../../services/clientes';
+import { ClienteTienePrestamosError, remove as removeCliente, create as createCliente } from '../../../services/clientes';
 import * as prestamosService from '../../../services/prestamos';
 import { PrestamoCard } from '../../prestamos/components/PrestamoCard';
 import { PrestamoEditModal } from '../../prestamos/components/PrestamoEditModal';
 import { DeletePrestamoConfirm } from '../../prestamos/components/DeletePrestamoConfirm';
+import { ClienteFormFlow } from './ClienteFormFlow';
+import { DeleteConfirm } from './DeleteConfirm';
 import { usePrestamosCliente } from '../../prestamos/hooks/usePrestamosCliente';
 import { statsCliente } from '../../../lib/resumen';
 
@@ -26,6 +29,9 @@ export function ClienteDetalle({ onNavigate, params }) {
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [editCliente, setEditCliente] = useState(false);
+  const [deleteCliente, setDeleteCliente] = useState(false);
+  const [deletingCliente, setDeletingCliente] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -119,6 +125,45 @@ export function ClienteDetalle({ onNavigate, params }) {
     }
   }
 
+  async function handleConfirmDeleteCliente() {
+    if (!cliente) return;
+    const backup = { ...cliente };
+    setDeletingCliente(true);
+    try {
+      await removeCliente(cliente.id);
+      setDeleteCliente(false);
+      showToast('Cliente eliminado', 'success', {
+        label: 'Deshacer',
+        duration: 8000,
+        onClick: async () => {
+          try {
+            await createCliente({
+              nombre: backup.nombre,
+              cedula: backup.cedula,
+              telefono: backup.telefono,
+              direccion: backup.direccion,
+            });
+            showToast('Cliente restaurado', 'success');
+          } catch (err) {
+            showToast(err.message || 'Error al restaurar', 'error');
+          }
+        },
+      });
+      onNavigate?.('clientes', {});
+    } catch (err) {
+      if (err instanceof ClienteTienePrestamosError) {
+        showToast(
+          `No se puede eliminar: tiene ${err.cantidadPrestamos} préstamo(s) activo(s)`,
+          'error',
+        );
+        return;
+      }
+      showToast(err.message || 'Error al eliminar cliente', 'error');
+    } finally {
+      setDeletingCliente(false);
+    }
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
       <Button
@@ -143,6 +188,24 @@ export function ClienteDetalle({ onNavigate, params }) {
                 </h1>
                 <p className="text-sm text-neutral-600 dark:text-navy-300">{cliente.cedula}</p>
               </div>
+            </div>
+            <div className="flex shrink-0 flex-wrap gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={Pencil}
+                onClick={() => setEditCliente(true)}
+              >
+                Editar
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                icon={Trash2}
+                onClick={() => setDeleteCliente(true)}
+              >
+                Eliminar
+              </Button>
             </div>
           </div>
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -219,6 +282,25 @@ export function ClienteDetalle({ onNavigate, params }) {
           loading={deleting}
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeleteTarget(null)}
+        />
+      )}
+
+      {editCliente && (
+        <ClienteFormFlow
+          cliente={cliente}
+          onClose={() => setEditCliente(false)}
+          onSaved={() => {
+            setEditCliente(false);
+            showToast('Cambios guardados correctamente', 'success');
+          }}
+        />
+      )}
+
+      {deleteCliente && (
+        <DeleteConfirm
+          cliente={cliente}
+          onConfirm={handleConfirmDeleteCliente}
+          onCancel={() => (deletingCliente ? null : setDeleteCliente(false))}
         />
       )}
     </div>

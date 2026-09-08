@@ -51,7 +51,7 @@ export function UserMenu({ className }) {
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
         className={clsx(
-          'flex items-center gap-2 rounded-input py-1 pl-1 pr-2 transition-colors',
+          'flex min-h-[44px] items-center gap-2 rounded-input py-1 pl-1 pr-2 transition-colors',
           'border border-transparent hover:border-slate-200 hover:bg-white',
           'dark:hover:border-navy-700 dark:hover:bg-navy-800',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-navy-900',
@@ -91,7 +91,7 @@ export function UserMenu({ className }) {
             role="menuitem"
             onClick={handleSignOut}
             className={clsx(
-              'mt-1 flex w-full items-center gap-3 rounded-input px-3 py-2 text-sm font-semibold transition-colors',
+              'mt-1 flex min-h-[44px] w-full items-center gap-3 rounded-input px-3 py-2 text-sm font-semibold transition-colors',
               'text-danger-600 hover:bg-danger-50',
               'dark:text-danger-500 dark:hover:bg-danger-500/10',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400',

@@ -373,18 +373,18 @@ export function PrestamoDetalle({ onNavigate, params }) {
                         title="Editar cobro"
                         aria-label="Editar cobro"
                         onClick={() => setEditCobro(c)}
-                        className="rounded-input p-2 text-neutral-400 transition-colors hover:bg-slate-100 hover:text-navy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 dark:text-navy-300 dark:hover:bg-navy-700 dark:hover:text-white"
+                        className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-input p-2 text-neutral-400 transition-colors hover:bg-slate-100 hover:text-navy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 dark:text-navy-300 dark:hover:bg-navy-700 dark:hover:text-white"
                       >
-                        <Pencil className="h-4 w-4" aria-hidden="true" />
+                        <Pencil className="h-5 w-5" aria-hidden="true" />
                       </button>
                       <button
                         type="button"
                         title="Eliminar cobro"
                         aria-label="Eliminar cobro"
                         onClick={() => setDeleteCobro(c)}
-                        className="rounded-input p-2 text-neutral-400 transition-colors hover:bg-danger-50 hover:text-danger-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-500 dark:text-navy-300 dark:hover:bg-danger-500/10 dark:hover:text-danger-500"
+                        className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-input p-2 text-neutral-400 transition-colors hover:bg-danger-50 hover:text-danger-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-500 dark:text-navy-300 dark:hover:bg-danger-500/10 dark:hover:text-danger-500"
                       >
-                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        <Trash2 className="h-5 w-5" aria-hidden="true" />
                       </button>
                     </div>
                   )}
