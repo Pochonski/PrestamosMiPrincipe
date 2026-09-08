@@ -1,5 +1,6 @@
-import { useQueries } from '@tanstack/react-query';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
+import { useDataChange } from '../../../lib/hooks/useDataChange';
 import {
   getKpis,
   getQuickBadges,
@@ -24,12 +25,20 @@ const EMPTY_BADGES = { notificaciones: 0, atrasados: 0, cobrarHoy: 0 };
 const EMPTY_RECENT = [];
 
 export function useDashboardData() {
+  const queryClient = useQueryClient();
+  // Sin esto, el staleTime largo (5-10 min) dejaría el dashboard desactualizado
+  // tras registrar cobros: sus keys no las invalida el evento global.
+  useDataChange((table) => {
+    if (table === 'clientes' || table === 'prestamos' || table === 'cobros') {
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    }
+  });
   const results = useQueries({
     queries: [
-      { queryKey: ['dashboard', 'kpis'], queryFn: getKpis, staleTime: 30_000 },
-      { queryKey: ['dashboard', 'badges'], queryFn: getQuickBadges, staleTime: 30_000 },
-      { queryKey: ['dashboard', 'recent'], queryFn: () => getRecentActivity(6), staleTime: 30_000 },
-      { queryKey: ['dashboard', 'metrics'], queryFn: getMetrics, staleTime: 60_000 },
+      { queryKey: ['dashboard', 'kpis'], queryFn: getKpis, staleTime: 5 * 60_000 },
+      { queryKey: ['dashboard', 'badges'], queryFn: getQuickBadges, staleTime: 5 * 60_000 },
+      { queryKey: ['dashboard', 'recent'], queryFn: () => getRecentActivity(6), staleTime: 5 * 60_000 },
+      { queryKey: ['dashboard', 'metrics'], queryFn: getMetrics, staleTime: 10 * 60_000 },
     ],
   });
 

@@ -1,4 +1,5 @@
-import { useQueries } from '@tanstack/react-query';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
+import { useDataChange } from '../../lib/hooks/useDataChange';
 import * as prestamosService from '../../services/prestamos';
 import * as clientesService from '../../services/clientes';
 
@@ -30,10 +31,18 @@ export function getResumenAtrasados() {
 }
 
 export function useAtrasados() {
+  const queryClient = useQueryClient();
+  // Sin esto, el staleTime largo (5 min) dejaría atrasados desactualizado
+  // tras registrar cobros: sus keys no las invalida el evento global.
+  useDataChange((table) => {
+    if (table === 'prestamos' || table === 'cobros') {
+      queryClient.invalidateQueries({ queryKey: ['atrasados'] });
+    }
+  });
   const results = useQueries({
     queries: [
-      { queryKey: ['atrasados', 'detallado'], queryFn: getAtrasadosDetallado, staleTime: 30_000 },
-      { queryKey: ['atrasados', 'resumen'], queryFn: getResumenAtrasados, staleTime: 30_000 },
+      { queryKey: ['atrasados', 'detallado'], queryFn: getAtrasadosDetallado, staleTime: 5 * 60_000 },
+      { queryKey: ['atrasados', 'resumen'], queryFn: getResumenAtrasados, staleTime: 5 * 60_000 },
     ],
   });
   const [itemsQ, resumenQ] = results;

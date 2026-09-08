@@ -198,8 +198,8 @@ export function usePrestamosLista() {
   const queryClient = useQueryClient();
   const results = useQueries({
     queries: [
-      { queryKey: ['prestamos', 'all'], queryFn: () => prestamosService.listAll(), staleTime: 30_000 },
-      { queryKey: ['clientes', 'all'], queryFn: () => clientesService.list({ limit: 500, offset: 0 }), staleTime: 60_000 },
+      { queryKey: ['prestamos', 'all'], queryFn: () => prestamosService.listAll(), staleTime: 5 * 60_000 },
+      { queryKey: ['clientes', 'all'], queryFn: () => clientesService.list({ limit: 500, offset: 0 }), staleTime: 10 * 60_000 },
     ],
   });
   const [prestamosQ, clientesQ] = results;

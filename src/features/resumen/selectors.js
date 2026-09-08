@@ -326,9 +326,9 @@ export const EMPTY_RESUMEN = {
 export function useResumenData(filters = {}) {
   const results = useQueries({
     queries: [
-      { queryKey: ['clientes', 'all'], queryFn: () => clientesService.list({ limit: 500, offset: 0 }), staleTime: 60_000 },
-      { queryKey: ['prestamos', 'all'], queryFn: () => prestamosService.list({ limit: 500, offset: 0 }), staleTime: 60_000 },
-      { queryKey: ['cobros', 'all'], queryFn: () => cobrosService.list({ limit: 500, offset: 0 }), staleTime: 60_000 },
+      { queryKey: ['clientes', 'all'], queryFn: () => clientesService.list({ limit: 500, offset: 0 }), staleTime: 10 * 60_000 },
+      { queryKey: ['prestamos', 'all'], queryFn: () => prestamosService.list({ limit: 500, offset: 0 }), staleTime: 5 * 60_000 },
+      { queryKey: ['cobros', 'all'], queryFn: () => cobrosService.list({ limit: 500, offset: 0 }), staleTime: 5 * 60_000 },
     ],
   });
   const [clientesQ, prestamosQ, cobrosQ] = results;
