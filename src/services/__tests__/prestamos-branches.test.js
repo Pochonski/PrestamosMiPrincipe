@@ -2,24 +2,32 @@ import { describe, it, expect } from 'vitest';
 import { getStatus, getSaldoCapital, cuotaDelPeriodo } from '../prestamos';
 import { makePrestamo, makeCuota } from '../../test/factories/prestamo';
 
+// Día local YYYY-MM-DD (los tests anteriores usaban fecha UTC, que falla en
+// la ventana donde UTC ya cambió de día pero local aún no, ej. tardes en CST).
+function localDay(offset = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 describe('getStatus branches 100%', () => {
   it('null -> cancelado', () => expect(getStatus(null)).toBe('cancelado'));
   it('estado cancelado', () => expect(getStatus({ estado: 'cancelado', cuotas: [] })).toBe('cancelado'));
   it('atrasado si pendiente < hoy', () => {
-    const past = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-    const p = makePrestamo({ cuotas: [{ numero: 1, fecha: past, estado: 'pendiente' }] });
+    const p = makePrestamo({ cuotas: [{ numero: 1, fecha: localDay(-1), estado: 'pendiente' }] });
     expect(getStatus(p)).toBe('atrasado');
   });
   it('cancelada no cuenta como atrasada', () => {
-    const past = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-    const p = makePrestamo({ cuotas: [{ numero: 1, fecha: past, estado: 'cancelada' }] });
+    const p = makePrestamo({ cuotas: [{ numero: 1, fecha: localDay(-1), estado: 'cancelada' }] });
     // todas cerradas -> cancelado
     expect(getStatus(p)).toBe('cancelado');
   });
   it('vigente sin cuotas', () => expect(getStatus(makePrestamo({ cuotas: [] }))).toBe('vigente'));
   it('vigente con pendiente futuro', () => {
-    const future = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-    const p = makePrestamo({ cuotas: [{ numero: 1, fecha: future, estado: 'pendiente' }] });
+    const p = makePrestamo({ cuotas: [{ numero: 1, fecha: localDay(1), estado: 'pendiente' }] });
     expect(getStatus(p)).toBe('vigente');
   });
   it('cancelado si todas pagadas', () => {
