@@ -58,7 +58,7 @@ function Sparkline({ data, tone = 'neutral' }) {
 export const StatCard = memo(function StatCard({ label, value, sub, icon: Icon, tone = 'neutral', delta, spark, className }) {
   const valueTone = {
     neutral: 'text-navy-800 dark:text-navy-50',
-    gold: 'text-gold-500 dark:text-gold-400',
+    gold: 'text-gold-600 dark:text-gold-400',
     success: 'text-success-600 dark:text-success-500',
     danger: 'text-danger-600 dark:text-danger-500',
     info: 'text-info-600 dark:text-info-500',
@@ -74,10 +74,10 @@ export const StatCard = memo(function StatCard({ label, value, sub, icon: Icon, 
     <Card padding="md" hover className={className}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-navy-300">
+          <p className="label-micro">
             {label}
           </p>
-          <p className={clsx('mt-1.5 text-xl font-bold tabular-nums sm:text-2xl lg:text-3xl', valueTone[tone] || valueTone.neutral)}>
+          <p className={clsx('mt-1.5 font-display text-xl font-bold tabular-nums sm:text-2xl', valueTone[tone] || valueTone.neutral)}>
             {value}
           </p>
           {sub && (

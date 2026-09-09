@@ -31,7 +31,7 @@ export function CuotaItem({ item, onCobrar, variant = 'today' }) {
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 dark:border-navy-700/60">
+      <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 dark:border-white/10">
         <div>
           <p className="section-label">Cuota</p>
           <p className="mt-0.5 text-sm font-bold tabular-nums text-navy-900 dark:text-white">
@@ -63,7 +63,7 @@ export function CuotaItem({ item, onCobrar, variant = 'today' }) {
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3 dark:border-navy-700/60">
+      <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3 dark:border-white/10">
         <span
           className={`inline-flex items-center gap-1.5 text-xs font-semibold ${
             isAtrasado

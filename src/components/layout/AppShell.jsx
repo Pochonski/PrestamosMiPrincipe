@@ -6,6 +6,8 @@ import { Sidebar } from './Sidebar';
 import { MobileBottomNav } from './MobileBottomNav';
 import { PlaceholderPage } from '../ui/PlaceholderPage';
 import { Spinner } from '../ui/Spinner';
+import { MeshGradient } from '../../features/auth/components/MeshGradient';
+import { GrainOverlay } from '../ui/GrainOverlay';
 import { getTheme, setTheme } from '../../services/theme';
 import * as notificacionesService from '../../services/notificaciones';
 import { onDataChanged } from '../../lib/events';
@@ -44,6 +46,22 @@ export function AppShell({ pages = {}, page: controlledPage, params: controlledP
     return onDataChanged(refreshNotifCount);
   }, [refreshNotifCount]);
 
+  // Luz glass: posiciona el glare (--mx/--my) en la card bajo el cursor (delegación)
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    if (window.matchMedia('(hover: none)').matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    function onMove(e) {
+      const el = e.target?.closest?.('.glass-glare');
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      el.style.setProperty('--mx', `${e.clientX - r.left}px`);
+      el.style.setProperty('--my', `${e.clientY - r.top}px`);
+    }
+    document.addEventListener('mousemove', onMove, { passive: true });
+    return () => document.removeEventListener('mousemove', onMove);
+  }, []);
+
   const handleToggleTheme = useCallback((next) => {
     setThemeState(next);
     setTheme(next);
@@ -68,7 +86,15 @@ export function AppShell({ pages = {}, page: controlledPage, params: controlledP
   const PageComponent = pages[page];
 
   return (
-    <div className="flex min-h-screen bg-neutral-50 text-navy-800 dark:bg-navy-900 dark:text-navy-100">
+    <div className="relative flex min-h-screen bg-neutral-50 text-navy-800 dark:bg-black dark:text-navy-100">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
+      >
+        <div className="absolute inset-0 bg-app-aurora-light dark:bg-app-aurora-dark" />
+        <MeshGradient variant="app" />
+        <GrainOverlay />
+      </div>
       <Sidebar
         open={sidebarOpen}
         page={page}
@@ -76,7 +102,7 @@ export function AppShell({ pages = {}, page: controlledPage, params: controlledP
         onClose={handleCloseSidebar}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col lg:pl-[var(--sidebar-w)]">
+      <div className="relative z-10 flex min-w-0 flex-1 flex-col lg:pl-[var(--sidebar-w)]">
         <TopBar
           page={page}
           onNavigate={handleNavigate}
@@ -104,7 +130,7 @@ export function AppShell({ pages = {}, page: controlledPage, params: controlledP
 
         <div
           aria-hidden="true"
-          className="hidden border-t border-slate-200 bg-white px-5 py-3 text-xs text-neutral-500 dark:border-navy-700 dark:bg-navy-900 dark:text-navy-300 lg:block"
+          className="hidden border-t border-white/50 bg-white/60 px-5 py-3 text-xs text-neutral-500 backdrop-blur-md dark:border-white/10 dark:bg-black/50 dark:text-navy-300 lg:block"
         >
           <div className="mx-auto flex max-w-6xl items-center justify-between">
             <span>

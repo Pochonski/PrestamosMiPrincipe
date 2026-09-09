@@ -85,7 +85,7 @@ export function ExportarPage() {
         <div className="flex items-center gap-3">
           <IconBox icon={Download} tone="emerald" size="md" />
           <div>
-            <h1 className="text-xl font-extrabold tracking-tight text-navy-900 sm:text-2xl dark:text-white">
+            <h1 className="font-display text-xl font-bold tracking-tight text-navy-900 sm:text-2xl dark:text-white">
               Exportar a Excel
             </h1>
             <p className="mt-0.5 text-sm text-neutral-600 dark:text-navy-300">
@@ -102,7 +102,7 @@ export function ExportarPage() {
             <p className="text-sm font-bold text-navy-900 dark:text-white">Formato CSV</p>
             <p className="mt-1 text-xs text-neutral-600 dark:text-navy-300">
               Cada descarga genera un archivo{' '}
-              <code className="rounded bg-slate-100 px-1 py-0.5 font-mono text-[11px] dark:bg-navy-700">
+              <code className="rounded bg-slate-100 px-1 py-0.5 font-mono text-[11px] dark:bg-white/10">
                 .csv
               </code>{' '}
               con codificación UTF-8. Abrilo directamente en Excel o Google Sheets. Los archivos
@@ -127,10 +127,10 @@ export function ExportarPage() {
                   disabled={disabled || exporting !== null}
                   className={clsx(
                     'group flex w-full flex-col items-start gap-3 rounded-card border p-4 text-left transition-all',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-navy-900',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black',
                     disabled
-                      ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-50 dark:border-navy-700 dark:bg-navy-800/50'
-                      : 'cursor-pointer border-slate-200 bg-white hover:-translate-y-0.5 hover:border-gold-400 hover:shadow-cardHover dark:border-navy-700 dark:bg-navy-800 dark:hover:border-gold-400',
+                      ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-50 dark:border-white/10 dark:bg-white/[0.03]'
+                      : 'cursor-pointer border-white/50 bg-white/60 backdrop-blur-md hover:-translate-y-0.5 hover:border-gold-400 hover:shadow-glass-strong hover:bg-white/80 dark:border-white/10 dark:bg-white/[0.06] dark:hover:border-gold-400 dark:hover:bg-white/10',
                   )}
                 >
                   <IconBox icon={Icon} tone={opt.tone} size="md" />

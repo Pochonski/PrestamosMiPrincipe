@@ -9,16 +9,16 @@ const VARIANTS = {
     'hover:brightness-[1.03] active:brightness-100 ' +
     'border border-gold-500/40',
   secondary:
-    'bg-white text-navy-800 border border-slate-200 shadow-card ' +
-    'hover:bg-slate-50 hover:border-slate-300 ' +
-    'dark:bg-navy-800 dark:text-navy-100 dark:border-navy-700 dark:hover:bg-navy-700/70 dark:hover:border-navy-600',
+    'bg-white/60 backdrop-blur-md text-navy-800 border border-white/50 shadow-card ' +
+    'hover:bg-white/80 hover:border-white/60 ' +
+    'dark:bg-white/[0.06] dark:text-navy-100 dark:border-white/10 dark:hover:bg-white/10 dark:hover:border-white/20',
   outline:
-    'bg-transparent text-navy-800 border border-slate-300 ' +
-    'hover:bg-slate-100 hover:border-slate-400 ' +
-    'dark:text-navy-100 dark:border-navy-600 dark:hover:bg-navy-800 dark:hover:border-navy-500',
+    'bg-white/30 backdrop-blur-md text-navy-800 border border-white/50 ' +
+    'hover:bg-white/60 hover:border-white/60 ' +
+    'dark:text-navy-100 dark:border-white/10 dark:hover:bg-white/[0.06] dark:hover:border-white/20',
   ghost:
-    'bg-transparent text-navy-700 hover:bg-slate-100 ' +
-    'dark:text-navy-200 dark:hover:bg-navy-800',
+    'bg-transparent text-navy-700 hover:bg-white/60 hover:backdrop-blur-md ' +
+    'dark:text-navy-200 dark:hover:bg-white/10',
   danger:
     'bg-danger-600 text-white border border-danger-700 shadow-card ' +
     'hover:bg-danger-700 hover:shadow-cardHover active:bg-danger-700',
@@ -69,7 +69,7 @@ export const Button = forwardRef(function Button(
       className={clsx(
         'inline-flex items-center justify-center font-semibold select-none whitespace-nowrap',
         'transition-all duration-200 ease-out',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gold-400 focus-visible:ring-offset-white dark:focus-visible:ring-offset-navy-900',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gold-400 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black',
         'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:brightness-100',
         VARIANTS[variant],
         SIZES[size],

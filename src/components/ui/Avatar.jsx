@@ -38,7 +38,7 @@ export const Avatar = memo(function Avatar({ nombre, color, size = 'md', classNa
       className={clsx(
         'inline-flex shrink-0 items-center justify-center rounded-full font-bold select-none',
         SIZES[size],
-        ring && 'ring-2 ring-white dark:ring-navy-900',
+        ring && 'ring-2 ring-white dark:ring-black',
         className,
       )}
       style={{ backgroundColor: color || '#475569', color: undefined }}

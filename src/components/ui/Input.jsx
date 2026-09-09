@@ -4,8 +4,8 @@ import clsx from 'clsx';
 
 const VARIANTS = {
   default:
-    'bg-white text-navy-900 placeholder:text-neutral-400 border-slate-200 ' +
-    'dark:bg-navy-800 dark:text-white dark:placeholder:text-navy-300 dark:border-navy-700',
+    'bg-white/70 backdrop-blur-md text-navy-900 placeholder:text-neutral-400 border-white/50 ' +
+    'dark:bg-white/[0.06] dark:text-white dark:placeholder:text-navy-300 dark:border-white/10',
   glass:
     'bg-white/10 text-white placeholder:text-white/50 border-white/20 backdrop-blur-md',
 };

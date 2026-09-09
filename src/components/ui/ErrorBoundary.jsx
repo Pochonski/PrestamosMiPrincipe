@@ -124,7 +124,7 @@ export class ErrorBoundary extends Component {
               : fallbackMessage || 'Ocurrió un error inesperado al mostrar esta sección.'}
           </p>
           {this.state.error?.message && (
-            <pre className="mt-3 max-h-32 overflow-auto rounded-input bg-neutral-100 p-3 text-left text-xs text-navy-700 dark:bg-navy-900 dark:text-navy-200">
+            <pre className="mt-3 max-h-32 overflow-auto rounded-input bg-neutral-100 p-3 text-left text-xs text-navy-700 dark:bg-white/[0.04] dark:text-navy-200">
               {this.state.error.message}
             </pre>
           )}

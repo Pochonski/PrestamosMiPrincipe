@@ -132,7 +132,7 @@ export function CobrosChart({ data }) {
 
       {hover !== null && (
         <div
-          className="pointer-events-none absolute top-2 rounded-card border border-navy-700/60 bg-navy-900 px-3 py-2 text-xs shadow-modal"
+          className="pointer-events-none absolute top-2 rounded-card border border-white/10 bg-black/70 px-3 py-2 text-xs shadow-glass-dark backdrop-blur-xl"
           style={{ left: `${(hover / (rows.length - 1)) * 100}%`, transform: 'translateX(-50%)' }}
         >
           <p className="font-semibold text-white">{rows[hover].label}</p>

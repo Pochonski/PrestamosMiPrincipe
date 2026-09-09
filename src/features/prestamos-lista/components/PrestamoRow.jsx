@@ -46,7 +46,7 @@ export function PrestamoRow({ row, onCobrar, onVer }) {
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 dark:border-navy-700/60">
+      <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 dark:border-white/10">
         <div>
           <p className="section-label">Cuota a cobrar</p>
           <p className="mt-0.5 text-sm font-bold tabular-nums text-navy-900 dark:text-white">
@@ -96,7 +96,7 @@ export function PrestamoRow({ row, onCobrar, onVer }) {
           <span>Progreso</span>
           <span className="font-semibold tabular-nums">{pct}%</span>
         </div>
-        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-navy-700">
+        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
           <div
             className="h-full rounded-full bg-gold-gradient transition-all"
             style={{ width: `${pct}%` }}
@@ -108,7 +108,7 @@ export function PrestamoRow({ row, onCobrar, onVer }) {
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3 dark:border-navy-700/60">
+      <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3 dark:border-white/10">
         <button
           type="button"
           onClick={(e) => {

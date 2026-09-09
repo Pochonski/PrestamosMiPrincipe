@@ -14,7 +14,7 @@ export function ClienteFAB({ onClick, className }) {
         'bottom-[calc(6rem+env(safe-area-inset-bottom))] sm:bottom-8 lg:right-8 lg:bottom-10',
         'bg-gold-gradient text-navy-900 transition-transform duration-200',
         'hover:scale-105 hover:shadow-cardHover active:scale-95',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-navy-900',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black',
         className,
       )}
     >

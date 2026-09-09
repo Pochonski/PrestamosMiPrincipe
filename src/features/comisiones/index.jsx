@@ -61,7 +61,7 @@ export function ComisionesPage({ onNavigate }) {
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
       <div>
-        <h1 className="text-xl font-extrabold text-navy-900 sm:text-2xl dark:text-white">
+        <h1 className="font-display text-xl font-bold tracking-tight text-navy-900 sm:text-2xl dark:text-white">
           Mis comisiones
         </h1>
         <p className="mt-1 text-sm text-neutral-600 dark:text-navy-300">
@@ -84,7 +84,7 @@ export function ComisionesPage({ onNavigate }) {
             description="Editá un préstamo y cargá la tasa del acreedor para empezar a ver tu comisión."
           />
         ) : (
-          <Card className="divide-y divide-slate-100 p-0 dark:divide-navy-700/60">
+          <Card className="divide-y divide-slate-100 p-0 dark:divide-white/10">
             {r.porPrestamo.map((row) => (
               <button
                 key={row.prestamoId}

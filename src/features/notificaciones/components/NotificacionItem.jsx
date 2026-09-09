@@ -48,7 +48,7 @@ export function NotificacionItem({ item, onClick }) {
             </p>
             {!item.leida && (
               <span
-                className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-gold-700 dark:text-gold-300"
+                className="label-micro inline-flex items-center gap-1 text-gold-700 dark:text-gold-300"
               >
                 <Circle
                   className="h-2 w-2 shrink-0 fill-gold-500 text-gold-500"
@@ -66,7 +66,7 @@ export function NotificacionItem({ item, onClick }) {
           >
             {item.mensaje}
           </p>
-          <p className="mt-1 text-[10px] text-neutral-400 dark:text-navy-300">
+          <p className="mt-1 text-[10px] text-neutral-500 dark:text-navy-300">
             {formatFechaRelativa(item.fecha)}
           </p>
         </div>

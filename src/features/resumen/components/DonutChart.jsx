@@ -13,7 +13,7 @@ export function DonutChart({ data, total, size = 180, colorMap }) {
         role="img"
         aria-label="Sin datos"
       >
-        <p className="text-xs text-neutral-400 dark:text-navy-300">Sin datos</p>
+        <p className="text-xs text-neutral-500 dark:text-navy-300">Sin datos</p>
       </div>
     );
   }

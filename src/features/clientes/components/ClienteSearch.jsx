@@ -8,9 +8,8 @@ export function ClienteSearch({ value, onChange, total, filtered }) {
     <div className="space-y-2">
       <div
         className={clsx(
-          'flex items-center gap-2 rounded-card border bg-white px-3 py-2.5 shadow-card transition-all',
-          'border-slate-200 focus-within:border-gold-400 focus-within:ring-2 focus-within:ring-gold-400/30',
-          'dark:bg-navy-800 dark:border-navy-700 dark:focus-within:border-gold-400',
+          'glass flex items-center gap-2 rounded-card px-3 py-2.5 transition-all',
+          'focus-within:border-gold-400 focus-within:ring-2 focus-within:ring-gold-400/30',
         )}
       >
         <Search className="h-4 w-4 shrink-0 text-neutral-400 dark:text-navy-300" aria-hidden="true" />

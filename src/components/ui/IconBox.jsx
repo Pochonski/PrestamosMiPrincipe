@@ -2,9 +2,9 @@ import React from 'react';
 import clsx from 'clsx';
 
 const TONES = {
-  neutral: 'bg-neutral-100 text-neutral-600 dark:bg-navy-700 dark:text-navy-200',
+  neutral: 'bg-neutral-100 text-neutral-600 dark:bg-white/10 dark:backdrop-blur-md dark:text-navy-200',
   gold: 'bg-gold-50 text-gold-600 dark:bg-gold-500/15 dark:text-gold-300',
-  navy: 'bg-navy-50 text-navy-700 dark:bg-navy-700/60 dark:text-navy-100',
+  navy: 'bg-navy-50 text-navy-700 dark:bg-white/10 dark:backdrop-blur-md dark:text-navy-100',
   emerald: 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-500',
   rose: 'bg-danger-50 text-danger-600 dark:bg-danger-500/15 dark:text-danger-500',
   sky: 'bg-info-50 text-info-600 dark:bg-info-500/15 dark:text-info-500',

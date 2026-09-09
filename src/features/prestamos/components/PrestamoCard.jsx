@@ -54,7 +54,7 @@ export function PrestamoCard({ prestamo, onOpen, onEdit, onDelete }) {
         onClick={() => onOpen?.(prestamo)}
         onKeyDown={handleKeyDown}
         aria-label={`Préstamo ${formatCRC(prestamo.monto)} - ${meta.label}`}
-        className="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-navy-900 rounded-input"
+        className="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black rounded-input"
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-3">
@@ -78,7 +78,7 @@ export function PrestamoCard({ prestamo, onOpen, onEdit, onDelete }) {
                 <button
                   type="button"
                   onClick={handleEdit}
-                  className="flex h-11 w-11 items-center justify-center rounded-input text-neutral-500 transition-colors hover:bg-slate-100 hover:text-navy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-navy-300 dark:hover:bg-navy-700 dark:hover:text-navy-100 dark:focus-visible:ring-offset-navy-900"
+                  className="flex h-11 w-11 items-center justify-center rounded-input text-neutral-500 transition-colors hover:bg-slate-100 hover:text-navy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-navy-300 dark:hover:bg-navy-700 dark:hover:text-navy-100 dark:focus-visible:ring-offset-black"
                   aria-label="Editar préstamo"
                   title="Editar préstamo"
                 >
@@ -89,7 +89,7 @@ export function PrestamoCard({ prestamo, onOpen, onEdit, onDelete }) {
                 <button
                   type="button"
                   onClick={handleDelete}
-                  className="flex h-11 w-11 items-center justify-center rounded-input text-danger-600 transition-colors hover:bg-danger-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-danger-500 dark:hover:bg-danger-500/10 dark:focus-visible:ring-offset-navy-900"
+                  className="flex h-11 w-11 items-center justify-center rounded-input text-danger-600 transition-colors hover:bg-danger-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-danger-500 dark:hover:bg-danger-500/10 dark:focus-visible:ring-offset-black"
                   aria-label="Eliminar préstamo"
                   title="Eliminar préstamo"
                 >
@@ -100,7 +100,7 @@ export function PrestamoCard({ prestamo, onOpen, onEdit, onDelete }) {
           )}
         </div>
 
-        <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 dark:border-navy-700/60">
+        <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 dark:border-white/10">
           <div>
             <p className="section-label">Cuota</p>
             <p className="mt-0.5 text-sm font-semibold tabular-nums text-navy-900 dark:text-white">

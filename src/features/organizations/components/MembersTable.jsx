@@ -30,8 +30,8 @@ export function MembersTable({ members, loading, onChangeRole, onRemove }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-card border border-slate-200 dark:border-navy-700">
-      <div className="divide-y divide-slate-100 dark:divide-navy-700/60">
+    <div className="glass overflow-hidden rounded-card">
+      <div className="divide-y divide-slate-100 dark:divide-white/10">
         {members.map((m) => {
           const meta = ROL_META[m.rol] || ROL_META.viewer;
           const isMe = m.user_id === user?.id;
@@ -67,7 +67,7 @@ export function MembersTable({ members, loading, onChangeRole, onRemove }) {
                         setActingId(null);
                       }
                     }}
-                    className="rounded-input border border-slate-200 bg-white px-2 py-1 text-xs font-medium dark:border-navy-700 dark:bg-navy-800"
+                    className="rounded-input border border-white/50 bg-white/70 px-2 py-1 text-xs font-medium backdrop-blur-md dark:border-white/10 dark:bg-white/[0.06]"
                   >
                     <option value="admin">Admin</option>
                     <option value="cobrador">Cobrador</option>

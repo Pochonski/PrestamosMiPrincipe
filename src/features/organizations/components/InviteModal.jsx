@@ -49,13 +49,13 @@ export function InviteModal({ open, onClose, onCreated }) {
           <Alert tone="success" title="Invitación creada">
             Se creó la invitación para <strong>{created.email}</strong> como <strong>{created.rol}</strong>.
           </Alert>
-          <div className="rounded-card border border-slate-200 bg-slate-50 p-3 dark:border-navy-700 dark:bg-navy-700/40">
+          <div className="glass-subtle rounded-card p-3">
             <p className="text-xs font-semibold text-neutral-600 dark:text-navy-300">Link de invitación (válido 7 días):</p>
             <div className="mt-1 flex items-center gap-2">
               <input
                 readOnly
                 value={invitesService.buildInviteLink(created.token, currentOrg?.slug)}
-                className="flex-1 rounded-input border border-slate-200 bg-white px-3 py-2 text-xs dark:border-navy-700 dark:bg-navy-800"
+                className="flex-1 rounded-input border border-white/50 bg-white/70 px-3 py-2 text-xs backdrop-blur-md dark:border-white/10 dark:bg-white/[0.06]"
               />
               <Button
                 size="sm"
@@ -95,7 +95,7 @@ export function InviteModal({ open, onClose, onCreated }) {
             <select
               value={inviteRol}
               onChange={(e) => setInviteRol(e.target.value)}
-              className="w-full rounded-input border border-slate-200 bg-white px-3 py-2.5 text-sm dark:border-navy-700 dark:bg-navy-800"
+              className="w-full rounded-input border border-white/50 bg-white/70 px-3 py-2.5 text-sm backdrop-blur-md dark:border-white/10 dark:bg-white/[0.06]"
             >
               {canInviteAdmin && <option value="admin">Admin — gestiona miembros y todo</option>}
               <option value="cobrador">Cobrador — CRUD clientes/préstamos/cobros</option>

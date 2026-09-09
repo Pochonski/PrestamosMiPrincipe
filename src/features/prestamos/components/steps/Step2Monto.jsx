@@ -69,7 +69,7 @@ export function Step2Monto({ values, errors, showError, set, touch }) {
         className="!text-2xl !font-bold !tabular-nums"
       />
 
-      <div className="rounded-card border border-slate-200 bg-slate-50 p-4 dark:border-navy-700 dark:bg-navy-700/40">
+      <div className="glass-subtle rounded-card p-4">
         <p className="text-xs text-neutral-600 dark:text-navy-300">
           El cliente recibe este monto al iniciar el préstamo. Los cobros periódicos son solo por
           intereses (los definís en el siguiente paso).

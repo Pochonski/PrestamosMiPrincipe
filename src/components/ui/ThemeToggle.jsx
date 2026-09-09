@@ -16,10 +16,10 @@ export function ThemeToggle({ theme, onToggle, className }) {
       onClick={handle}
       className={clsx(
         'relative inline-flex h-11 w-11 items-center justify-center rounded-input border transition-colors',
-        'border-slate-200 bg-white text-navy-700',
-        'hover:bg-slate-50 hover:border-gold-300',
-        'dark:border-navy-700 dark:bg-navy-800 dark:text-navy-100 dark:hover:bg-navy-700 dark:hover:border-gold-400',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-navy-900',
+        'border-white/50 bg-white/60 backdrop-blur-md text-navy-700',
+        'hover:bg-white/80 hover:border-white/60',
+        'dark:border-white/10 dark:bg-white/[0.06] dark:text-navy-100 dark:hover:bg-white/10 dark:hover:border-white/20',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black',
         className,
       )}
       aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}

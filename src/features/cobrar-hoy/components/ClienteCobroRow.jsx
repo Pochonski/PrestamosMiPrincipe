@@ -65,7 +65,7 @@ export function ClienteCobroRow({ grupo, maxTotal, onVerCliente, onVerCobro }) {
               </p>
             </div>
           </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-navy-700">
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
             <div className="h-full rounded-full bg-gold-gradient transition-all" style={{ width: `${pct}%` }} />
           </div>
         </div>
@@ -91,7 +91,7 @@ export function ClienteCobroRow({ grupo, maxTotal, onVerCliente, onVerCobro }) {
       </div>
 
       {open && (
-        <ul className="mt-3 space-y-2 border-t border-slate-100 pt-3 dark:border-navy-700/60">
+        <ul className="mt-3 space-y-2 border-t border-slate-100 pt-3 dark:border-white/10">
           {grupo.cobros.map((c) => (
             <li key={c.id}>
               <button

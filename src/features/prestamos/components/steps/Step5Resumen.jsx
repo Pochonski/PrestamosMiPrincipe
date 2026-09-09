@@ -30,7 +30,7 @@ function buildCuotas({ fechaInicio, periodo, nCuotas, monto, tasa, comision }) {
 
 function Row({ label, value }) {
   return (
-    <div className="flex items-start justify-between gap-2 border-b border-slate-100 py-2 last:border-0 dark:border-navy-700/60">
+    <div className="flex items-start justify-between gap-2 border-b border-slate-100 py-2 last:border-0 dark:border-white/10">
       <span className="text-xs font-medium text-neutral-500 dark:text-navy-300">{label}</span>
       <span className="text-right text-sm font-semibold text-navy-900 dark:text-white">{value}</span>
     </div>
@@ -85,7 +85,7 @@ export function Step5Resumen({ values, cliente }) {
 
       <Card className="p-4 sm:p-5">
         {cliente && (
-          <div className="mb-3 flex items-center gap-3 border-b border-slate-100 pb-3 dark:border-navy-700/60">
+          <div className="mb-3 flex items-center gap-3 border-b border-slate-100 pb-3 dark:border-white/10">
             <Avatar nombre={cliente.nombre} size="sm" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-navy-900 dark:text-white">

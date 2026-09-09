@@ -8,16 +8,18 @@ export function ActionTile({ icon: Icon, title, description, tone = 'gold', onCl
     emerald: 'from-success-500 via-success-600 to-success-700 text-white',
     sky: 'from-info-500 via-info-600 to-info-700 text-white',
     rose: 'from-danger-500 via-danger-600 to-danger-700 text-white',
+    mono: 'from-white/80 via-white/60 to-white/40 dark:from-white/10 dark:via-white/[0.06] dark:to-white/[0.02] text-navy-900 dark:text-white',
   };
-  const textTone = tone === 'gold' ? 'text-navy-900' : 'text-white';
+  const textTone =
+    tone === 'gold' ? 'text-navy-900' : tone === 'mono' ? 'text-navy-900 dark:text-white' : 'text-white';
   return (
     <button
       type="button"
       onClick={onClick}
       className={clsx(
-        'group relative flex min-h-[92px] overflow-hidden rounded-card text-left transition-all duration-200 ease-out sm:min-h-[104px]',
+        'group relative flex min-h-[92px] overflow-hidden rounded-card border border-white/40 text-left backdrop-blur-xl transition-all duration-200 ease-out sm:min-h-[104px] dark:border-white/10 glass-glare',
         'shadow-card hover:shadow-cardHover hover:-translate-y-0.5 active:translate-y-0',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-navy-900',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black',
         'disabled:opacity-50 disabled:cursor-not-allowed',
         className,
       )}

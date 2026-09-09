@@ -25,7 +25,7 @@ const SORTS = [
 ];
 
 const selectCls =
-  'rounded-input border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-navy-800 dark:border-navy-700 dark:bg-navy-800 dark:text-navy-100';
+  'rounded-input border border-white/50 bg-white/70 backdrop-blur-md px-3 py-2 text-sm font-medium text-navy-800 dark:border-white/10 dark:bg-white/[0.06] dark:text-navy-100';
 
 const CSV_COLUMNS = [
   { key: 'fecha', label: 'Fecha' },
@@ -136,7 +136,7 @@ export function CobrosMes({ onNavigate }) {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar cliente, cédula o teléfono…"
             aria-label="Buscar cobros del mes"
-            className="w-full rounded-input border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-navy-800 placeholder:text-neutral-400 dark:border-navy-700 dark:bg-navy-800 dark:text-navy-100"
+            className="w-full rounded-input border border-white/50 bg-white/70 backdrop-blur-md py-2 pl-9 pr-3 text-sm text-navy-800 placeholder:text-neutral-400 dark:border-white/10 dark:bg-white/[0.06] dark:text-navy-100"
           />
         </label>
         <select value={ruta} onChange={(e) => setRuta(e.target.value)} aria-label="Filtrar por ruta" className={selectCls}>
@@ -234,7 +234,7 @@ export function CobrosMes({ onNavigate }) {
               </Alert>
             </div>
           )}
-          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 dark:border-navy-700/60">
+          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 dark:border-white/10">
             <button
               type="button"
               onClick={handleExport}

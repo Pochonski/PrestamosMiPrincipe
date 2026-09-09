@@ -105,7 +105,7 @@ export function MiniCalendar({ value, onChange }) {
               className={clsx(
                 'flex min-h-[44px] w-full items-center justify-center rounded-input text-sm font-semibold transition-colors',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400',
-                !inMonth && 'text-neutral-300 dark:text-navy-700',
+                !inMonth && 'text-neutral-400 dark:text-navy-500',
                 inMonth && !selected && 'text-navy-700 hover:bg-slate-100 dark:text-navy-100 dark:hover:bg-navy-700',
                 selected && 'bg-gold-gradient font-bold text-navy-900 shadow-glow',
               )}

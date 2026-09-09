@@ -23,10 +23,10 @@ export function CobroTipoPicker({ value, onChange }) {
               aria-pressed={active}
               className={clsx(
                 'flex items-start gap-3 rounded-input border p-3 text-left transition-all',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-navy-900',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black',
                 active
                   ? 'border-gold-400 bg-gold-50 shadow-sm dark:bg-gold-500/10'
-                  : 'border-slate-200 bg-white hover:border-slate-300 dark:border-navy-700 dark:bg-navy-800 dark:hover:border-navy-600',
+                  : 'border-white/50 bg-white/60 backdrop-blur-md hover:border-white/60 hover:bg-white/80 dark:border-white/10 dark:bg-white/[0.06] dark:hover:border-white/20 dark:hover:bg-white/10',
               )}
             >
               <div
@@ -34,7 +34,7 @@ export function CobroTipoPicker({ value, onChange }) {
                   'flex h-10 w-10 shrink-0 items-center justify-center rounded-input',
                   active
                     ? 'bg-gold-gradient text-navy-900 shadow-glow'
-                    : 'bg-slate-100 text-slate-500 dark:bg-navy-700 dark:text-navy-300',
+                    : 'bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-navy-300',
                 )}
               >
                 <Icon className="h-5 w-5" aria-hidden="true" />

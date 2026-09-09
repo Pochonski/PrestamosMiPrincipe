@@ -13,7 +13,7 @@ const PERIODOS = [
 ];
 
 const selectCls =
-  'rounded-input border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-navy-800 dark:border-navy-700 dark:bg-navy-800 dark:text-navy-100';
+  'rounded-input border border-white/50 bg-white/70 backdrop-blur-md px-3 py-2 text-sm font-medium text-navy-800 dark:border-white/10 dark:bg-white/[0.06] dark:text-navy-100';
 
 export function PrestamosFilters({
   tab,
@@ -43,11 +43,11 @@ export function PrestamosFilters({
               'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all',
               tab === t.id
                 ? 'bg-navy-900 text-white shadow-card dark:bg-gold-500 dark:text-navy-900'
-                : 'bg-slate-100 text-navy-700 hover:bg-slate-200 dark:bg-navy-800 dark:text-navy-200 dark:hover:bg-navy-700',
+                : 'bg-white/50 backdrop-blur-md text-navy-700 hover:bg-white/80 dark:bg-white/[0.06] dark:text-navy-200 dark:hover:bg-white/10',
             )}
           >
             {t.label}
-            <span className={clsx('rounded-full px-1.5 tabular-nums', tab === t.id ? 'bg-white/20' : 'bg-white dark:bg-navy-900')}>
+            <span className={clsx('rounded-full px-1.5 tabular-nums', tab === t.id ? 'bg-white/20' : 'bg-white dark:bg-black')}>
               {counts?.[t.id] ?? 0}
             </span>
           </button>
@@ -63,7 +63,7 @@ export function PrestamosFilters({
             onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar cliente, cédula, teléfono o ruta…"
             aria-label="Buscar préstamos"
-            className="w-full rounded-input border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-navy-800 placeholder:text-neutral-400 dark:border-navy-700 dark:bg-navy-800 dark:text-navy-100"
+            className="w-full rounded-input border border-white/50 bg-white/70 backdrop-blur-md py-2 pl-9 pr-3 text-sm text-navy-800 placeholder:text-neutral-400 dark:border-white/10 dark:bg-white/[0.06] dark:text-navy-100"
           />
         </label>
         <select value={ruta} onChange={(e) => setRuta(e.target.value)} aria-label="Filtrar por ruta" className={selectCls}>

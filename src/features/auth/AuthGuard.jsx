@@ -9,7 +9,7 @@ export function AuthGuard({ children, requireOrg = true }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-navy-900">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-black">
         <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
       </div>
     );

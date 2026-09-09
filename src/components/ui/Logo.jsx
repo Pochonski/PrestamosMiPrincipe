@@ -15,7 +15,7 @@ export function Logo({ withText = true, size = 'md', className, onClick }) {
       onClick={onClick}
       className={clsx(
         'inline-flex items-center gap-2.5',
-        onClick && 'rounded-input focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-navy-900',
+        onClick && 'rounded-input focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black',
         className,
       )}
     >
@@ -28,14 +28,21 @@ export function Logo({ withText = true, size = 'md', className, onClick }) {
       >
         <svg viewBox="0 0 24 24" fill="none" className={s.icon}>
           <path
-            d="M3 18l3-10h2l1.5 4.5L11 8h2l1.5 4.5L15 8h2l3 10h-2.5l-1.5-5-1.5 5h-2l-1.5-5-1.5 5H3z"
+            d="M5 16 L6.5 9 L9.5 12 L12 7 L14.5 12 L17.5 9 L19 16 Z"
             fill="currentColor"
             className="text-navy-900"
+            stroke="currentColor"
+            strokeWidth="1"
+            strokeLinejoin="round"
           />
+          <circle cx="6.5" cy="8" r="1.1" fill="currentColor" className="text-navy-900" />
+          <circle cx="12" cy="6" r="1.25" fill="currentColor" className="text-navy-900" />
+          <circle cx="17.5" cy="8" r="1.1" fill="currentColor" className="text-navy-900" />
+          <rect x="5" y="16.5" width="14" height="1.5" rx="0.6" fill="currentColor" className="text-navy-900" />
         </svg>
       </span>
       {withText && (
-        <span className={clsx('font-extrabold tracking-tight text-navy-900 dark:text-white', s.text)}>
+        <span className={clsx('font-display font-bold tracking-tight text-navy-900 dark:text-white', s.text)}>
           Mi <span className="text-gold-500">Príncipe</span>
         </span>
       )}

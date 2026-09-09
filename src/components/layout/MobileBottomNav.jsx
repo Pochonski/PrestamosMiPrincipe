@@ -37,9 +37,9 @@ export const MobileBottomNav = memo(function MobileBottomNav({ page, onNavigate 
   return (
     <nav
       className={clsx(
-        'fixed inset-x-0 bottom-0 z-30 border-t backdrop-blur-md safe-bottom lg:hidden',
-        'bg-white/90 border-slate-200 supports-[backdrop-filter]:bg-white/80',
-        'dark:bg-navy-900/90 dark:border-navy-700 dark:supports-[backdrop-filter]:bg-navy-900/80',
+        'fixed inset-x-0 bottom-0 z-30 border-t backdrop-blur-xl backdrop-saturate-150 safe-bottom lg:hidden',
+        'bg-white/60 border-white/50 shadow-glass supports-[backdrop-filter]:bg-white/60',
+        'dark:bg-black/50 dark:border-white/10 dark:shadow-glass-dark dark:supports-[backdrop-filter]:bg-black/50',
       )}
       aria-label="Navegación principal"
     >
@@ -55,7 +55,7 @@ export const MobileBottomNav = memo(function MobileBottomNav({ page, onNavigate 
                 aria-current={active ? 'page' : undefined}
                 className={clsx(
                   'flex w-full flex-col items-center justify-center gap-0.5 rounded-input px-1 py-1.5 transition-all duration-150',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-navy-900',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black',
                   active
                     ? 'text-gold-600 dark:text-gold-300'
                     : 'text-neutral-500 hover:text-navy-700 dark:text-navy-300 dark:hover:text-white',

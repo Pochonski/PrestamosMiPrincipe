@@ -17,12 +17,14 @@ export const Card = memo(forwardRef(function Card(
     <Tag
       ref={ref}
       className={clsx(
-        'rounded-card border bg-white dark:bg-navy-800 shadow-card border-slate-100 dark:border-navy-700/60',
+        'glass rounded-card',
+        // `glass` prop kept for backwards compat (glass is now the default)
         glass && 'glass',
         PAD[padding],
-        hover && 'transition-all duration-200 hover:shadow-cardHover',
+        hover && 'transition-all duration-200 hover:shadow-glass-strong',
+        (hover || interactive) && 'glass-glare',
         interactive &&
-          'cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-cardHover hover:border-gold-300 dark:hover:border-gold-500/40 active:translate-y-0',
+          'cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-glass-strong hover:border-white/70 dark:hover:border-white/20 active:translate-y-0',
         className,
       )}
       {...rest}

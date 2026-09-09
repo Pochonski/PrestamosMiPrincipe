@@ -183,7 +183,7 @@ export function ClienteDetalle({ onNavigate, params }) {
             <div className="flex min-w-0 flex-1 items-center gap-3">
               <Avatar nombre={cliente.nombre} size="lg" />
               <div className="min-w-0">
-                <h1 className="truncate text-xl font-extrabold tracking-tight text-navy-900 sm:text-2xl dark:text-white">
+                <h1 className="truncate font-display text-xl font-bold tracking-tight text-navy-900 sm:text-2xl dark:text-white">
                   {cliente.nombre}
                 </h1>
                 <p className="truncate text-sm text-neutral-600 dark:text-navy-300">{cliente.cedula}</p>

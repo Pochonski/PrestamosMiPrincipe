@@ -19,7 +19,7 @@ export function AuthBranding() {
       <div className="relative z-10">
         <Link
           to="/login"
-          className="inline-flex items-center gap-3 rounded-input focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-navy-900"
+          className="inline-flex items-center gap-3 rounded-input focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         >
           <span className="flex h-12 w-12 items-center justify-center rounded-card bg-gold-gradient shadow-glow">
             <Logo withText={false} className="h-7 w-7" />
@@ -33,7 +33,7 @@ export function AuthBranding() {
 
       <div className="relative z-10 space-y-8">
         <div>
-          <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
+          <h1 className="font-serif text-4xl font-semibold leading-[1.08] tracking-tight sm:text-5xl">
             Gestioná tu cartera
             <br />
             <span className="bg-gold-gradient bg-clip-text text-transparent">con elegancia</span>

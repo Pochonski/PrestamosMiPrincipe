@@ -52,9 +52,9 @@ export function UserMenu({ className }) {
         aria-controls={open ? menuId : undefined}
         className={clsx(
           'flex min-h-[44px] items-center gap-2 rounded-input py-1 pl-1 pr-2 transition-colors',
-          'border border-transparent hover:border-slate-200 hover:bg-white',
-          'dark:hover:border-navy-700 dark:hover:bg-navy-800',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-navy-900',
+          'border border-transparent hover:border-white/50 hover:bg-white/60 hover:backdrop-blur-md',
+          'dark:hover:border-white/10 dark:hover:bg-white/[0.06]',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black',
         )}
       >
         <Avatar nombre={name} size="sm" />
@@ -72,12 +72,11 @@ export function UserMenu({ className }) {
           role="menu"
           className={clsx(
             'absolute right-0 z-40 mt-2 w-60 origin-top-right rounded-card p-1.5',
-            'border border-slate-100 bg-white shadow-cardHover',
-            'dark:border-navy-700 dark:bg-navy-800',
+            'glass-strong',
             'animate-fade-in',
           )}
         >
-          <div className="border-b border-slate-100 px-3 py-2 dark:border-navy-700">
+          <div className="border-b border-white/50 px-3 py-2 dark:border-white/10">
             <p className="flex items-center gap-2 text-xs text-neutral-500 dark:text-navy-300">
               <User className="h-3 w-3" aria-hidden="true" />
               Sesión activa

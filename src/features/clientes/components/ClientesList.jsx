@@ -101,7 +101,7 @@ function VirtualizedList({
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="max-h-[70vh] overflow-y-auto rounded-input border border-slate-100 scrollbar-thin dark:border-navy-700/60"
+        className="max-h-[70vh] overflow-y-auto rounded-input border border-white/50 bg-white/40 backdrop-blur-md scrollbar-thin dark:border-white/10 dark:bg-white/[0.03]"
       >
         <div style={{ height: total * ROW_HEIGHT, position: 'relative' }}>
           <div style={{ transform: `translateY(${padTop}px)` }}>
@@ -109,7 +109,7 @@ function VirtualizedList({
               <div
                 key={c.id}
                 style={{ height: ROW_HEIGHT }}
-                className="border-b border-slate-100 px-3 py-2 dark:border-navy-700/60"
+                className="border-b border-slate-100 px-3 py-2 dark:border-white/10"
               >
                 <ClienteCard cliente={c} onOpen={onOpen} onEdit={onEdit} onDelete={onDelete} />
               </div>

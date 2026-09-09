@@ -86,7 +86,7 @@ export function Step3CuotasTasa({ values, errors, showError, set, touch }) {
         error={showError('comision') && errors.comision}
       />
 
-      <div className="rounded-card border border-slate-200 bg-slate-50 p-4 dark:border-navy-700 dark:bg-navy-700/40">
+      <div className="glass-subtle rounded-card p-4">
         <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-navy-300">
           <Calculator className="h-3.5 w-3.5" aria-hidden="true" />
           Cálculo automático
@@ -115,7 +115,7 @@ export function Step3CuotasTasa({ values, errors, showError, set, touch }) {
 
 function PreviewItem({ label, value, highlight }) {
   return (
-    <div className="rounded-input bg-white p-3 dark:bg-navy-800">
+    <div className="rounded-input border border-white/50 bg-white/60 p-3 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04]">
       <p className="section-label">{label}</p>
       <p
         className={

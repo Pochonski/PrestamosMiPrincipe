@@ -64,7 +64,7 @@ export function CobroFormBody({ form }) {
           <select
             value={cuotaNumero}
             onChange={(e) => setCuotaNumero(Number(e.target.value))}
-            className="w-full rounded-input border border-slate-200 bg-white px-3.5 py-3 text-base text-navy-900 outline-none transition-colors focus:border-gold-400 focus:ring-2 focus:ring-gold-400/25 dark:border-navy-700 dark:bg-navy-800 dark:text-white"
+            className="w-full rounded-input border border-white/50 bg-white/70 backdrop-blur-md px-3.5 py-3 text-base text-navy-900 outline-none transition-colors focus:border-gold-400 focus:ring-2 focus:ring-gold-400/25 dark:border-white/10 dark:bg-white/[0.06] dark:text-white"
           >
             {cuotasPendientes.map((c) => {
               const isAtrasada =
@@ -100,7 +100,7 @@ export function CobroFormBody({ form }) {
       )}
 
       {tipo === 'interes' && cuotaActual && (
-        <div className="rounded-card border border-slate-200 bg-slate-50 p-4 dark:border-navy-700 dark:bg-navy-700/40">
+        <div className="glass-subtle rounded-card p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="section-label">
@@ -135,7 +135,7 @@ export function CobroFormBody({ form }) {
 
       {tipo === 'capital' && (
         <div className="space-y-3">
-          <div className="rounded-card border border-slate-200 bg-slate-50 p-4 dark:border-navy-700 dark:bg-navy-700/40">
+          <div className="glass-subtle rounded-card p-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-neutral-600 dark:text-navy-300">
                 Saldo pendiente
@@ -191,8 +191,8 @@ export function CobroFormBody({ form }) {
             className={clsx(
               'flex items-start gap-3 rounded-card border p-3 transition-colors',
               capitalBloqueado
-                ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-60 dark:border-navy-700 dark:bg-navy-800/50'
-                : 'cursor-pointer border-slate-200 bg-white hover:border-gold-400 dark:border-navy-700 dark:bg-navy-800 dark:hover:border-gold-400',
+                ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-60 dark:border-white/10 dark:bg-white/[0.03]'
+                : 'cursor-pointer border-white/50 bg-white/60 backdrop-blur-md hover:border-gold-400 hover:bg-white/80 dark:border-white/10 dark:bg-white/[0.06] dark:hover:border-gold-400 dark:hover:bg-white/10',
             )}
           >
             <input
@@ -224,7 +224,7 @@ export function CobroFormBody({ form }) {
           <button
             type="button"
             onClick={() => setShowNota(true)}
-            className="inline-flex items-center gap-1.5 rounded-input text-xs font-semibold text-neutral-500 hover:text-navy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 dark:text-navy-300 dark:hover:text-white dark:focus-visible:ring-offset-navy-900"
+            className="inline-flex items-center gap-1.5 rounded-input text-xs font-semibold text-neutral-500 hover:text-navy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 dark:text-navy-300 dark:hover:text-white dark:focus-visible:ring-offset-black"
           >
             <Receipt className="h-3.5 w-3.5" aria-hidden="true" />
             Agregar nota
@@ -277,7 +277,7 @@ function AtrasadasWarning({ cuotas, incluirInteres, aceptaAtrasados, onAceptaCha
         {cuotas.map((c) => (
           <li
             key={c.numero}
-            className="flex items-center justify-between gap-2 rounded-input bg-white/60 px-3 py-2 text-xs dark:bg-navy-900/40"
+            className="flex items-center justify-between gap-2 rounded-input border border-white/50 bg-white/60 px-3 py-2 text-xs backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04]"
           >
             <span className="flex items-center gap-2 font-semibold text-warning-700 dark:text-warning-500">
               <Calendar className="h-3.5 w-3.5" aria-hidden="true" />

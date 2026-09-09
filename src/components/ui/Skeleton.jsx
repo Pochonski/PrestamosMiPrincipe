@@ -5,7 +5,7 @@ export function Skeleton({ className, rounded = 'rounded-input', children, ...re
   return (
     <div
       className={clsx(
-        'relative overflow-hidden bg-neutral-200/70 dark:bg-navy-700/60',
+        'relative overflow-hidden bg-neutral-200/70 dark:bg-white/[0.06] dark:backdrop-blur-md',
         rounded,
         className,
       )}

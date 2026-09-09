@@ -60,7 +60,7 @@ export function ExtenderCuotasModal({ prestamo, onClose, onSaved }) {
       }
     >
       <div className="space-y-5">
-        <div className="rounded-card border border-slate-200 bg-slate-50 p-4 dark:border-navy-700 dark:bg-navy-700/40">
+        <div className="glass-subtle rounded-card p-4">
           <p className="section-label">Cuotas actuales</p>
           <p className="mt-1 text-base font-bold text-navy-900 dark:text-white">
             {(prestamo.cuotas || []).length}{' '}
@@ -89,7 +89,7 @@ export function ExtenderCuotasModal({ prestamo, onClose, onSaved }) {
           <div className="space-y-2">
             <p className="section-label">Vista previa</p>
             <Card padding="sm">
-              <ul className="divide-y divide-slate-100 dark:divide-navy-700/60">
+              <ul className="divide-y divide-slate-100 dark:divide-white/10">
                 {form.preview.map((c) => (
                   <li
                     key={c.numero}
@@ -107,7 +107,7 @@ export function ExtenderCuotasModal({ prestamo, onClose, onSaved }) {
                   </li>
                 ))}
               </ul>
-              <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-2 dark:border-navy-700/60">
+              <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-2 dark:border-white/10">
                 <span className="text-xs font-medium text-neutral-600 dark:text-navy-300">
                   Total en intereses
                 </span>

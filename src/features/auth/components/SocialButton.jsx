@@ -8,9 +8,9 @@ export function SocialButton({ icon: Icon, children, onClick, className, ...rest
       onClick={onClick}
       className={clsx(
         'inline-flex w-full items-center justify-center gap-2 rounded-card border px-4 py-3 text-sm font-semibold transition-all duration-200',
-        'border-slate-200 bg-white text-navy-800 hover:border-gold-400 hover:bg-gold-50',
-        'dark:border-navy-700 dark:bg-navy-800 dark:text-white dark:hover:border-gold-400 dark:hover:bg-navy-700',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-navy-900',
+        'border-white/50 bg-white/60 backdrop-blur-md text-navy-800 hover:border-gold-400 hover:bg-white/80',
+        'dark:border-white/10 dark:bg-white/[0.06] dark:text-white dark:hover:border-gold-400 dark:hover:bg-white/10',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black',
         className,
       )}
       {...rest}

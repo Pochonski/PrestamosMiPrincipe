@@ -124,7 +124,7 @@ export function RespaldoPage() {
         <div className="flex items-center gap-3">
           <IconBox icon={Database} tone="navy" size="md" />
           <div>
-            <h1 className="text-xl font-extrabold tracking-tight text-navy-900 sm:text-2xl dark:text-white">
+            <h1 className="font-display text-xl font-bold tracking-tight text-navy-900 sm:text-2xl dark:text-white">
               Respaldar datos
             </h1>
             <p className="mt-0.5 text-sm text-neutral-600 dark:text-navy-300">
@@ -207,7 +207,7 @@ export function RespaldoPage() {
 
 function Stat({ label, value }) {
   return (
-    <div className="rounded-input bg-white p-2 text-center dark:bg-navy-800">
+    <div className="rounded-input border border-white/50 bg-white/60 p-2 text-center backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04]">
       <p className="section-label">{label}</p>
       <p className="mt-0.5 text-base font-bold tabular-nums text-navy-900 dark:text-white">
         {value}

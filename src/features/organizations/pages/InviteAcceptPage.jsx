@@ -68,10 +68,10 @@ export function InviteAcceptPage() {
 
   if (status === 'needsAuth') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50 p-6 dark:bg-navy-900">
+      <div className="relative flex min-h-screen items-center justify-center bg-neutral-50 bg-app-aurora-light p-6 dark:bg-black dark:bg-app-aurora-dark">
         <Card className="w-full max-w-md space-y-4 text-center">
           <IconBox icon={LogIn} tone="gold" size="lg" ring className="mx-auto" />
-          <h1 className="text-xl font-bold text-navy-900 dark:text-white">Invitación pendiente</h1>
+          <h1 className="font-display text-xl font-bold tracking-tight text-navy-900 dark:text-white">Invitación pendiente</h1>
           <p className="text-sm text-neutral-600 dark:text-navy-300">
             Necesitás iniciar sesión o crear una cuenta con el email invitado para aceptar.
           </p>
@@ -96,7 +96,7 @@ export function InviteAcceptPage() {
 
   if (status === 'accepting' || (loading && status === 'idle')) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50 dark:bg-navy-900">
+      <div className="relative flex min-h-screen items-center justify-center bg-neutral-50 bg-app-aurora-light dark:bg-black dark:bg-app-aurora-dark">
         <Card className="w-full max-w-md space-y-4 text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin text-gold-500" />
           <p className="text-sm font-semibold text-navy-900 dark:text-white">Aceptando invitación...</p>
@@ -107,10 +107,10 @@ export function InviteAcceptPage() {
 
   if (status === 'success') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50 p-6 dark:bg-navy-900">
+      <div className="relative flex min-h-screen items-center justify-center bg-neutral-50 bg-app-aurora-light p-6 dark:bg-black dark:bg-app-aurora-dark">
         <Card className="w-full max-w-md space-y-4 text-center">
           <IconBox icon={CheckCircle2} tone="emerald" size="lg" ring className="mx-auto" />
-          <h1 className="text-xl font-bold text-navy-900 dark:text-white">¡Bienvenido a la organización!</h1>
+          <h1 className="font-display text-xl font-bold tracking-tight text-navy-900 dark:text-white">¡Bienvenido a la organización!</h1>
           <p className="text-sm text-neutral-600 dark:text-navy-300">Redirigiendo al dashboard...</p>
         </Card>
       </div>
@@ -119,11 +119,11 @@ export function InviteAcceptPage() {
 
   if (status === 'error') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50 p-6 dark:bg-navy-900">
+      <div className="relative flex min-h-screen items-center justify-center bg-neutral-50 bg-app-aurora-light p-6 dark:bg-black dark:bg-app-aurora-dark">
         <Card className="w-full max-w-md space-y-4">
           <div className="flex flex-col items-center gap-2 text-center">
             <IconBox icon={AlertTriangle} tone="danger" size="lg" ring className="mx-auto" />
-            <h1 className="text-xl font-bold text-navy-900 dark:text-white">{errorMeta?.title || 'Error'}</h1>
+            <h1 className="font-display text-xl font-bold tracking-tight text-navy-900 dark:text-white">{errorMeta?.title || 'Error'}</h1>
           </div>
           <Alert tone={errorMeta?.variant === 'warning' ? 'warning' : 'danger'} title={errorMeta?.title}>
             {errorMeta?.message}

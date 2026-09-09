@@ -129,7 +129,7 @@ export function SettingsPage() {
         <div className="flex items-center gap-3">
           <IconBox icon={Building2} tone="gold" size="md" />
           <div>
-            <h1 className="text-xl font-extrabold tracking-tight text-navy-900 dark:text-white sm:text-2xl">Organización</h1>
+            <h1 className="font-display text-xl font-bold tracking-tight text-navy-900 dark:text-white sm:text-2xl">Organización</h1>
             <p className="mt-0.5 text-sm text-neutral-600 dark:text-navy-300">
               {org?.nombre || currentOrg?.nombre} · <span className="font-mono text-xs">{org?.slug}</span> {currentOrg?.rol && <Badge tone="gold" className="ml-2">{currentOrg.rol}</Badge>}
             </p>
@@ -192,7 +192,7 @@ export function SettingsPage() {
               Guardar cambios
             </Button>
           </div>
-          <div className="rounded-card border border-slate-200 bg-slate-50 p-4 text-xs text-neutral-600 dark:border-navy-700 dark:bg-navy-700/40">
+          <div className="glass-subtle rounded-card p-4 text-xs text-neutral-600 dark:text-navy-300">
             <div className="flex items-center gap-2">
               <Crown className="h-4 w-4 text-gold-600" />
               Owner: <strong>{members.find((m) => m.rol === 'owner')?.email || org?.owner_id || '—'}</strong>
@@ -230,7 +230,7 @@ export function SettingsPage() {
             <Card className="py-10 text-center text-sm text-neutral-500">Sin invitaciones</Card>
           ) : (
             <Card className="overflow-hidden p-0">
-              <div className="divide-y divide-slate-100 dark:divide-navy-700/60">
+              <div className="divide-y divide-slate-100 dark:divide-white/10">
                 {invites.map((iv) => {
                   const isPending = !iv.accepted_at && !iv.revoked_at && new Date(iv.expires_at) > new Date();
                   const tone = isPending ? 'warning' : iv.accepted_at ? 'success' : 'danger';

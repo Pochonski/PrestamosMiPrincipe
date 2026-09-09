@@ -31,7 +31,7 @@ function ActionButton({ icon: Icon, label, onClick, className }) {
       }}
       className={clsx(
         'flex h-11 w-11 items-center justify-center rounded-input transition-colors',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-navy-900',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black',
         className,
       )}
       aria-label={label}

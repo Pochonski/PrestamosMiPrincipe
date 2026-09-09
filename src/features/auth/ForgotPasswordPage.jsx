@@ -9,7 +9,7 @@ import { MeshGradient } from './components/MeshGradient';
 
 export function ForgotPasswordPage() {
   return (
-    <div className="grid min-h-screen grid-cols-1 bg-neutral-50 dark:bg-navy-900 lg:grid-cols-2">
+    <div className="grid min-h-screen grid-cols-1 bg-neutral-50 dark:bg-black lg:grid-cols-2">
       <AuthBranding />
 
       <div className="relative flex items-center justify-center overflow-hidden p-6 sm:p-10">
@@ -17,12 +17,12 @@ export function ForgotPasswordPage() {
           <MeshGradient />
         </div>
         <div className="absolute inset-0 bg-gradient-to-br from-white via-neutral-50 to-gold-50/30 dark:hidden" />
-        <div className="absolute inset-0 hidden bg-navy-900/95 dark:block" />
+        <div className="absolute inset-0 hidden bg-black/70 backdrop-blur-xl dark:block" />
 
         <div className="relative w-full max-w-md">
           <Link
             to="/login"
-            className="mb-6 inline-flex items-center gap-1 rounded-sm text-sm font-medium text-neutral-500 hover:text-navy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 dark:text-navy-300 dark:hover:text-white dark:focus-visible:ring-offset-navy-900 lg:hidden"
+            className="mb-6 inline-flex items-center gap-1 rounded-sm text-sm font-medium text-neutral-500 hover:text-navy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 dark:text-navy-300 dark:hover:text-white dark:focus-visible:ring-offset-black lg:hidden"
           >
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
             Volver
@@ -41,7 +41,7 @@ export function ForgotPasswordPage() {
 
           <GlassCard className="p-6 sm:p-8">
             <div className="mb-6">
-              <h1 className="text-2xl font-extrabold tracking-tight text-navy-900 dark:text-white sm:text-3xl">
+              <h1 className="font-serif text-2xl font-semibold tracking-tight text-navy-900 dark:text-white sm:text-3xl">
                 Restablecer contraseña
               </h1>
               <p className="mt-1 text-sm text-neutral-600 dark:text-navy-300">

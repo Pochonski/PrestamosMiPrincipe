@@ -12,7 +12,7 @@ export function PlaceholderPage({ titulo, descripcion }) {
         </div>
         <h2 className="text-xl font-bold text-navy-900 dark:text-white">{titulo}</h2>
         <p className="mt-2 text-sm text-neutral-600 dark:text-navy-300">{descripcion}</p>
-        <p className="mt-4 text-xs font-bold uppercase tracking-widest text-gold-600 dark:text-gold-400">
+        <p className="label-micro mt-4 text-gold-600 dark:text-gold-400">
           Disponible próximamente
         </p>
       </Card>

@@ -6,7 +6,7 @@ export function MonthNavigator({ monthKey, onChange }) {
   const { label } = getMonthBounds(monthKey);
   const isCurrent = monthKey === monthKeyOf(new Date());
   return (
-    <div className="flex items-center justify-between gap-2 rounded-card border border-slate-200 bg-white p-2 dark:border-navy-700 dark:bg-navy-800">
+    <div className="glass flex items-center justify-between gap-2 rounded-card p-2">
       <button
         type="button"
         onClick={() => onChange(shiftMonth(monthKey, -1))}

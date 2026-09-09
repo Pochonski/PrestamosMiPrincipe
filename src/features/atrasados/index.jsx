@@ -42,7 +42,7 @@ export function AtrasadosPage({ onNavigate }) {
         <div className="flex items-center gap-3">
           <IconBox icon={AlertTriangle} tone="rose" size="md" />
           <div>
-            <h1 className="text-xl font-extrabold tracking-tight text-navy-900 sm:text-2xl dark:text-white">
+            <h1 className="font-display text-xl font-bold tracking-tight text-navy-900 sm:text-2xl dark:text-white">
               Préstamos atrasados
             </h1>
             <p className="mt-0.5 text-sm text-neutral-600 dark:text-navy-300">
@@ -126,7 +126,7 @@ function AtrasadoCard({ item, onCobrar }) {
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 dark:border-navy-700/60">
+      <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 dark:border-white/10">
         <div>
           <p className="section-label">Cuota</p>
           <p className="mt-0.5 text-sm font-bold tabular-nums text-navy-900 dark:text-white">

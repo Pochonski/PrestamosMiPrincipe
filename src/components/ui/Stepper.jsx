@@ -19,7 +19,7 @@ export function Stepper({ steps, current, onJump }) {
               aria-label={`Paso ${s.num}: ${s.label}${completed ? ' (completado)' : active ? ' (actual)' : ''}`}
               className={clsx(
                 'flex min-h-[44px] shrink-0 items-center gap-2 rounded-full transition-colors',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-navy-900',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black',
                 interactive ? 'cursor-pointer hover:opacity-90' : 'cursor-default',
               )}
             >
@@ -27,8 +27,8 @@ export function Stepper({ steps, current, onJump }) {
                 className={clsx(
                   'flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all duration-200',
                   completed && 'border-gold-500 bg-gold-500 text-navy-900 shadow-glow',
-                  active && 'border-gold-400 bg-white text-gold-600 shadow-sm dark:bg-navy-800 dark:text-gold-300',
-                  !completed && !active && 'border-slate-300 bg-white text-slate-400 dark:border-navy-600 dark:bg-navy-800 dark:text-navy-300',
+                  active && 'border-gold-400 bg-white/70 backdrop-blur-md text-gold-600 shadow-sm dark:bg-white/[0.06] dark:text-gold-300',
+                  !completed && !active && 'border-white/50 bg-white/50 text-slate-400 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04] dark:text-navy-300',
                 )}
               >
                 {completed ? <Check className="h-4 w-4" strokeWidth={3} aria-hidden="true" /> : s.num}
@@ -46,7 +46,7 @@ export function Stepper({ steps, current, onJump }) {
               <div
                 className={clsx(
                   'mx-2 h-0.5 flex-1 rounded-full transition-colors',
-                  current > s.num ? 'bg-gold-400' : 'bg-slate-200 dark:bg-navy-700',
+                  current > s.num ? 'bg-gold-400' : 'bg-slate-200 dark:bg-white/10',
                 )}
               />
             )}

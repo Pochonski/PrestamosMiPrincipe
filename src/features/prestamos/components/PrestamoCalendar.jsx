@@ -39,7 +39,7 @@ export function PrestamoCalendar({ cuotas, total }) {
         </div>
       </div>
 
-      <ul className="divide-y divide-slate-100 dark:divide-navy-700/60">
+      <ul className="divide-y divide-slate-100 dark:divide-white/10">
         {safeCuotas.map((c) => {
           const meta = STATUS_META[c.estado] || STATUS_META.pendiente;
           return (

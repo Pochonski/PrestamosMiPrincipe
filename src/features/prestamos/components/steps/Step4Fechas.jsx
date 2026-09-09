@@ -61,7 +61,7 @@ export function Step4Fechas({ values, errors, showError, set, touch }) {
       />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="rounded-card border border-slate-200 bg-slate-50 p-4 dark:border-navy-700 dark:bg-navy-700/40">
+        <div className="glass-subtle rounded-card p-4">
           <p className="section-label">Próximo cobro</p>
           {primera ? (
             <>
@@ -74,7 +74,7 @@ export function Step4Fechas({ values, errors, showError, set, touch }) {
             <p className="mt-1 text-sm text-neutral-500 dark:text-navy-300">—</p>
           )}
         </div>
-        <div className="rounded-card border border-slate-200 bg-slate-50 p-4 dark:border-navy-700 dark:bg-navy-700/40">
+        <div className="glass-subtle rounded-card p-4">
           <p className="section-label">Fecha final estimada</p>
           {ultima ? (
             <>

@@ -62,7 +62,7 @@ export function ModalShell({
   if (typeof document === 'undefined') return null;
 
   const headerTone = {
-    default: 'border-b border-slate-200 dark:border-navy-700',
+    default: 'border-b border-white/50 dark:border-white/10',
     danger: 'border-b border-danger-500/30 bg-danger-50/40 dark:bg-danger-500/10',
     success: 'border-b border-success-500/30 bg-success-50/40 dark:bg-success-500/10',
   };
@@ -96,9 +96,8 @@ export function ModalShell({
         aria-labelledby="modal-title"
         aria-describedby={description ? 'modal-description' : undefined}
         className={clsx(
-          'relative z-10 flex w-full max-h-[95vh] flex-col overflow-hidden bg-white shadow-modal dark:bg-navy-800',
+          'glass-strong relative z-10 flex w-full max-h-[95vh] flex-col overflow-hidden',
           'rounded-t-modal sm:rounded-modal',
-          'border border-slate-100 dark:border-navy-700/60',
           'animate-slide-up-mobile sm:animate-slide-up',
           'focus:outline-none',
           SIZES[size],
@@ -131,7 +130,7 @@ export function ModalShell({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-input text-neutral-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-navy-300 dark:hover:bg-navy-700 dark:focus-visible:ring-offset-navy-800"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-input text-neutral-500 hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-navy-300 dark:hover:bg-white/10 dark:focus-visible:ring-offset-navy-800"
             aria-label="Cerrar"
           >
             <X className="h-5 w-5" aria-hidden="true" />
@@ -141,7 +140,7 @@ export function ModalShell({
         <div className="flex-1 overflow-y-auto px-5 py-5 scrollbar-thin sm:px-6">{children}</div>
 
         {footer && (
-          <footer className="flex shrink-0 items-center justify-between gap-2 border-t border-slate-200 bg-white/80 px-5 py-4 backdrop-blur-md dark:border-navy-700 dark:bg-navy-800/80 sm:px-6">
+          <footer className="flex shrink-0 items-center justify-between gap-2 border-t border-white/50 bg-white/50 px-5 py-4 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04] sm:px-6">
             {footer}
           </footer>
         )}

@@ -33,7 +33,7 @@ export function CobrarHoyPage({ onNavigate }) {
         <div className="flex items-center gap-3">
           <IconBox icon={HandCoins} tone="gold" size="md" />
           <div>
-            <h1 className="text-xl font-extrabold tracking-tight text-navy-900 sm:text-2xl dark:text-white">
+            <h1 className="font-display text-xl font-bold tracking-tight text-navy-900 sm:text-2xl dark:text-white">
               Cobros
             </h1>
             <p className="mt-0.5 text-sm text-neutral-600 dark:text-navy-300">
@@ -53,7 +53,7 @@ export function CobrarHoyPage({ onNavigate }) {
                 'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold transition-all',
                 tab === t.id
                   ? 'bg-navy-900 text-white shadow-card dark:bg-gold-500 dark:text-navy-900'
-                  : 'bg-slate-100 text-navy-700 hover:bg-slate-200 dark:bg-navy-800 dark:text-navy-200 dark:hover:bg-navy-700',
+                  : 'bg-white/50 backdrop-blur-md text-navy-700 hover:bg-white/80 dark:bg-white/[0.06] dark:text-navy-200 dark:hover:bg-white/10',
               )}
             >
               {t.label}

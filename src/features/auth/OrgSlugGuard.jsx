@@ -11,7 +11,7 @@ export function OrgSlugGuard({ children }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-navy-900">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-black">
         <Spinner size="lg" tone="gold" />
       </div>
     );

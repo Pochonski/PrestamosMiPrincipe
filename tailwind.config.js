@@ -6,8 +6,21 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        display: ['Sora', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        serif: ['Fraunces', 'Georgia', 'serif'],
       },
       colors: {
+        // Acentos para glass en dark (regla: usar 300-400 sobre vidrio ahumado).
+        // En claro, usar los tonos 600-800 existentes para contraste AA.
+        glow: {
+          gold: '#E0C44D',
+          champagne: '#F3DFA0',
+          sky: '#38BDF8',
+          violet: '#A78BFA',
+          emerald: '#34D399',
+          rose: '#FB7185',
+          amber: '#FBBF24',
+        },
         gold: {
           50: '#FBF7E8',
           100: '#F5EDC7',
@@ -84,14 +97,25 @@ export default {
         glow: '0 0 0 1px rgb(212 175 55 / 0.2), 0 8px 24px -8px rgb(212 175 55 / 0.35)',
         modal: '0 25px 50px -12px rgb(0 0 0 / 0.25), 0 0 0 1px rgb(15 23 42 / 0.05)',
         focus: '0 0 0 3px rgb(212 175 55 / 0.35)',
+        glass:
+          '0 8px 32px -8px rgb(15 23 42 / 0.12), 0 12px 48px -12px rgb(212 175 55 / 0.18), inset 0 1px 0 0 rgb(255 255 255 / 0.6)',
+        'glass-dark':
+          '0 8px 32px -8px rgb(0 0 0 / 0.55), 0 12px 48px -12px rgb(14 165 233 / 0.15), inset 0 1px 0 0 rgb(255 255 255 / 0.12)',
+        'glass-strong':
+          '0 24px 48px -12px rgb(15 23 42 / 0.18), 0 16px 64px -16px rgb(212 175 55 / 0.22), inset 0 1px 0 0 rgb(255 255 255 / 0.65)',
       },
       backgroundImage: {
         'gold-gradient': 'linear-gradient(135deg, #E0C44D 0%, #D4AF37 50%, #B8902A 100%)',
+        'champagne-gradient': 'linear-gradient(135deg, #F3DFA0 0%, #E0C44D 55%, #D4AF37 100%)',
         'gold-shine': 'linear-gradient(110deg, transparent 33%, rgb(255 255 255 / 0.25) 50%, transparent 67%)',
         'navy-gradient': 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)',
         'navy-radial': 'radial-gradient(ellipse at top, #1E293B 0%, #020617 100%)',
         'hero-surface':
           'radial-gradient(60rem 14rem at 100% 0%, rgb(212 175 55 / 0.10), transparent 70%), radial-gradient(40rem 20rem at -5% 100%, rgb(30 41 59 / 0.08), transparent 70%)',
+        'app-aurora-light':
+          'radial-gradient(40rem 20rem at 85% -5%, rgb(212 175 55 / 0.20), transparent 70%), radial-gradient(36rem 22rem at -10% 25%, rgb(14 165 233 / 0.12), transparent 70%), radial-gradient(28rem 18rem at 15% 110%, rgb(16 185 129 / 0.10), transparent 70%), radial-gradient(30rem 18rem at 50% 110%, rgb(30 41 59 / 0.08), transparent 70%)',
+        'app-aurora-dark':
+          'radial-gradient(40rem 20rem at 85% -5%, rgb(212 175 55 / 0.28), transparent 70%), radial-gradient(36rem 22rem at -10% 25%, rgb(14 165 233 / 0.20), transparent 70%), radial-gradient(28rem 18rem at 15% 110%, rgb(167 139 250 / 0.12), transparent 70%), radial-gradient(30rem 18rem at 50% 110%, rgb(0 0 0 / 0.4), transparent 70%)',
       },
       keyframes: {
         'fade-in': {

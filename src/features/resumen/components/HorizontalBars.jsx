@@ -19,7 +19,7 @@ export function HorizontalBars({ data, max, formatValue }) {
                 {formatValue ? formatValue(d.value) : d.value}
               </span>
             </div>
-            <div className="relative h-2.5 overflow-hidden rounded-full bg-slate-100 dark:bg-navy-700/60">
+            <div className="relative h-2.5 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
               <div
                 className="absolute inset-y-0 left-0 rounded-full bg-gold-gradient"
                 style={{ width: `${pct}%` }}

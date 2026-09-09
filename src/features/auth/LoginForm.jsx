@@ -239,7 +239,7 @@ export function LoginForm({ mode = 'signin', onAuth, redirectTo = '/' }) {
             type="button"
             onClick={handleForgot}
             disabled={submitting}
-            className="font-semibold text-gold-600 hover:text-gold-700 disabled:opacity-50 dark:text-gold-300 dark:hover:text-gold-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-navy-900 rounded-sm"
+            className="font-semibold text-gold-600 hover:text-gold-700 disabled:opacity-50 dark:text-gold-300 dark:hover:text-gold-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black rounded-sm"
           >
             ¿Olvidaste tu contraseña?
           </button>
