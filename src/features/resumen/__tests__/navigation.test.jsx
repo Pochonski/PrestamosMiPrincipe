@@ -43,8 +43,6 @@ describe('ResumenPage navigation (mobile-first)', () => {
     ['Exportar cobrado del mes', 'exportar'],
     ['Ver préstamos cancelados', 'prestamos'],
     ['Ver atrasados por tasa de morosidad', 'atrasados'],
-    ['Ir a cobrar hoy por eficiencia', 'cobrar-hoy'],
-    ['Ver préstamos por promedio', 'prestamos'],
     ['Ver por cobrar hoy', 'cobrar-hoy'],
     ['Exportar cobros en rango', 'exportar'],
   ])('card %s navega a %s', async (label, id) => {

@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useId } from 'react';
 export function DonutChart({ data, total, size = 180, colorMap }) {
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const glowId = `donutGlow-${uid}`;
   const radius = size / 2 - 20;
   const circumference = 2 * Math.PI * radius;
   const cx = size / 2;
   const cy = size / 2;
+  const GAP = 3;
 
   if (!data || data.length === 0 || total === 0) {
     return (
@@ -34,7 +37,13 @@ export function DonutChart({ data, total, size = 180, colorMap }) {
       role="img"
       aria-label="Gráfico de dona"
     >
+      <defs>
+        <filter id={glowId} x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#D4AF37" floodOpacity="0.35" />
+        </filter>
+      </defs>
       <g transform={`translate(${cx}, ${cy}) rotate(-90)`}>
+        <circle r={radius} fill="none" className="stroke-slate-100 dark:stroke-white/10" strokeWidth="20" />
         {segments.map((d, i) => (
           <circle
             key={d.label + i}
@@ -42,27 +51,28 @@ export function DonutChart({ data, total, size = 180, colorMap }) {
             fill="none"
             stroke={colorMap?.[d.label] || d.color}
             strokeWidth="20"
-            strokeDasharray={`${d.length} ${circumference - d.length}`}
-            strokeDashoffset={-d.offset}
+            strokeLinecap="round"
+            strokeDasharray={`${Math.max(d.length - GAP, 0.5)} ${circumference - d.length + GAP}`}
+            strokeDashoffset={-(d.offset - GAP / 2)}
+            filter={`url(#${glowId})`}
           />
         ))}
       </g>
       <text
         x={cx}
-        y={cy - 4}
+        y={cy - 2}
         textAnchor="middle"
-        fontSize="14"
-        fontWeight="700"
-        className="fill-navy-900 dark:fill-white"
+        fontSize="20"
+        className="fill-navy-900 font-display font-bold tabular-nums dark:fill-white"
       >
         {total}
       </text>
       <text
         x={cx}
-        y={cy + 14}
+        y={cy + 16}
         textAnchor="middle"
         fontSize="9"
-        className="fill-slate-500 dark:fill-navy-300"
+        className="fill-slate-500 uppercase tracking-wider dark:fill-navy-300"
       >
         préstamos
       </text>

@@ -27,7 +27,7 @@ describe('AppShell', () => {
   it('renderiza con pages', async () => {
     render(<AppShell pages={{ dashboard: Dummy }} />);
     expect(await screen.findByText('DummyPage')).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText('Ana')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getAllByText('Ana').length).toBeGreaterThan(0));
   });
   it('muestra placeholder si page no existe', async () => {
     const { container } = render(<AppShell pages={{}} />);

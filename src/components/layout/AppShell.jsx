@@ -100,6 +100,9 @@ export function AppShell({ pages = {}, page: controlledPage, params: controlledP
         page={page}
         onNavigate={handleNavigate}
         onClose={handleCloseSidebar}
+        orgName={currentOrg?.nombre}
+        userName={profile?.full_name}
+        rol={currentOrg?.rol}
       />
 
       <div className="relative z-10 flex min-w-0 flex-1 flex-col lg:pl-[var(--sidebar-w)]">

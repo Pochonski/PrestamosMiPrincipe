@@ -10,9 +10,7 @@ import {
   HandCoins,
   CheckCircle2,
   Calendar,
-  BarChart3,
   Percent,
-  Target,
   Download,
   ArrowUpRight,
   RefreshCw,
@@ -124,7 +122,7 @@ function ClickableCard({ to, label, onNavigate, go, children }) {
       type="button"
       onClick={handleClick}
       aria-label={label}
-      className="block min-h-[44px] w-full min-w-0 touch-manipulation rounded-card text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
+      className="block h-full min-h-[44px] w-full min-w-0 touch-manipulation rounded-card text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
     >
       {children}
     </button>
@@ -136,7 +134,6 @@ export function ResumenPage({ onNavigate }) {
   const { data, loading, isError, error, hasMore, refetch } = useResumenData(filters);
   const { currentOrg } = useAuth();
   const navigate = useNavigate();
-  const [vistaRuta, setVistaRuta] = useState('saldo');
 
   function go(path, params = {}) {
     if (onNavigate) {
@@ -206,10 +203,12 @@ export function ResumenPage({ onNavigate }) {
     { label: 'Atrasado', value: data.porEstado.atrasado, color: '#ef4444' },
     { label: 'Cancelado', value: data.porEstado.cancelado, color: '#10b981' },
   ];
-  const rutaData =
-    vistaRuta === 'saldo'
-      ? (data.saldoPorRuta || []).map((r) => ({ label: r.ruta, value: r.saldo }))
-      : (data.conteoPorRuta || []).map((r) => ({ label: r.ruta, value: r.count }));
+  const rutaData = (() => {
+    const counts = new Map((data.conteoPorRuta || []).map((r) => [r.ruta, r.count]));
+    return (data.saldoPorRuta || [])
+      .map((r) => ({ label: r.ruta, saldo: r.saldo, count: counts.get(r.ruta) ?? 0 }))
+      .slice(0, 5);
+  })();
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
@@ -241,27 +240,21 @@ export function ResumenPage({ onNavigate }) {
         <SectionTitle title="Indicadores clave" />
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <ClickableCard to="clientes" label="Ver clientes" onNavigate={onNavigate} go={go}>
-            <div className="relative">
-              <StatCard label="Clientes" value={k.totalClientes} sub={k.totalClientes === 1 ? 'cliente registrado' : 'clientes registrados'} icon={Users} tone="navy" />
-            </div>
+            <StatCard label="Clientes" value={k.totalClientes} sub={k.totalClientes === 1 ? 'cliente registrado' : 'clientes registrados'} icon={Users} tone="navy" className="h-full" />
           </ClickableCard>
           <ClickableCard to="prestamos" label="Ver préstamos activos" onNavigate={onNavigate} go={go}>
-            <StatCard label="Préstamos activos" value={k.prestamosActivos} sub="vigentes + atrasados" icon={Wallet} tone="gold" />
+            <StatCard label="Préstamos activos" value={k.prestamosActivos} sub="vigentes + atrasados" icon={Wallet} tone="gold" className="h-full" />
           </ClickableCard>
           <ClickableCard to="cobrar-hoy" label="Ir a cobrar hoy" onNavigate={onNavigate} go={go}>
-            <div className="relative">
-              <StatCard
-                label="Cobrado hoy"
-                value={formatCRC(k.totalCobradoHoy)}
-                sub={`${k.cobrosHoyCount} cobros · por cobrar ${formatCRC(k.totalPorCobrarHoy)}`}
-                icon={HandCoins}
-                tone="success"
-                delta={k.eficienciaCobroHoy != null ? k.eficienciaCobroHoy - 100 : undefined}
-              />
-              <div className="absolute bottom-2 right-2 hidden sm:block" aria-hidden="true">
-                <Sparkline data={data.spark7} color="#16a34a" />
-              </div>
-            </div>
+            <StatCard
+              label="Cobrado hoy"
+              value={formatCRC(k.totalCobradoHoy)}
+              sub={`${k.cobrosHoyCount} cobros · por cobrar ${formatCRC(k.totalPorCobrarHoy)}`}
+              icon={HandCoins}
+              tone="success"
+              delta={k.eficienciaCobroHoy != null ? k.eficienciaCobroHoy - 100 : undefined}
+              className="h-full"
+            />
           </ClickableCard>
           <ClickableCard to="atrasados" label="Ver atrasados" onNavigate={onNavigate} go={go}>
             <StatCard
@@ -270,6 +263,7 @@ export function ResumenPage({ onNavigate }) {
               sub={`${k.cantidadAtrasados} préstamos · ${k.tasaMorosidad.toFixed(1)}% cartera`}
               icon={AlertTriangle}
               tone={k.totalAtrasado > 0 ? 'danger' : 'neutral'}
+              className="h-full"
             />
           </ClickableCard>
         </div>
@@ -291,48 +285,7 @@ export function ResumenPage({ onNavigate }) {
             <StatCard label="Cancelados (30d)" value={k.cancelados30} sub="préstamos liquidados" icon={CheckCircle2} tone="emerald" />
           </ClickableCard>
         </div>
-        <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3">
-          <ClickableCard to="atrasados" label="Ver atrasados por tasa de morosidad" onNavigate={onNavigate} go={go}>
-            <Card interactive className="flex min-h-[44px] items-center justify-between active:bg-white/70 dark:active:bg-white/10">
-              <div className="min-w-0">
-                <p className="label-micro">Tasa morosidad</p>
-                <p className={`mt-1 break-words font-display text-2xl font-bold tabular-nums ${k.tasaMorosidad > 10 ? 'text-danger-600' : 'text-navy-800 dark:text-navy-50'}`}>{k.tasaMorosidad.toFixed(1)}%</p>
-                <p className="mt-1 line-clamp-2 text-xs text-neutral-500 dark:text-navy-300">{formatCRC(k.totalAtrasado)} / {formatCRC(k.carteraActiva)}</p>
-              </div>
-              <span className="flex shrink-0 items-center gap-1">
-                <IconBox icon={Percent} tone={k.tasaMorosidad > 10 ? 'danger' : 'neutral'} size="md" />
-                <ArrowUpRight className="h-5 w-5 text-neutral-400" aria-hidden="true" />
-              </span>
-            </Card>
-          </ClickableCard>
-          <ClickableCard to="cobrar-hoy" label="Ir a cobrar hoy por eficiencia" onNavigate={onNavigate} go={go}>
-            <Card interactive className="flex min-h-[44px] items-center justify-between active:bg-white/70 dark:active:bg-white/10">
-              <div className="min-w-0">
-                <p className="label-micro">Eficiencia cobro hoy</p>
-                <p className="mt-1 break-words font-display text-2xl font-bold tabular-nums text-navy-800 dark:text-navy-50">{k.eficienciaCobroHoy == null ? '—' : `${k.eficienciaCobroHoy.toFixed(0)}%`}</p>
-                <p className="mt-1 line-clamp-2 text-xs text-neutral-500 dark:text-navy-300">{formatCRC(k.totalCobradoHoy)} / {formatCRC(k.totalPorCobrarHoy)} por cobrar</p>
-              </div>
-              <span className="flex shrink-0 items-center gap-1">
-                <IconBox icon={Target} tone="success" size="md" />
-                <ArrowUpRight className="h-5 w-5 text-neutral-400" aria-hidden="true" />
-              </span>
-            </Card>
-          </ClickableCard>
-          <ClickableCard to="prestamos" label="Ver préstamos por promedio" onNavigate={onNavigate} go={go}>
-            <Card interactive className="flex min-h-[44px] items-center justify-between active:bg-white/70 dark:active:bg-white/10">
-              <div className="min-w-0">
-                <p className="label-micro">Préstamo promedio</p>
-                <p className="mt-1 break-words font-display text-2xl font-bold tabular-nums text-navy-800 dark:text-navy-50">{formatCRC(Math.round(k.prestamoPromedio))}</p>
-                <p className="mt-1 text-xs text-neutral-500 dark:text-navy-300">{k.prestamosActivos} activos</p>
-              </div>
-              <span className="flex shrink-0 items-center gap-1">
-                <IconBox icon={BarChart3} tone="gold" size="md" />
-                <ArrowUpRight className="h-5 w-5 text-neutral-400" aria-hidden="true" />
-              </span>
-            </Card>
-          </ClickableCard>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           <ClickableCard to="cobrar-hoy" label="Ver por cobrar hoy" onNavigate={onNavigate} go={go}>
             <Card interactive className="flex min-h-[44px] items-center justify-between active:bg-white/70 dark:active:bg-white/10">
               <div className="min-w-0">
@@ -350,6 +303,19 @@ export function ResumenPage({ onNavigate }) {
               </div>
               <span className="flex shrink-0 items-center gap-1">
                 <Sparkline data={data.spark30.slice(-14)} color="#0ea5e9" height={24} />
+                <ArrowUpRight className="h-5 w-5 text-neutral-400" aria-hidden="true" />
+              </span>
+            </Card>
+          </ClickableCard>
+          <ClickableCard to="atrasados" label="Ver atrasados por tasa de morosidad" onNavigate={onNavigate} go={go}>
+            <Card interactive className="flex min-h-[44px] items-center justify-between active:bg-white/70 dark:active:bg-white/10">
+              <div className="min-w-0">
+                <p className="label-micro">Tasa morosidad</p>
+                <p className={`mt-1 break-words font-display text-2xl font-bold tabular-nums ${k.tasaMorosidad > 10 ? 'text-danger-600' : 'text-navy-800 dark:text-navy-50'}`}>{k.tasaMorosidad.toFixed(1)}%</p>
+                <p className="mt-1 line-clamp-2 text-xs text-neutral-500 dark:text-navy-300">{formatCRC(k.totalAtrasado)} / {formatCRC(k.carteraActiva)}</p>
+              </div>
+              <span className="flex shrink-0 items-center gap-1">
+                <IconBox icon={Percent} tone={k.tasaMorosidad > 10 ? 'danger' : 'neutral'} size="md" />
                 <ArrowUpRight className="h-5 w-5 text-neutral-400" aria-hidden="true" />
               </span>
             </Card>
@@ -379,7 +345,7 @@ export function ResumenPage({ onNavigate }) {
               {donutData.map((d) => {
                 const pct = porEstadoTotal > 0 ? Math.round((d.value / porEstadoTotal) * 100) : 0;
                 return (
-                  <span key={d.label} className="inline-flex items-center gap-1">
+                  <span key={d.label} className="inline-flex items-center gap-1 whitespace-nowrap">
                     <span className="h-2 w-2 rounded-full" style={{ backgroundColor: d.color }} />
                     {d.label} {d.value} ({pct}%)
                   </span>
@@ -394,33 +360,19 @@ export function ResumenPage({ onNavigate }) {
         <Card>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <SectionTitle title={`Distribución por ruta (top ${rutaData.length})`} />
-            <div className="flex gap-1 rounded-full border border-white/50 bg-white/50 p-1 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04]" role="tablist" aria-label="Vista de distribución por ruta">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={vistaRuta === 'saldo'}
-                onClick={() => setVistaRuta('saldo')}
-                className={vistaRuta === 'saldo'
-                  ? 'rounded-full bg-white/80 px-3 py-2.5 text-xs font-bold shadow-sm touch-manipulation backdrop-blur-md text-navy-900 dark:bg-white/10 dark:text-white'
-                  : 'px-3 py-2.5 text-xs font-semibold touch-manipulation text-neutral-500 dark:text-navy-300'}
-              >
-                Por saldo ₡
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={vistaRuta === 'cantidad'}
-                onClick={() => setVistaRuta('cantidad')}
-                className={vistaRuta === 'cantidad'
-                  ? 'rounded-full bg-white/80 px-3 py-2.5 text-xs font-bold shadow-sm touch-manipulation backdrop-blur-md text-navy-900 dark:bg-white/10 dark:text-white'
-                  : 'px-3 py-2.5 text-xs font-semibold touch-manipulation text-neutral-500 dark:text-navy-300'}
-              >
-                Por cantidad
-              </button>
+            <div className="flex items-center gap-4 text-xs font-semibold" aria-label="Leyenda">
+              <span className="inline-flex items-center gap-1.5 text-navy-700 dark:text-navy-200">
+                <span className="h-2 w-2 rounded-full bg-gold-gradient" aria-hidden="true" />
+                Saldo ₡
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-navy-700 dark:text-navy-200">
+                <span className="h-2 w-2 rounded-full bg-info-500" aria-hidden="true" />
+                Préstamos
+              </span>
             </div>
           </div>
           <p className="mt-1 text-sm text-neutral-600 dark:text-navy-300">
-            {vistaRuta === 'saldo' ? 'Top 5 rutas por saldo pendiente' : 'Top 5 rutas por cantidad de préstamos'}
+            Top 5 rutas por saldo pendiente y cantidad de préstamos
           </p>
           <div className="mt-3">
             {rutaData.length === 0 ? (
@@ -428,7 +380,8 @@ export function ResumenPage({ onNavigate }) {
             ) : (
               <HorizontalBars
                 data={rutaData}
-                formatValue={(v) => (vistaRuta === 'saldo' ? formatCRC(v) : String(v))}
+                formatSaldo={(v) => formatCRC(v)}
+                formatCount={(v) => String(v)}
               />
             )}
           </div>
