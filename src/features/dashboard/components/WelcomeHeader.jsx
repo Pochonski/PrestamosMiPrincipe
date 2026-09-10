@@ -26,7 +26,7 @@ export function WelcomeHeader({ user, kpis }) {
           <Avatar nombre={u.nombre} color={u.color} size="lg" />
           <div className="min-w-0">
             <p className="section-label text-gold-600 dark:text-gold-400">{saludo}</p>
-            <h1 className="mt-0.5 truncate font-display text-xl font-bold tracking-tight text-navy-900 sm:text-2xl dark:text-white">
+            <h1 className="mt-0.5 truncate font-display text-xl font-bold tracking-tight text-navy-900 sm:text-2xl bg-gold-deep-gradient bg-clip-text text-transparent dark:bg-none dark:text-white">
               {(u.nombre || '').split(' ')[0] || u.email?.split('@')[0] || 'Hola'}
             </h1>
             <p className="mt-1 text-sm text-neutral-600 dark:text-navy-300">{microMsg}</p>

@@ -37,9 +37,7 @@ export const MobileBottomNav = memo(function MobileBottomNav({ page, onNavigate 
   return (
     <nav
       className={clsx(
-        'fixed inset-x-0 bottom-0 z-30 border-t backdrop-blur-xl backdrop-saturate-150 safe-bottom lg:hidden',
-        'bg-white/60 border-white/50 shadow-glass supports-[backdrop-filter]:bg-white/60',
-        'dark:bg-black/50 dark:border-white/10 dark:shadow-glass-dark dark:supports-[backdrop-filter]:bg-black/50',
+        'glass fixed inset-x-0 bottom-0 z-30 safe-bottom lg:hidden',
       )}
       aria-label="Navegación principal"
     >

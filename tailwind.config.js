@@ -107,13 +107,14 @@ export default {
       backgroundImage: {
         'gold-gradient': 'linear-gradient(135deg, #E0C44D 0%, #D4AF37 50%, #B8902A 100%)',
         'champagne-gradient': 'linear-gradient(135deg, #F3DFA0 0%, #E0C44D 55%, #D4AF37 100%)',
+        'gold-deep-gradient': 'linear-gradient(135deg, #96701F 0%, #73521A 55%, #503916 100%)',
         'gold-shine': 'linear-gradient(110deg, transparent 33%, rgb(255 255 255 / 0.25) 50%, transparent 67%)',
         'navy-gradient': 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)',
         'navy-radial': 'radial-gradient(ellipse at top, #1E293B 0%, #020617 100%)',
         'hero-surface':
           'radial-gradient(60rem 14rem at 100% 0%, rgb(212 175 55 / 0.10), transparent 70%), radial-gradient(40rem 20rem at -5% 100%, rgb(30 41 59 / 0.08), transparent 70%)',
         'app-aurora-light':
-          'radial-gradient(40rem 20rem at 85% -5%, rgb(212 175 55 / 0.20), transparent 70%), radial-gradient(36rem 22rem at -10% 25%, rgb(14 165 233 / 0.12), transparent 70%), radial-gradient(28rem 18rem at 15% 110%, rgb(16 185 129 / 0.10), transparent 70%), radial-gradient(30rem 18rem at 50% 110%, rgb(30 41 59 / 0.08), transparent 70%)',
+          'radial-gradient(40rem 20rem at 85% -5%, rgb(212 175 55 / 0.28), transparent 70%), radial-gradient(36rem 22rem at -10% 25%, rgb(14 165 233 / 0.18), transparent 70%), radial-gradient(28rem 18rem at 15% 110%, rgb(16 185 129 / 0.14), transparent 70%), radial-gradient(30rem 18rem at 50% 110%, rgb(30 41 59 / 0.08), transparent 70%)',
         'app-aurora-dark':
           'radial-gradient(40rem 20rem at 85% -5%, rgb(212 175 55 / 0.28), transparent 70%), radial-gradient(36rem 22rem at -10% 25%, rgb(14 165 233 / 0.20), transparent 70%), radial-gradient(28rem 18rem at 15% 110%, rgb(167 139 250 / 0.12), transparent 70%), radial-gradient(30rem 18rem at 50% 110%, rgb(0 0 0 / 0.4), transparent 70%)',
       },

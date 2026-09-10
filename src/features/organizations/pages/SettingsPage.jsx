@@ -148,7 +148,7 @@ export function SettingsPage() {
         </Alert>
       )}
 
-      <div className="flex gap-2 border-b border-slate-200 dark:border-navy-700">
+      <div className="flex gap-2 border-b border-white/50 dark:border-white/10">
         {[
           { id: 'general', label: 'General', icon: Building2 },
           { id: 'miembros', label: `Miembros (${members.length})`, icon: Users },

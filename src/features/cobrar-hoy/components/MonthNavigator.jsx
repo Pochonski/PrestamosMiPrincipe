@@ -16,7 +16,7 @@ export function MonthNavigator({ monthKey, onChange }) {
         <ChevronLeft className="h-5 w-5" aria-hidden="true" />
       </button>
       <p className="inline-flex min-w-0 flex-1 items-center justify-center gap-2 truncate text-sm font-bold text-navy-900 dark:text-white">
-        <CalendarDays className="h-4 w-4 shrink-0 text-gold-500" aria-hidden="true" />
+        <CalendarDays className="h-4 w-4 shrink-0 text-gold-600 dark:text-gold-400" aria-hidden="true" />
         <span className="truncate">{label}</span>
       </p>
       <button

@@ -23,9 +23,9 @@ export function showToast(message, tone = 'success', options = {}) {
 }
 
 const TONES = {
-  success: 'bg-success-600/90 text-white border-white/20 shadow-glass-dark',
-  error: 'bg-danger-600/90 text-white border-white/20 shadow-glass-dark',
-  info: 'bg-navy-800/90 text-white border-white/10 shadow-glass-dark',
+  success: 'bg-success-600/70 text-white border-white/20 shadow-glass-dark',
+  error: 'bg-danger-600/70 text-white border-white/20 shadow-glass-dark',
+  info: 'bg-navy-800/70 text-white border-white/10 shadow-glass-dark dark:bg-black/60',
 };
 
 const ICONS = {
@@ -62,7 +62,7 @@ function ToastItem({ toast, onDone }) {
       role={toast.tone === 'error' ? 'alert' : 'status'}
       aria-live={toast.tone === 'error' ? 'assertive' : 'polite'}
       className={clsx(
-        'flex items-center gap-3 rounded-full border px-4 py-2.5 text-sm font-medium shadow-cardHover animate-slide-up backdrop-blur-xl backdrop-saturate-150',
+        'glass-strong flex items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium animate-slide-up',
         TONES[toast.tone] || TONES.info,
       )}
     >

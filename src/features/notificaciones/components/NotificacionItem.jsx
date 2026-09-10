@@ -51,7 +51,7 @@ export function NotificacionItem({ item, onClick }) {
                 className="label-micro inline-flex items-center gap-1 text-gold-700 dark:text-gold-300"
               >
                 <Circle
-                  className="h-2 w-2 shrink-0 fill-gold-500 text-gold-500"
+                  className="h-2 w-2 shrink-0 fill-gold-600 text-gold-600 dark:fill-gold-400 dark:text-gold-400"
                   aria-hidden="true"
                 />
                 <span>Nueva</span>

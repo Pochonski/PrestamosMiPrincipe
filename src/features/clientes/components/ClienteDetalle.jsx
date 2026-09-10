@@ -209,13 +209,13 @@ export function ClienteDetalle({ onNavigate, params }) {
             </div>
           </div>
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <div className="flex items-center gap-2 rounded-input bg-slate-50 px-3 py-2 dark:bg-navy-700/50">
+            <div className="glass-subtle flex items-center gap-2 rounded-input px-3 py-2">
               <IconBox icon={Phone} tone="neutral" size="sm" />
               <span className="text-sm text-navy-900 dark:text-white">
                 {formatPhoneCR(cliente.telefono)}
               </span>
             </div>
-            <div className="flex items-start gap-2 rounded-input bg-slate-50 px-3 py-2 dark:bg-navy-700/50">
+            <div className="glass-subtle flex items-start gap-2 rounded-input px-3 py-2">
               <IconBox icon={MapPin} tone="neutral" size="sm" />
               <span className="text-sm text-navy-900 dark:text-white">{cliente.direccion}</span>
             </div>

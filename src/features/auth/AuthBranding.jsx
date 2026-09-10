@@ -36,7 +36,7 @@ export function AuthBranding() {
           <h1 className="font-serif text-4xl font-semibold leading-[1.08] tracking-tight sm:text-5xl">
             Gestioná tu cartera
             <br />
-            <span className="bg-gold-gradient bg-clip-text text-transparent">con elegancia</span>
+            <span className="bg-champagne-gradient bg-clip-text text-transparent">con elegancia</span>
           </h1>
           <p className="mt-4 max-w-md text-base text-navy-200">
             Plataforma premium para cobros de préstamos. Sincronizada en la nube, multi-usuario y

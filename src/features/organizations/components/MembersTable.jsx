@@ -20,7 +20,7 @@ export function MembersTable({ members, loading, onChangeRole, onRemove }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin text-gold-500" />
+        <Loader2 className="h-6 w-6 animate-spin text-gold-600 dark:text-glow-gold" />
       </div>
     );
   }
@@ -89,7 +89,7 @@ export function MembersTable({ members, loading, onChangeRole, onRemove }) {
                     }}
                     className="text-danger-600"
                   />
-                  {actingId === m.user_id && <Loader2 className="h-4 w-4 animate-spin text-gold-500" />}
+                  {actingId === m.user_id && <Loader2 className="h-4 w-4 animate-spin text-gold-600 dark:text-glow-gold" />}
                 </div>
               )}
             </div>

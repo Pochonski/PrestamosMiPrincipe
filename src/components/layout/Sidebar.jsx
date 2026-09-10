@@ -38,8 +38,7 @@ export const Sidebar = memo(function Sidebar({ open, page, onNavigate, onClose }
 
       <aside
         className={clsx(
-          'fixed inset-y-0 left-0 z-50 flex flex-col border-r backdrop-blur-2xl backdrop-saturate-150 bg-white/60 shadow-glass',
-          'border-white/50 dark:bg-black/40 dark:border-white/10 dark:shadow-glass-dark',
+          'glass fixed inset-y-0 left-0 z-50 flex flex-col',
           'transition-transform duration-300 ease-out',
           'w-[var(--sidebar-w)] lg:translate-x-0',
           open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
@@ -123,7 +122,7 @@ function NavLink({ item, active, onClick }) {
         <Icon
           className={clsx(
             'h-5 w-5 shrink-0 transition-colors',
-            active ? 'text-gold-500' : 'text-neutral-400 group-hover:text-navy-600 dark:text-navy-300 dark:group-hover:text-navy-100',
+            active ? 'text-gold-600 dark:text-gold-300' : 'text-neutral-400 group-hover:text-navy-600 dark:text-navy-300 dark:group-hover:text-navy-100',
           )}
           aria-hidden="true"
         />

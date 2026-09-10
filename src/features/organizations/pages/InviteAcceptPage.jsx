@@ -98,7 +98,7 @@ export function InviteAcceptPage() {
     return (
       <div className="relative flex min-h-screen items-center justify-center bg-neutral-50 bg-app-aurora-light dark:bg-black dark:bg-app-aurora-dark">
         <Card className="w-full max-w-md space-y-4 text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-gold-500" />
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-gold-600 dark:text-glow-gold" />
           <p className="text-sm font-semibold text-navy-900 dark:text-white">Aceptando invitación...</p>
         </Card>
       </div>

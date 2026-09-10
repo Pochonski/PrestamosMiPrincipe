@@ -87,7 +87,8 @@
 
   /* Borde en degradado (brillante arriba-izq → tenue abajo-der), respeta border-radius */
   .glass::before,
-  .glass-strong::before {
+  .glass-strong::before,
+  .glass-subtle::before {
     content: '';
     position: absolute;
     inset: 0;
@@ -108,7 +109,8 @@
   }
 
   .dark .glass::before,
-  .dark .glass-strong::before {
+  .dark .glass-strong::before,
+  .dark .glass-subtle::before {
     background: linear-gradient(
       135deg,
       rgb(255 255 255 / 0.35),
@@ -155,6 +157,7 @@
 
   .glass-subtle {
     @apply bg-white/50 backdrop-blur-md backdrop-saturate-150 border border-white/50 shadow-card dark:bg-white/[0.06] dark:border-white/10;
+    position: relative;
   }
 
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {

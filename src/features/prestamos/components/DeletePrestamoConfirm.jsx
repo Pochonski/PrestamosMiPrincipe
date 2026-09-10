@@ -42,7 +42,7 @@ export function DeletePrestamoConfirm({ prestamo, loading, onConfirm, onCancel }
       }
     >
       <div className="space-y-4">
-        <div className="rounded-card bg-slate-50 px-4 py-3 dark:bg-navy-700/50">
+        <div className="glass-subtle rounded-card px-4 py-3">
           <p className="section-label">Préstamo</p>
           <p className="mt-1 text-sm font-semibold text-navy-900 dark:text-white">
             {prestamo?.ruta || '—'}

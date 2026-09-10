@@ -8,7 +8,7 @@ export function DonutChart({ data, total, size = 180, colorMap }) {
   if (!data || data.length === 0 || total === 0) {
     return (
       <div
-        className="flex items-center justify-center rounded-full border-2 border-dashed border-slate-200 dark:border-navy-700"
+        className="flex items-center justify-center rounded-full border-2 border-dashed border-white/50 dark:border-white/10"
         style={{ width: size, height: size }}
         role="img"
         aria-label="Sin datos"

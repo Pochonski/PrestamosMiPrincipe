@@ -102,7 +102,7 @@ export function ClienteCobroRow({ grupo, maxTotal, onVerCliente, onVerCobro }) {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-navy-900 dark:text-white">
                     {formatDate(c.fecha)}
-                    {c.cuotaNumero != null && <span className="text-neutral-400"> · Cuota #{c.cuotaNumero}</span>}
+                    {c.cuotaNumero != null && <span className="text-neutral-500 dark:text-navy-300"> · Cuota #{c.cuotaNumero}</span>}
                   </p>
                   <p className="truncate text-xs text-neutral-500 dark:text-navy-300">
                     {[c.ruta, c.nota].filter(Boolean).join(' · ') || '—'}

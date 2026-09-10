@@ -241,7 +241,7 @@ export function PrestamoDetalle({ onNavigate, params }) {
             <button
               type="button"
               onClick={() => onNavigate?.('cliente-detalle', { clienteId: cliente.id })}
-              className="mt-4 flex items-center gap-3 rounded-input bg-slate-50 px-3 py-2 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 dark:bg-navy-700/50 dark:hover:bg-navy-700"
+              className="glass-subtle mt-4 flex items-center gap-3 rounded-input px-3 py-2 transition-colors hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 dark:hover:bg-white/10"
             >
               <Avatar nombre={cliente.nombre} size="sm" />
               <div className="text-left">

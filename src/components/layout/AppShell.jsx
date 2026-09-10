@@ -130,7 +130,7 @@ export function AppShell({ pages = {}, page: controlledPage, params: controlledP
 
         <div
           aria-hidden="true"
-          className="hidden border-t border-white/50 bg-white/60 px-5 py-3 text-xs text-neutral-500 backdrop-blur-md dark:border-white/10 dark:bg-black/50 dark:text-navy-300 lg:block"
+          className="glass hidden px-5 py-3 text-xs text-neutral-500 dark:text-navy-300 lg:block"
         >
           <div className="mx-auto flex max-w-6xl items-center justify-between">
             <span>

@@ -253,11 +253,11 @@ export function LoginForm({ mode = 'signin', onAuth, redirectTo = '/' }) {
       {!isSignUp && (
         <>
           <div className="relative my-4 flex items-center">
-            <div className="flex-1 border-t border-slate-200 dark:border-navy-700" />
+            <div className="flex-1 border-t border-white/50 dark:border-white/10" />
             <span className="px-3 text-[10px] font-bold uppercase tracking-widest text-neutral-400 dark:text-navy-300">
               o continuar con
             </span>
-            <div className="flex-1 border-t border-slate-200 dark:border-navy-700" />
+            <div className="flex-1 border-t border-white/50 dark:border-white/10" />
           </div>
 
           <SocialButton onClick={handleGoogle} icon={GoogleIcon}>

@@ -43,7 +43,7 @@ export function Logo({ withText = true, size = 'md', className, onClick }) {
       </span>
       {withText && (
         <span className={clsx('font-display font-bold tracking-tight text-navy-900 dark:text-white', s.text)}>
-          Mi <span className="text-gold-500">Príncipe</span>
+          Mi <span className="text-gold-600 dark:text-glow-gold">Príncipe</span>
         </span>
       )}
     </Wrapper>

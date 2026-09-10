@@ -32,7 +32,7 @@ export function DeleteConfirm({ cliente, onConfirm, onCancel }) {
       }
     >
       <div className="space-y-5">
-        <div className="flex items-center gap-3 rounded-card bg-slate-50 px-3 py-3 dark:bg-navy-700/50">
+        <div className="glass-subtle flex items-center gap-3 rounded-card px-3 py-3">
           <Avatar nombre={cliente?.nombre} size="sm" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-navy-900 dark:text-white">

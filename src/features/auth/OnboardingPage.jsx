@@ -40,7 +40,7 @@ export function OnboardingPage() {
           <h1 className="font-serif text-4xl font-semibold leading-[1.08] tracking-tight sm:text-5xl">
             Bienvenido,
             <br />
-            <span className="bg-gold-gradient bg-clip-text text-transparent">{name}</span>
+            <span className="bg-champagne-gradient bg-clip-text text-transparent">{name}</span>
           </h1>
           <p className="max-w-md text-base text-navy-200">
             Estás a un paso de empezar. Solo necesitamos un nombre para tu organización y todo

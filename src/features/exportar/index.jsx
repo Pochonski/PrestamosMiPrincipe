@@ -129,7 +129,7 @@ export function ExportarPage() {
                     'group flex w-full flex-col items-start gap-3 rounded-card border p-4 text-left transition-all',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black',
                     disabled
-                      ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-50 dark:border-white/10 dark:bg-white/[0.03]'
+                      ? 'cursor-not-allowed border-white/50 bg-white/40 opacity-50 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.03]'
                       : 'cursor-pointer border-white/50 bg-white/60 backdrop-blur-md hover:-translate-y-0.5 hover:border-gold-400 hover:shadow-glass-strong hover:bg-white/80 dark:border-white/10 dark:bg-white/[0.06] dark:hover:border-gold-400 dark:hover:bg-white/10',
                   )}
                 >
