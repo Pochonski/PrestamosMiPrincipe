@@ -8,8 +8,8 @@ export function ClienteSearch({ value, onChange, total, filtered }) {
     <div className="space-y-2">
       <div
         className={clsx(
-          'glass flex items-center gap-2 rounded-card px-3 py-2.5 transition-all',
-          'focus-within:border-gold-400 focus-within:ring-2 focus-within:ring-gold-400/30',
+          'glass flex min-h-[44px] items-center gap-2 rounded-card px-3 py-3 transition-all',
+          'focus-within:border-gold-400 focus-within:ring-2 focus-within:ring-gold-400/25',
         )}
       >
         <Search className="h-4 w-4 shrink-0 text-neutral-400 dark:text-navy-300" aria-hidden="true" />
@@ -34,7 +34,7 @@ export function ClienteSearch({ value, onChange, total, filtered }) {
             icon={X}
             onClick={() => onChange('')}
             aria-label="Limpiar búsqueda"
-            className="!h-7 !w-7 !p-0"
+            className="!h-9 !w-9 !p-0 sm:!h-7 sm:!w-7"
           />
         )}
       </div>

@@ -61,12 +61,12 @@ export function DashboardPage({ onNavigate }) {
 
       <KpiRow kpis={data.kpis} deltas={data.deltas} metrics={data.metrics} />
 
-      <section className="space-y-2">
+      <section className="space-y-3">
         <h2 className="section-label">Accesos rápidos</h2>
         <QuickActionsRow badges={data.badges} onNavigate={onNavigate} />
       </section>
 
-      <section className="space-y-2">
+      <section className="space-y-3">
         <h2 className="section-label">Acciones principales</h2>
         <PrimaryActions onNavigate={onNavigate} />
       </section>

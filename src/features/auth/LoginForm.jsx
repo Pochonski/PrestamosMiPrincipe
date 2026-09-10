@@ -6,7 +6,6 @@ import { supabase } from '../../lib/supabase';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { Alert } from '../../components/ui/Alert';
-import { SocialButton } from './components/SocialButton';
 import { describeAuthError as describeError } from './errors';
 
 function GoogleIcon() {
@@ -167,7 +166,7 @@ export function LoginForm({ mode = 'signin', onAuth, redirectTo = '/' }) {
               size="sm"
               icon={KeyRound}
               onClick={handleForgot}
-              className="!h-7 !px-2 !text-xs"
+              className="!h-9 !px-2 !text-xs sm:!h-7"
             >
               Recuperar contraseña
             </Button>
@@ -177,7 +176,7 @@ export function LoginForm({ mode = 'signin', onAuth, redirectTo = '/' }) {
               variant="ghost"
               size="sm"
               onClick={handleResendConfirmation}
-              className="!h-7 !px-2 !text-xs"
+              className="!h-9 !px-2 !text-xs sm:!h-7"
             >
               Reenviar email de confirmación
             </Button>
@@ -226,12 +225,12 @@ export function LoginForm({ mode = 'signin', onAuth, redirectTo = '/' }) {
 
       {!isSignUp && (
         <div className="flex items-center justify-between text-sm">
-          <label className="inline-flex cursor-pointer items-center gap-2 text-neutral-600 dark:text-navy-200">
+          <label className="inline-flex min-h-[44px] cursor-pointer items-center gap-2 text-neutral-600 dark:text-navy-200">
             <input
               type="checkbox"
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-gold-500 focus:ring-gold-400 dark:border-navy-600 dark:bg-navy-800"
+              className="h-5 w-5 rounded border-slate-300 text-gold-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-white/20 dark:bg-white/10 dark:focus-visible:ring-offset-black"
             />
             Recordarme
           </label>
@@ -260,9 +259,9 @@ export function LoginForm({ mode = 'signin', onAuth, redirectTo = '/' }) {
             <div className="flex-1 border-t border-white/50 dark:border-white/10" />
           </div>
 
-          <SocialButton onClick={handleGoogle} icon={GoogleIcon}>
-            Google
-          </SocialButton>
+          <Button variant="secondary" size="lg" fullWidth icon={GoogleIcon} onClick={handleGoogle}>
+            Continuar con Google
+          </Button>
         </>
       )}
     </form>

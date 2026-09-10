@@ -49,16 +49,17 @@ export function InviteModal({ open, onClose, onCreated }) {
           <Alert tone="success" title="Invitación creada">
             Se creó la invitación para <strong>{created.email}</strong> como <strong>{created.rol}</strong>.
           </Alert>
-          <div className="glass-subtle rounded-card p-3">
+          <div className="rounded-card border border-white/50 bg-white/50 p-3 dark:border-white/10 dark:bg-white/[0.04]">
             <p className="text-xs font-semibold text-neutral-600 dark:text-navy-300">Link de invitación (válido 7 días):</p>
             <div className="mt-1 flex items-center gap-2">
               <input
                 readOnly
+                aria-label="Link de invitación"
                 value={invitesService.buildInviteLink(created.token, currentOrg?.slug)}
-                className="flex-1 rounded-input border border-white/50 bg-white/70 px-3 py-2 text-xs backdrop-blur-md dark:border-white/10 dark:bg-white/[0.06]"
+                className="h-11 flex-1 rounded-input border border-white/50 bg-white/70 px-3 py-2 text-xs backdrop-blur-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-white/10 dark:bg-white/[0.06] dark:text-white dark:focus-visible:ring-offset-black"
               />
               <Button
-                size="sm"
+                size="md"
                 onClick={() => {
                   navigator.clipboard.writeText(invitesService.buildInviteLink(created.token, currentOrg?.slug));
                 }}
@@ -68,7 +69,7 @@ export function InviteModal({ open, onClose, onCreated }) {
             </div>
             <p className="mt-2 text-xs text-neutral-500">Compartí este link con la persona. Expira el {new Date(created.expires_at).toLocaleDateString('es-CR')}.</p>
           </div>
-          <Button variant="secondary" fullWidth onClick={handleClose}>
+          <Button variant="primary" fullWidth onClick={handleClose}>
             Cerrar
           </Button>
         </div>
@@ -91,11 +92,12 @@ export function InviteModal({ open, onClose, onCreated }) {
             autoFocus
           />
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-navy-700 dark:text-navy-200">Rol</label>
+            <label htmlFor="invite-rol" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-navy-700 dark:text-navy-200">Rol</label>
             <select
+              id="invite-rol"
               value={inviteRol}
               onChange={(e) => setInviteRol(e.target.value)}
-              className="w-full rounded-input border border-white/50 bg-white/70 px-3 py-2.5 text-sm backdrop-blur-md dark:border-white/10 dark:bg-white/[0.06]"
+              className="min-h-[44px] w-full rounded-input border border-white/50 bg-white/70 px-3 py-2.5 text-sm backdrop-blur-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-white/10 dark:bg-white/[0.06] dark:text-white dark:focus-visible:ring-offset-black"
             >
               {canInviteAdmin && <option value="admin">Admin — gestiona miembros y todo</option>}
               <option value="cobrador">Cobrador — CRUD clientes/préstamos/cobros</option>

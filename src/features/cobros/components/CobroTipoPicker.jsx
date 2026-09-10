@@ -8,7 +8,7 @@ const ICON_MAP = { Percent, Wallet };
 export function CobroTipoPicker({ value, onChange }) {
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-navy-700 dark:text-navy-200">
+      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-navy-700 dark:text-navy-200">
         Tipo de cobro <span className="ml-0.5 text-danger-500">*</span>
       </p>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">

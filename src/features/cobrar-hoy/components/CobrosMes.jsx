@@ -25,7 +25,7 @@ const SORTS = [
 ];
 
 const selectCls =
-  'rounded-input border border-white/50 bg-white/70 backdrop-blur-md px-3 py-2 text-sm font-medium text-navy-800 dark:border-white/10 dark:bg-white/[0.06] dark:text-navy-100';
+  'rounded-input border border-white/50 bg-white/70 backdrop-blur-md px-4 py-2.5 text-sm font-medium text-navy-800 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-white/10 dark:bg-white/[0.06] dark:text-navy-100 dark:focus-visible:ring-offset-black';
 
 const CSV_COLUMNS = [
   { key: 'fecha', label: 'Fecha' },
@@ -90,9 +90,9 @@ export function CobrosMes({ onNavigate }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5 sm:gap-6">
         <Skeleton className="h-14 w-full" />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
           <Skeleton className="h-28 w-full" />
           <Skeleton className="h-28 w-full" />
           <Skeleton className="h-28 w-full" />
@@ -104,7 +104,7 @@ export function CobrosMes({ onNavigate }) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5 sm:gap-6">
       <MonthNavigator monthKey={monthKey} onChange={setMonthKey} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
@@ -127,7 +127,7 @@ export function CobrosMes({ onNavigate }) {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
         <label className="relative block">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" aria-hidden="true" />
           <input
@@ -136,7 +136,7 @@ export function CobrosMes({ onNavigate }) {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar cliente, cédula o teléfono…"
             aria-label="Buscar cobros del mes"
-            className="w-full rounded-input border border-white/50 bg-white/70 backdrop-blur-md py-2 pl-9 pr-3 text-sm text-navy-800 placeholder:text-neutral-400 dark:border-white/10 dark:bg-white/[0.06] dark:text-navy-100"
+            className="w-full min-h-[44px] rounded-input border border-white/50 bg-white/70 backdrop-blur-md py-2.5 pl-9 pr-3 text-sm text-navy-800 placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-white/10 dark:bg-white/[0.06] dark:text-navy-100 dark:focus-visible:ring-offset-black"
           />
         </label>
         <select value={ruta} onChange={(e) => setRuta(e.target.value)} aria-label="Filtrar por ruta" className={selectCls}>
@@ -192,7 +192,7 @@ export function CobrosMes({ onNavigate }) {
       <section className="space-y-3">
         <SectionTitle title="Conciliación del mes" />
         <Card padding="md">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
             <div>
               <p className="section-label">Total mes</p>
               <p className="mt-0.5 text-base font-bold tabular-nums text-navy-900 dark:text-white">{formatCRC(totales.total)}</p>
@@ -239,7 +239,7 @@ export function CobrosMes({ onNavigate }) {
               type="button"
               onClick={handleExport}
               disabled={totales.count === 0}
-              className="inline-flex items-center gap-1.5 rounded-input bg-navy-900 px-3 py-2 text-xs font-bold text-white disabled:opacity-50 dark:bg-gold-500 dark:text-navy-900"
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-input bg-navy-900 px-4 py-2 text-xs font-bold text-white disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-gold-500 dark:text-navy-900 dark:focus-visible:ring-offset-black"
             >
               <Download className="h-3.5 w-3.5" aria-hidden="true" />
               Exportar CSV del mes

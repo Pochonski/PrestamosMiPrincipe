@@ -13,7 +13,7 @@ const PERIODOS = [
 ];
 
 const selectCls =
-  'rounded-input border border-white/50 bg-white/70 backdrop-blur-md px-3 py-2 text-sm font-medium text-navy-800 dark:border-white/10 dark:bg-white/[0.06] dark:text-navy-100';
+  'rounded-input border border-white/50 bg-white/70 backdrop-blur-md px-4 py-2.5 text-sm font-medium text-navy-800 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-white/10 dark:bg-white/[0.06] dark:text-navy-100 dark:focus-visible:ring-offset-black';
 
 export function PrestamosFilters({
   tab,
@@ -40,7 +40,7 @@ export function PrestamosFilters({
             aria-selected={tab === t.id}
             onClick={() => setTab(t.id)}
             className={clsx(
-              'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all',
+              'inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition-all min-h-[44px] sm:min-h-0',
               tab === t.id
                 ? 'bg-navy-900 text-white shadow-card dark:bg-gold-500 dark:text-navy-900'
                 : 'bg-white/50 backdrop-blur-md text-navy-700 hover:bg-white/80 dark:bg-white/[0.06] dark:text-navy-200 dark:hover:bg-white/10',
@@ -63,7 +63,7 @@ export function PrestamosFilters({
             onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar cliente, cédula, teléfono o ruta…"
             aria-label="Buscar préstamos"
-            className="w-full rounded-input border border-white/50 bg-white/70 backdrop-blur-md py-2 pl-9 pr-3 text-sm text-navy-800 placeholder:text-neutral-400 dark:border-white/10 dark:bg-white/[0.06] dark:text-navy-100"
+            className="w-full min-h-[44px] rounded-input border border-white/50 bg-white/70 backdrop-blur-md py-2.5 pl-9 pr-3 text-sm text-navy-800 placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-white/10 dark:bg-white/[0.06] dark:text-navy-100 dark:focus-visible:ring-offset-black"
           />
         </label>
         <select value={ruta} onChange={(e) => setRuta(e.target.value)} aria-label="Filtrar por ruta" className={selectCls}>

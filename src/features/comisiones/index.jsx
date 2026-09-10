@@ -46,7 +46,7 @@ export function ComisionesPage({ onNavigate }) {
     return (
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
         <Skeleton className="h-10 w-48" />
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
           {[0, 1, 2].map((i) => (
             <Skeleton key={i} className="h-24 w-full" />
           ))}
@@ -84,13 +84,13 @@ export function ComisionesPage({ onNavigate }) {
             description="Editá un préstamo y cargá la tasa del acreedor para empezar a ver tu comisión."
           />
         ) : (
-          <Card className="divide-y divide-slate-100 p-0 dark:divide-white/10">
+          <Card padding="none" className="divide-y divide-slate-100 overflow-hidden dark:divide-white/10">
             {r.porPrestamo.map((row) => (
               <button
                 key={row.prestamoId}
                 type="button"
                 onClick={() => onNavigate?.('prestamo-detalle', { prestamoId: row.prestamoId, clienteId: row.clienteId })}
-                className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-gold-400 dark:hover:bg-navy-700/40"
+                className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:hover:bg-white/10 dark:focus-visible:ring-offset-black"
               >
                 <IconBox icon={BadgePercent} tone="gold" size="sm" />
                 <div className="min-w-0 flex-1">

@@ -111,7 +111,7 @@ export class ErrorBoundary extends Component {
 
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-4">
-        <Card className="max-w-md p-6 text-center">
+        <Card padding="lg" className="max-w-md text-center">
           <div className="mx-auto mb-4">
             <IconBox icon={AlertTriangle} tone="rose" size="lg" ring />
           </div>

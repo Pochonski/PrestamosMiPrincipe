@@ -107,7 +107,7 @@ export function ToastViewport() {
       role="region"
       aria-live="polite"
       aria-label="Notificaciones"
-      className="pointer-events-none fixed inset-x-0 top-4 left-1/2 z-50 mx-auto flex w-fit -translate-x-1/2 max-w-[90vw] flex-col items-center gap-2"
+      className="pointer-events-none fixed inset-x-0 top-[calc(1rem+env(safe-area-inset-top))] left-1/2 z-50 mx-auto flex w-fit -translate-x-1/2 max-w-[90vw] flex-col items-center gap-2"
     >
       {toasts.map((t) => (
         <div key={t.id} className="pointer-events-auto">

@@ -116,7 +116,7 @@ export function SettingsPage() {
 
   if (loadingOrg) {
     return (
-      <div className="mx-auto max-w-6xl space-y-4">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
         <Skeleton className="h-20 w-full" />
         <Skeleton className="h-64 w-full" />
       </div>
@@ -148,7 +148,7 @@ export function SettingsPage() {
         </Alert>
       )}
 
-      <div className="flex gap-2 border-b border-white/50 dark:border-white/10">
+      <div className="flex gap-2 overflow-x-auto border-b border-white/50 scrollbar-hide dark:border-white/10" role="tablist" aria-label="Secciones de organización">
         {[
           { id: 'general', label: 'General', icon: Building2 },
           { id: 'miembros', label: `Miembros (${members.length})`, icon: Users },
@@ -156,8 +156,10 @@ export function SettingsPage() {
         ].map((t) => (
           <button
             key={t.id}
+            role="tab"
+            aria-selected={tab === t.id}
             onClick={() => setTab(t.id)}
-            className={`inline-flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm font-semibold ${
+            className={`inline-flex min-h-[44px] shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black ${
               tab === t.id ? 'border-gold-500 text-navy-900 dark:text-white' : 'border-transparent text-neutral-500'
             }`}
           >
@@ -169,7 +171,7 @@ export function SettingsPage() {
       {tab === 'general' && (
         <Card className="space-y-4">
           <SectionTitle title="Datos de la organización" />
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
             <Input
               label="Nombre del negocio"
               value={editNombre}
@@ -186,13 +188,13 @@ export function SettingsPage() {
               disabled={!isOwner && !isAdmin}
             />
           </div>
-          {!isAdmin && <p className="text-xs text-neutral-500">Solo owner/admin pueden editar.</p>}
+          {!isAdmin && <p className="text-[10px] text-neutral-400 dark:text-navy-300">Solo owner/admin pueden editar.</p>}
           <div className="flex justify-end">
             <Button variant="primary" icon={Save} loading={saving} disabled={!isAdmin || !editNombre.trim() || !editSlug.trim()} onClick={handleSave}>
               Guardar cambios
             </Button>
           </div>
-          <div className="glass-subtle rounded-card p-4 text-xs text-neutral-600 dark:text-navy-300">
+          <div className="rounded-card border border-white/50 bg-white/50 p-4 text-xs text-neutral-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-navy-300">
             <div className="flex items-center gap-2">
               <Crown className="h-4 w-4 text-gold-600" />
               Owner: <strong>{members.find((m) => m.rol === 'owner')?.email || org?.owner_id || '—'}</strong>
@@ -207,7 +209,7 @@ export function SettingsPage() {
           <div className="flex items-center justify-between">
             <SectionTitle title="Miembros" />
             {canInvite && (
-              <Button variant="primary" icon={UserPlus} onClick={() => setInviteOpen(true)}>
+              <Button variant="secondary" icon={UserPlus} onClick={() => setInviteOpen(true)}>
                 Invitar
               </Button>
             )}
@@ -221,7 +223,7 @@ export function SettingsPage() {
           <div className="flex items-center justify-between">
             <SectionTitle title="Invitaciones" />
             {canInvite && (
-              <Button variant="primary" icon={UserPlus} onClick={() => setInviteOpen(true)}>
+              <Button variant="secondary" icon={UserPlus} onClick={() => setInviteOpen(true)}>
                 Nueva invitación
               </Button>
             )}

@@ -17,7 +17,7 @@ export function ActionTile({ icon: Icon, title, description, tone = 'gold', onCl
       type="button"
       onClick={onClick}
       className={clsx(
-        'group relative flex min-h-[92px] overflow-hidden rounded-card border border-white/40 text-left backdrop-blur-xl transition-all duration-200 ease-out sm:min-h-[104px] dark:border-white/10 glass-glare',
+        'glass glass-glare group relative flex min-h-[92px] overflow-hidden rounded-card text-left transition-all duration-200 ease-out sm:min-h-[104px]',
         'shadow-card hover:shadow-cardHover hover:-translate-y-0.5 active:translate-y-0',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black',
         'disabled:opacity-50 disabled:cursor-not-allowed',

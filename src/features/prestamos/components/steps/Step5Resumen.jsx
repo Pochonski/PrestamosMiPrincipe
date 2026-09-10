@@ -83,7 +83,7 @@ export function Step5Resumen({ values, cliente }) {
         </div>
       </header>
 
-      <Card className="p-4 sm:p-5">
+      <Card>
         {cliente && (
           <div className="mb-3 flex items-center gap-3 border-b border-slate-100 pb-3 dark:border-white/10">
             <Avatar nombre={cliente.nombre} size="sm" />
@@ -138,7 +138,7 @@ export function Step5Resumen({ values, cliente }) {
       )}
 
       {showAcreedor && tieneComision && (
-        <Card className="p-4 sm:p-5">
+        <Card>
           <p className="section-label">Vista acreedor (sin tu comisión)</p>
           <div className="mt-1">
             <Row label="Cuota por período" value={formatCRC(cuotaBase)} />

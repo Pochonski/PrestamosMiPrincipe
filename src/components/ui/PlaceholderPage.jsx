@@ -6,7 +6,7 @@ import { IconBox } from './IconBox';
 export function PlaceholderPage({ titulo, descripcion }) {
   return (
     <div className="flex flex-1 items-center justify-center p-6">
-      <Card className="max-w-md p-8 text-center">
+      <Card padding="lg" className="max-w-md text-center">
         <div className="mx-auto mb-4">
           <IconBox icon={Construction} tone="gold" size="lg" ring />
         </div>

@@ -4,7 +4,6 @@ import { ModalShell } from '../../../components/ui/ModalShell';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Alert } from '../../../components/ui/Alert';
-import { Card } from '../../../components/ui/Card';
 import { formatCRC, formatDate } from '../../../lib/format';
 import { useExtenderCuotas } from '../hooks/useExtenderCuotas';
 
@@ -88,7 +87,7 @@ export function ExtenderCuotasModal({ prestamo, onClose, onSaved }) {
         {form.preview.length > 0 && (
           <div className="space-y-2">
             <p className="section-label">Vista previa</p>
-            <Card padding="sm">
+            <div className="rounded-card border border-white/50 bg-white/50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
               <ul className="divide-y divide-slate-100 dark:divide-white/10">
                 {form.preview.map((c) => (
                   <li
@@ -115,7 +114,7 @@ export function ExtenderCuotasModal({ prestamo, onClose, onSaved }) {
                   {formatCRC(totalInteres)}
                 </span>
               </div>
-            </Card>
+            </div>
           </div>
         )}
       </div>

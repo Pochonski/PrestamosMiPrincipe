@@ -16,7 +16,7 @@ export function NotificacionesFiltros({ value, onChange, counts }) {
           onClick={() => onChange(o.id)}
           aria-pressed={value === o.id}
           className={clsx(
-            'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors',
+            'inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition-colors min-h-[44px] sm:min-h-0',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black',
             value === o.id
               ? 'border-gold-400 bg-gold-50 text-gold-700 dark:bg-gold-500/15 dark:text-gold-300'

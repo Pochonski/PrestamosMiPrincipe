@@ -187,7 +187,7 @@ export function ResumenPage({ onNavigate }) {
 
   if (isError) {
     return (
-      <div className="mx-auto w-full max-w-6xl space-y-4">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
         <Alert tone="danger" title="Error al cargar resumen">
           {error?.message || 'No se pudo cargar el resumen.'}
         </Alert>
@@ -293,7 +293,7 @@ export function ResumenPage({ onNavigate }) {
         </div>
         <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3">
           <ClickableCard to="atrasados" label="Ver atrasados por tasa de morosidad" onNavigate={onNavigate} go={go}>
-            <Card hover interactive className="flex min-h-[44px] items-center justify-between active:bg-white/70 dark:active:bg-white/10">
+            <Card interactive className="flex min-h-[44px] items-center justify-between active:bg-white/70 dark:active:bg-white/10">
               <div className="min-w-0">
                 <p className="label-micro">Tasa morosidad</p>
                 <p className={`mt-1 break-words font-display text-2xl font-bold tabular-nums ${k.tasaMorosidad > 10 ? 'text-danger-600' : 'text-navy-800 dark:text-navy-50'}`}>{k.tasaMorosidad.toFixed(1)}%</p>
@@ -306,7 +306,7 @@ export function ResumenPage({ onNavigate }) {
             </Card>
           </ClickableCard>
           <ClickableCard to="cobrar-hoy" label="Ir a cobrar hoy por eficiencia" onNavigate={onNavigate} go={go}>
-            <Card hover interactive className="flex min-h-[44px] items-center justify-between active:bg-white/70 dark:active:bg-white/10">
+            <Card interactive className="flex min-h-[44px] items-center justify-between active:bg-white/70 dark:active:bg-white/10">
               <div className="min-w-0">
                 <p className="label-micro">Eficiencia cobro hoy</p>
                 <p className="mt-1 break-words font-display text-2xl font-bold tabular-nums text-navy-800 dark:text-navy-50">{k.eficienciaCobroHoy == null ? '—' : `${k.eficienciaCobroHoy.toFixed(0)}%`}</p>
@@ -319,7 +319,7 @@ export function ResumenPage({ onNavigate }) {
             </Card>
           </ClickableCard>
           <ClickableCard to="prestamos" label="Ver préstamos por promedio" onNavigate={onNavigate} go={go}>
-            <Card hover interactive className="flex min-h-[44px] items-center justify-between active:bg-white/70 dark:active:bg-white/10">
+            <Card interactive className="flex min-h-[44px] items-center justify-between active:bg-white/70 dark:active:bg-white/10">
               <div className="min-w-0">
                 <p className="label-micro">Préstamo promedio</p>
                 <p className="mt-1 break-words font-display text-2xl font-bold tabular-nums text-navy-800 dark:text-navy-50">{formatCRC(Math.round(k.prestamoPromedio))}</p>
@@ -334,7 +334,7 @@ export function ResumenPage({ onNavigate }) {
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-2">
           <ClickableCard to="cobrar-hoy" label="Ver por cobrar hoy" onNavigate={onNavigate} go={go}>
-            <Card hover interactive className="flex min-h-[44px] items-center justify-between active:bg-white/70 dark:active:bg-white/10">
+            <Card interactive className="flex min-h-[44px] items-center justify-between active:bg-white/70 dark:active:bg-white/10">
               <div className="min-w-0">
                 <p className="label-micro">Por cobrar hoy</p>
                 <p className="mt-1 break-words font-display text-xl font-bold tabular-nums text-navy-800 dark:text-navy-50">{k.cantidadCobrarHoy} cuotas · {formatCRC(k.totalPorCobrarHoy)}</p>
@@ -343,7 +343,7 @@ export function ResumenPage({ onNavigate }) {
             </Card>
           </ClickableCard>
           <ClickableCard to="exportar" label="Exportar cobros en rango" onNavigate={onNavigate} go={go}>
-            <Card hover interactive className="flex min-h-[44px] items-center justify-between active:bg-white/70 dark:active:bg-white/10">
+            <Card interactive className="flex min-h-[44px] items-center justify-between active:bg-white/70 dark:active:bg-white/10">
               <div className="min-w-0">
                 <p className="label-micro">Cobros en rango</p>
                 <p className="mt-1 font-display text-xl font-bold tabular-nums text-navy-800 dark:text-navy-50">{data.cobrosEnRangoCount} cobros</p>
@@ -358,7 +358,7 @@ export function ResumenPage({ onNavigate }) {
       </section>
 
       {/* Charts unificados (ex-Reportes absorbido) */}
-      <section className="grid gap-4 lg:grid-cols-2">
+      <section className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">
         <Card>
           <SectionTitle title="Cobros últimos 6 meses" />
           <p className="mt-1 text-sm text-neutral-600 dark:text-navy-300">
@@ -394,14 +394,14 @@ export function ResumenPage({ onNavigate }) {
         <Card>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <SectionTitle title={`Distribución por ruta (top ${rutaData.length})`} />
-            <div className="flex gap-1 rounded-input border border-white/50 bg-white/50 p-1 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04]" role="tablist" aria-label="Vista de distribución por ruta">
+            <div className="flex gap-1 rounded-full border border-white/50 bg-white/50 p-1 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04]" role="tablist" aria-label="Vista de distribución por ruta">
               <button
                 type="button"
                 role="tab"
                 aria-selected={vistaRuta === 'saldo'}
                 onClick={() => setVistaRuta('saldo')}
                 className={vistaRuta === 'saldo'
-                  ? 'rounded-input bg-white/80 px-3 py-2.5 text-xs font-bold shadow-sm touch-manipulation backdrop-blur-md text-navy-900 dark:bg-white/10 dark:text-white'
+                  ? 'rounded-full bg-white/80 px-3 py-2.5 text-xs font-bold shadow-sm touch-manipulation backdrop-blur-md text-navy-900 dark:bg-white/10 dark:text-white'
                   : 'px-3 py-2.5 text-xs font-semibold touch-manipulation text-neutral-500 dark:text-navy-300'}
               >
                 Por saldo ₡
@@ -412,7 +412,7 @@ export function ResumenPage({ onNavigate }) {
                 aria-selected={vistaRuta === 'cantidad'}
                 onClick={() => setVistaRuta('cantidad')}
                 className={vistaRuta === 'cantidad'
-                  ? 'rounded-input bg-white/80 px-3 py-2.5 text-xs font-bold shadow-sm touch-manipulation backdrop-blur-md text-navy-900 dark:bg-white/10 dark:text-white'
+                  ? 'rounded-full bg-white/80 px-3 py-2.5 text-xs font-bold shadow-sm touch-manipulation backdrop-blur-md text-navy-900 dark:bg-white/10 dark:text-white'
                   : 'px-3 py-2.5 text-xs font-semibold touch-manipulation text-neutral-500 dark:text-navy-300'}
               >
                 Por cantidad
@@ -445,15 +445,15 @@ export function ResumenPage({ onNavigate }) {
         {data.topClientes.length === 0 ? (
           <EmptyState icon={Users} title="Sin clientes todavía" description="Creá tu primer cliente para ver el ranking." action={<Button variant="primary" onClick={() => (onNavigate ? onNavigate('clientes') : go('/clientes'))}>Ir a clientes</Button>} />
         ) : (
-          <Card className="overflow-hidden p-0">
+          <Card padding="none" className="overflow-hidden">
             <div className="overflow-x-auto scrollbar-thin">
-              <table className="w-full text-sm">
+              <table className="w-full min-w-[620px] text-sm">
                 <thead className="bg-white/50 dark:bg-white/[0.04]">
                   <tr className="text-left text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-navy-300">
                     <th className="px-4 py-3">Cliente</th>
                     <th className="px-4 py-3 text-center">Préstamos</th>
-                    <th className="px-4 py-3 text-right">Total prestado</th>
-                    <th className="px-4 py-3 text-right">Saldo pendiente</th>
+                    <th className="hidden px-4 py-3 text-right sm:table-cell">Total prestado</th>
+                    <th className="whitespace-nowrap px-4 py-3 text-right">Saldo pendiente</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-white/10">
@@ -471,8 +471,8 @@ export function ResumenPage({ onNavigate }) {
                       <td className="px-4 py-3 text-center">
                         <Badge tone="navy">{c.prestamosCount}</Badge>
                       </td>
-                      <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums text-navy-900 dark:text-white">{formatCRC(c.totalPrestado)}</td>
-                      <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums text-gold-600 dark:text-gold-300">{formatCRC(c.saldoPendiente)}</td>
+                      <td className="hidden px-4 py-3 text-right text-sm font-semibold tabular-nums text-navy-900 sm:table-cell dark:text-white">{formatCRC(c.totalPrestado)}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold tabular-nums text-gold-600 dark:text-gold-300">{formatCRC(c.saldoPendiente)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -490,13 +490,13 @@ export function ResumenPage({ onNavigate }) {
               Ver todos
             </Button>
           </div>
-          <Card className="overflow-hidden p-0">
+          <Card padding="none" className="overflow-hidden">
             <div className="overflow-x-auto scrollbar-thin">
               <table className="w-full text-sm">
                 <thead className="bg-white/50 dark:bg-white/[0.04]">
                   <tr className="text-left text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-navy-300">
                     <th className="px-4 py-3">Cliente</th>
-                    <th className="px-4 py-3 text-right">Atrasado</th>
+                    <th className="whitespace-nowrap px-4 py-3 text-right">Atrasado</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-white/10">
@@ -528,7 +528,7 @@ export function ResumenPage({ onNavigate }) {
         {data.ultimosCobros.length === 0 ? (
           <EmptyState icon={HandCoins} title="Aún no hay cobros" description="Registrá el primer cobro para ver actividad reciente." />
         ) : (
-          <Card className="divide-y divide-slate-100 p-0 dark:divide-white/10">
+          <Card padding="none" className="divide-y divide-slate-100 overflow-hidden dark:divide-white/10">
             {data.ultimosCobros.map((c) => {
               const tipoMeta = c.tipo === 'capital' ? { tone: 'emerald', label: 'Capital' } : { tone: 'gold', label: 'Interés' };
               return (

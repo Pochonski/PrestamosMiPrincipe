@@ -96,7 +96,7 @@ export function ModalShell({
         aria-labelledby="modal-title"
         aria-describedby={description ? 'modal-description' : undefined}
         className={clsx(
-          'glass-strong relative z-10 flex w-full max-h-[95vh] flex-col overflow-hidden',
+          'glass-strong relative z-10 flex w-full max-h-[95vh] max-h-[95dvh] flex-col overflow-hidden',
           'rounded-t-modal sm:rounded-modal',
           'animate-slide-up-mobile sm:animate-slide-up',
           'focus:outline-none',
@@ -140,7 +140,7 @@ export function ModalShell({
         <div className="flex-1 overflow-y-auto px-5 py-5 scrollbar-thin sm:px-6">{children}</div>
 
         {footer && (
-          <footer className="flex shrink-0 items-center justify-between gap-2 border-t border-white/50 bg-white/50 px-5 py-4 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04] sm:px-6">
+          <footer className="flex shrink-0 items-center justify-between gap-2 border-t border-white/50 bg-white/50 px-5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04] sm:px-6 sm:pb-4">
             {footer}
           </footer>
         )}

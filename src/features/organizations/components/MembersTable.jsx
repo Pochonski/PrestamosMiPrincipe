@@ -4,6 +4,7 @@ import { Crown, Shield, HandCoins, Eye, Trash2, Loader2 } from 'lucide-react';
 import { Avatar } from '../../../components/ui/Avatar';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
+import { Card } from '../../../components/ui/Card';
 import { useAuth } from '../../auth/useAuth';
 
 const ROL_META = {
@@ -30,7 +31,7 @@ export function MembersTable({ members, loading, onChangeRole, onRemove }) {
   }
 
   return (
-    <div className="glass overflow-hidden rounded-card">
+    <Card padding="none" className="overflow-hidden">
       <div className="divide-y divide-slate-100 dark:divide-white/10">
         {members.map((m) => {
           const meta = ROL_META[m.rol] || ROL_META.viewer;
@@ -38,9 +39,9 @@ export function MembersTable({ members, loading, onChangeRole, onRemove }) {
           const isOwner = m.rol === 'owner';
           const canAct = isAdmin && !isMe && !isOwner;
           return (
-            <div key={m.user_id} className="flex items-center gap-3 px-4 py-3">
+            <div key={m.user_id} className="flex flex-wrap items-center gap-3 px-4 py-3">
               <Avatar nombre={m.full_name || m.email} size="sm" />
-              <div className="min-w-0 flex-1">
+              <div className="min-w-[140px] flex-1">
                 <div className="flex items-center gap-2">
                   <p className="truncate text-sm font-semibold text-navy-900 dark:text-white">
                     {m.full_name || m.email}
@@ -53,7 +54,7 @@ export function MembersTable({ members, loading, onChangeRole, onRemove }) {
                 {meta.label}
               </Badge>
               {canAct && (
-                <div className="flex items-center gap-1">
+                <div className="flex shrink-0 items-center gap-1">
                   <select
                     value={m.rol}
                     disabled={!!actingId}
@@ -67,7 +68,7 @@ export function MembersTable({ members, loading, onChangeRole, onRemove }) {
                         setActingId(null);
                       }
                     }}
-                    className="rounded-input border border-white/50 bg-white/70 px-2 py-1 text-xs font-medium backdrop-blur-md dark:border-white/10 dark:bg-white/[0.06]"
+                    className="min-h-[44px] rounded-input border border-white/50 bg-white/70 px-3 py-2 text-sm font-medium backdrop-blur-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-white/10 dark:bg-white/[0.06] dark:text-white dark:focus-visible:ring-offset-black"
                   >
                     <option value="admin">Admin</option>
                     <option value="cobrador">Cobrador</option>
@@ -96,6 +97,6 @@ export function MembersTable({ members, loading, onChangeRole, onRemove }) {
           );
         })}
       </div>
-    </div>
+    </Card>
   );
 }

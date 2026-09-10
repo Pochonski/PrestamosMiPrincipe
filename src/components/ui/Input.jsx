@@ -59,7 +59,7 @@ export const Input = forwardRef(function Input(
       )}
       <div
         className={clsx(
-          'flex w-full border transition-all duration-150',
+          'flex w-full border transition-all duration-150 [color-scheme:light] dark:[color-scheme:dark]',
           isTextarea ? 'items-start' : 'items-center gap-2',
           VARIANTS[variant],
           VARIANT_FOCUS[variant],

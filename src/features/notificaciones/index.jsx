@@ -68,7 +68,7 @@ export function NotificacionesPage({ onNavigate }) {
         </div>
       </header>
 
-      <section className="space-y-2">
+      <section className="space-y-3">
         <SectionTitle title="Resumen" />
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <StatCard

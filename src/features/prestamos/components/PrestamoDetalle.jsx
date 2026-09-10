@@ -205,11 +205,11 @@ export function PrestamoDetalle({ onNavigate, params }) {
                 <Wallet className="h-6 w-6" aria-hidden="true" />
               </span>
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h1 className="truncate font-display text-xl font-bold tabular-nums text-navy-900 sm:text-2xl dark:text-white">
+                <div className="flex min-w-0 items-center gap-2">
+                  <h1 className="min-w-0 flex-1 truncate font-display text-xl font-bold tabular-nums text-navy-900 sm:text-2xl dark:text-white">
                     {formatCRC(prestamo.monto)}
                   </h1>
-                  <Badge tone={meta.tone}>{meta.label}</Badge>
+                  <Badge tone={meta.tone} className="shrink-0">{meta.label}</Badge>
                 </div>
                 <p className="mt-1 truncate text-sm text-neutral-600 dark:text-navy-300">
                   {prestamo.ruta} · {labelPeriodoValue} · {prestamo.tasa}% por cuota
@@ -342,7 +342,7 @@ export function PrestamoDetalle({ onNavigate, params }) {
             description='Tocá "Registrar cobro" para empezar.'
           />
         ) : (
-          <Card className="divide-y divide-slate-100 p-0 dark:divide-white/10">
+          <Card padding="none" className="divide-y divide-slate-100 overflow-hidden dark:divide-white/10">
             {cobros.map((c) => {
               const tipoMeta = COBRO_TIPO_META[c.tipo] || COBRO_TIPO_META.interes;
               const isUltimo = c.id === ultimoCobroId;

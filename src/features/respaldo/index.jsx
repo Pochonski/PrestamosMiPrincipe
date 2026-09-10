@@ -134,12 +134,12 @@ export function RespaldoPage() {
         </div>
       </header>
 
-      <Card className="p-5 sm:p-6">
+      <Card padding="lg">
         <div className="flex items-start gap-3">
           <IconBox icon={FileJson} tone="info" size="md" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold text-navy-900 dark:text-white">Datos actuales</p>
-            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
               <Stat label="Clientes" value={stats.clientes} />
               <Stat label="Préstamos" value={stats.prestamos} />
               <Stat label="Cobros" value={stats.cobros} />
@@ -155,9 +155,9 @@ export function RespaldoPage() {
 
       <section className="space-y-3">
         <SectionTitle title="Restaurar desde archivo" />
-        <Card className="p-5">
+        <Card>
           {!preview && !error && (
-            <label className="flex cursor-pointer flex-col items-center gap-3 rounded-card border-2 border-dashed border-slate-300 bg-slate-50/50 p-8 text-center transition-colors hover:border-gold-400 hover:bg-gold-50/30 dark:border-navy-600 dark:bg-navy-700/30 dark:hover:border-gold-400 dark:hover:bg-gold-500/10">
+            <label tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inputRef.current?.click(); } }} className="flex cursor-pointer flex-col items-center gap-3 rounded-card border-2 border-dashed border-slate-300 bg-slate-50/50 p-8 text-center transition-colors hover:border-gold-400 hover:bg-gold-50/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-white/20 dark:bg-white/[0.04] dark:hover:border-gold-400 dark:hover:bg-gold-500/10 dark:focus-visible:ring-offset-black">
               <Upload className="h-8 w-8 text-neutral-400 dark:text-navy-300" />
               <div>
                 <p className="text-sm font-semibold text-navy-700 dark:text-navy-100">
@@ -172,7 +172,7 @@ export function RespaldoPage() {
                 type="file"
                 accept="application/json,.json"
                 onChange={handleFile}
-                className="hidden"
+                className="sr-only"
               />
             </label>
           )}
@@ -235,7 +235,7 @@ function RestorePreview({ fileName, preview, onCancel, onConfirm }) {
         )}
       </Alert>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         <Stat label="Clientes" value={counts.clientes} />
         <Stat label="Préstamos" value={counts.prestamos} />
         <Stat label="Cobros" value={counts.cobros} />

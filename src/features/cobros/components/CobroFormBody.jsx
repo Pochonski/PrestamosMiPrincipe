@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
-import { Receipt, AlertCircle, AlertTriangle, Calendar } from 'lucide-react';
+import { Receipt, AlertCircle, AlertTriangle, Calendar, ChevronDown } from 'lucide-react';
 import clsx from 'clsx';
 import { CobroTipoPicker } from './CobroTipoPicker';
 import { Input } from '../../../components/ui/Input';
@@ -61,10 +61,11 @@ export function CobroFormBody({ form }) {
           <span className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-navy-700 dark:text-navy-200">
             Cuota a pagar
           </span>
+          <div className="relative">
           <select
             value={cuotaNumero}
             onChange={(e) => setCuotaNumero(Number(e.target.value))}
-            className="w-full rounded-input border border-white/50 bg-white/70 backdrop-blur-md px-3.5 py-3 text-base text-navy-900 outline-none transition-colors focus:border-gold-400 focus:ring-2 focus:ring-gold-400/25 dark:border-white/10 dark:bg-white/[0.06] dark:text-white"
+            className="min-h-[56px] w-full appearance-none rounded-input border border-white/50 bg-white/70 backdrop-blur-md px-3.5 py-3 pr-10 text-base text-navy-900 outline-none transition-colors focus:border-gold-400 focus:ring-2 focus:ring-gold-400/25 dark:border-white/10 dark:bg-white/[0.06] dark:text-white"
           >
             {cuotasPendientes.map((c) => {
               const isAtrasada =
@@ -82,6 +83,8 @@ export function CobroFormBody({ form }) {
               );
             })}
           </select>
+          <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400 dark:text-navy-300" aria-hidden="true" />
+          </div>
         </label>
       )}
 
@@ -200,7 +203,7 @@ export function CobroFormBody({ form }) {
               checked={incluirInteres}
               onChange={(e) => setIncluirInteres(e.target.checked)}
               disabled={capitalBloqueado}
-              className="mt-0.5 h-5 w-5 shrink-0 rounded border-slate-300 text-gold-500 focus:ring-gold-400 dark:border-navy-600 dark:bg-navy-700"
+              className="mt-0.5 h-5 w-5 shrink-0 rounded border-slate-300 text-gold-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-white/20 dark:bg-white/10 dark:focus-visible:ring-offset-black"
             />
             <div>
               <p className="text-sm font-semibold text-navy-900 dark:text-white">
@@ -224,7 +227,7 @@ export function CobroFormBody({ form }) {
           <button
             type="button"
             onClick={() => setShowNota(true)}
-            className="inline-flex items-center gap-1.5 rounded-input text-xs font-semibold text-neutral-500 hover:text-navy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 dark:text-navy-300 dark:hover:text-white dark:focus-visible:ring-offset-black"
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-input text-xs font-semibold text-neutral-500 hover:text-navy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 dark:text-navy-300 dark:hover:text-white dark:focus-visible:ring-offset-black"
           >
             <Receipt className="h-3.5 w-3.5" aria-hidden="true" />
             Agregar nota
@@ -243,7 +246,7 @@ export function CobroFormBody({ form }) {
               rows={2}
               className="resize-none"
             />
-            <p className="mt-1 text-right text-[10px] text-neutral-400 dark:text-navy-300">
+            <p className="mt-1 text-right text-[10px] font-normal text-neutral-400 dark:text-navy-300">
               {nota.length}/200
             </p>
           </div>
@@ -295,7 +298,7 @@ function AtrasadasWarning({ cuotas, incluirInteres, aceptaAtrasados, onAceptaCha
           type="checkbox"
           checked={Boolean(aceptaAtrasados)}
           onChange={(e) => onAceptaChange?.(e.target.checked)}
-          className="mt-0.5 h-5 w-5 shrink-0 rounded border-warning-500/50 text-warning-600 focus:ring-warning-500"
+          className="mt-0.5 h-5 w-5 shrink-0 rounded border-warning-500/50 text-warning-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black"
         />
         <span className="text-xs font-semibold text-warning-700 dark:text-warning-500">
           Entiendo que quedan {formatCRC(total)} en intereses atrasados pendientes y quiero

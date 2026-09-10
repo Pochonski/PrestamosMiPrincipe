@@ -65,8 +65,8 @@ export function Step1RutaPeriodo({ values, errors, showError, set, touch }) {
         ))}
       </datalist>
 
-      <div>
-        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-navy-700 dark:text-navy-200">
+      <div role="group" aria-labelledby="periodo-label">
+        <p id="periodo-label" className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-navy-700 dark:text-navy-200">
           Período de pago <span className="ml-0.5 text-danger-500">*</span>
         </p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
@@ -99,7 +99,7 @@ export function Step1RutaPeriodo({ values, errors, showError, set, touch }) {
           })}
         </div>
         {showError('periodo') && errors.periodo && (
-          <p className="mt-1.5 text-xs font-medium text-danger-600 dark:text-danger-500">
+          <p role="alert" className="mt-1.5 text-xs font-medium text-danger-600 dark:text-danger-500">
             {errors.periodo}
           </p>
         )}
@@ -114,7 +114,7 @@ export function Step1RutaPeriodo({ values, errors, showError, set, touch }) {
             <button
               type="button"
               onClick={() => setShowCalendar(false)}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-slate-100 hover:text-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 dark:hover:bg-navy-700 dark:hover:text-navy-200"
+              className="flex h-11 w-11 items-center justify-center rounded-input text-neutral-400 hover:bg-white/70 hover:text-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 dark:hover:bg-white/10 dark:hover:text-navy-200"
               aria-label="Cerrar calendario"
             >
               <X className="h-4 w-4" aria-hidden="true" />

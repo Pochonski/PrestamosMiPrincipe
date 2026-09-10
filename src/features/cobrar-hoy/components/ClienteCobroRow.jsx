@@ -75,7 +75,7 @@ export function ClienteCobroRow({ grupo, maxTotal, onVerCliente, onVerCobro }) {
         <button
           type="button"
           onClick={() => onVerCliente?.(grupo)}
-          className="text-xs font-semibold text-info-600 dark:text-info-500"
+          className="inline-flex min-h-[44px] items-center text-xs font-semibold text-info-600 dark:text-info-500"
         >
           Ver cliente
         </button>
@@ -83,7 +83,7 @@ export function ClienteCobroRow({ grupo, maxTotal, onVerCliente, onVerCobro }) {
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-500 dark:text-navy-300"
+          className="inline-flex min-h-[44px] items-center gap-1 text-xs font-semibold text-neutral-500 dark:text-navy-300"
         >
           <ReceiptText className="h-3.5 w-3.5" aria-hidden="true" />
           {open ? 'Ocultar cobros' : `Ver ${grupo.cobros.length} cobros`}

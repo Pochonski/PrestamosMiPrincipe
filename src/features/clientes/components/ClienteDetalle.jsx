@@ -77,7 +77,7 @@ export function ClienteDetalle({ onNavigate, params }) {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
         <Skeleton className="h-10 w-40" />
         <Skeleton className="h-32 w-full" />
-        <div className="grid grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
           <Skeleton className="h-20 w-full" />
           <Skeleton className="h-20 w-full" />
           <Skeleton className="h-20 w-full" />
@@ -316,11 +316,11 @@ function StatTile({ icon: Icon, label, value, tone }) {
   };
   return (
     <Card padding="sm" hover>
-      <div className="flex items-center gap-3">
-        <IconBox icon={Icon} tone={tones[tone]} size="md" />
-        <div>
-          <p className="section-label">{label}</p>
-          <p className="text-xl font-bold tabular-nums text-navy-900 dark:text-white">{value}</p>
+      <div className="flex items-center gap-2 sm:gap-3">
+        <IconBox icon={Icon} tone={tones[tone]} size="sm" />
+        <div className="min-w-0">
+          <p className="section-label truncate">{label}</p>
+          <p className="truncate text-lg font-bold tabular-nums text-navy-900 sm:text-xl dark:text-white">{value}</p>
         </div>
       </div>
     </Card>

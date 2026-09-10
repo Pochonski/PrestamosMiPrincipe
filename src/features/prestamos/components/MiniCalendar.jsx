@@ -67,7 +67,7 @@ export function MiniCalendar({ value, onChange }) {
           type="button"
           onClick={() => shift(-1)}
           aria-label="Mes anterior"
-          className="flex h-11 w-11 items-center justify-center rounded-input text-neutral-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 dark:text-navy-300 dark:hover:bg-navy-700"
+          className="flex h-11 w-11 items-center justify-center rounded-input text-neutral-500 hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-navy-300 dark:hover:bg-white/10 dark:focus-visible:ring-offset-black"
         >
           <ChevronLeft className="h-4 w-4" aria-hidden="true" />
         </button>
@@ -78,7 +78,7 @@ export function MiniCalendar({ value, onChange }) {
           type="button"
           onClick={() => shift(1)}
           aria-label="Mes siguiente"
-          className="flex h-11 w-11 items-center justify-center rounded-input text-neutral-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 dark:text-navy-300 dark:hover:bg-navy-700"
+          className="flex h-11 w-11 items-center justify-center rounded-input text-neutral-500 hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-navy-300 dark:hover:bg-white/10 dark:focus-visible:ring-offset-black"
         >
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </button>

@@ -33,16 +33,16 @@ export const TopBar = memo(function TopBar({ page, onNavigate, onOpenSidebar, th
         <Menu className="h-5 w-5" aria-hidden="true" />
       </button>
 
-      <Logo className="lg:hidden" size="sm" />
+      <Logo className="shrink-0 lg:hidden" size="sm" />
 
-      <div className="hidden min-w-0 flex-1 lg:block">
-        <p className="section-label">Navegación</p>
-        <h1 className="truncate font-display text-lg font-bold tracking-tight text-navy-900 dark:text-white">
+      <div className="min-w-0 flex-1">
+        <p className="section-label hidden lg:block">Navegación</p>
+        <h1 className="truncate font-display text-sm font-bold tracking-tight text-navy-900 sm:text-base lg:text-lg dark:text-white">
           {current.label}
         </h1>
       </div>
 
-      <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
         <button
           type="button"
           onClick={() => onNavigate('notificaciones')}

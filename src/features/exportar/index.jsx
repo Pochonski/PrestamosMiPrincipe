@@ -95,7 +95,7 @@ export function ExportarPage() {
         </div>
       </header>
 
-      <Card className="p-4 sm:p-5">
+      <Card>
         <div className="flex items-start gap-3">
           <IconBox icon={FileText} tone="info" size="sm" />
           <div className="min-w-0 flex-1">
@@ -121,16 +121,16 @@ export function ExportarPage() {
             const disabled = count === 0;
             return (
               <li key={opt.id} className="animate-fade-in">
-                <button
+                <Card
+                  as="button"
                   type="button"
+                  interactive={!disabled}
                   onClick={() => !disabled && handleExport(opt.id)}
                   disabled={disabled || exporting !== null}
                   className={clsx(
-                    'group flex w-full flex-col items-start gap-3 rounded-card border p-4 text-left transition-all',
+                    'group flex w-full flex-col items-start gap-3 text-left',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black',
-                    disabled
-                      ? 'cursor-not-allowed border-white/50 bg-white/40 opacity-50 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.03]'
-                      : 'cursor-pointer border-white/50 bg-white/60 backdrop-blur-md hover:-translate-y-0.5 hover:border-gold-400 hover:shadow-glass-strong hover:bg-white/80 dark:border-white/10 dark:bg-white/[0.06] dark:hover:border-gold-400 dark:hover:bg-white/10',
+                    disabled && 'cursor-not-allowed opacity-50',
                   )}
                 >
                   <IconBox icon={Icon} tone={opt.tone} size="md" />
@@ -165,7 +165,7 @@ export function ExportarPage() {
                       </span>
                     </div>
                   </div>
-                </button>
+                </Card>
               </li>
             );
           })}

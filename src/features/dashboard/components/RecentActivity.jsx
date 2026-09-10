@@ -2,6 +2,7 @@ import React from 'react';
 import { HandCoins, Clock } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
 import { Badge } from '../../../components/ui/Badge';
+import { SectionTitle } from '../../../components/ui/SectionTitle';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { IconBox } from '../../../components/ui/IconBox';
 import { formatCRC, formatDateShort } from '../../../lib/format';
@@ -9,13 +10,13 @@ import { formatCRC, formatDateShort } from '../../../lib/format';
 export function RecentActivity({ items }) {
   const list = items || [];
   return (
-    <Card className="p-4 sm:p-5">
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-bold text-navy-900 dark:text-white">Actividad reciente</h3>
-          <p className="text-xs text-neutral-500 dark:text-navy-300">Últimos movimientos registrados</p>
-        </div>
-        <Badge tone="neutral">{list.length}</Badge>
+    <Card>
+      <div className="mb-3">
+        <SectionTitle
+          title="Actividad reciente"
+          description="Últimos movimientos registrados"
+          action={<Badge tone="neutral">{list.length}</Badge>}
+        />
       </div>
 
       {list.length === 0 ? (

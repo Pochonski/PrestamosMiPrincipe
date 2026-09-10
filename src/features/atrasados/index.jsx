@@ -17,7 +17,7 @@ export function AtrasadosPage({ onNavigate }) {
     return (
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 sm:gap-6">
         <Skeleton className="h-20 w-full" />
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
           <Skeleton className="h-28 w-full" />
           <Skeleton className="h-28 w-full" />
           <Skeleton className="h-28 w-full" />
@@ -106,7 +106,7 @@ function AtrasadoCard({ item, onCobrar }) {
   const { prestamo, cuota, cliente, diasAtraso } = item;
   return (
     <Card
-      className="cursor-pointer p-4 transition-shadow hover:shadow-cardHover sm:p-5"
+      interactive
       onClick={() => onCobrar?.(item)}
     >
       <div className="flex items-start gap-3">
@@ -126,7 +126,7 @@ function AtrasadoCard({ item, onCobrar }) {
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 dark:border-white/10">
+      <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 dark:border-white/10 [&>div]:min-w-0">
         <div>
           <p className="section-label">Cuota</p>
           <p className="mt-0.5 text-sm font-bold tabular-nums text-navy-900 dark:text-white">

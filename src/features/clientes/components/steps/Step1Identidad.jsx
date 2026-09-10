@@ -3,28 +3,6 @@ import { User } from 'lucide-react';
 import { Input } from '../../../../components/ui/Input';
 import { IconBox } from '../../../../components/ui/IconBox';
 
-export function Field({ label, hint, error, children, required }) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-navy-700 dark:text-navy-200">
-        <span>
-          {label}
-          {required && <span className="ml-0.5 text-danger-500">*</span>}
-        </span>
-        {hint && (
-          <span className="text-[10px] font-normal normal-case tracking-normal text-neutral-400 dark:text-navy-300">
-            {hint}
-          </span>
-        )}
-      </span>
-      {children}
-      {error && (
-        <p className="mt-1.5 text-xs font-medium text-danger-600 dark:text-danger-500">{error}</p>
-      )}
-    </label>
-  );
-}
-
 export function Step1Identidad({ values, errors, showError, set, touch }) {
   return (
     <div className="space-y-5">
@@ -58,7 +36,7 @@ export function Step1Identidad({ values, errors, showError, set, touch }) {
       <Input
         as="textarea"
         name="direccion"
-        size="lg"
+        size="md"
         label={
           <>
             Dirección <span className="text-danger-500">*</span>
@@ -68,7 +46,6 @@ export function Step1Identidad({ values, errors, showError, set, touch }) {
         onChange={(e) => set('direccion', e.target.value)}
         onBlur={() => touch('direccion')}
         placeholder="Provincia, cantón, distrito y dirección exacta"
-        className="!h-auto !py-3"
         rows={3}
         error={showError('direccion') && errors.direccion}
       />

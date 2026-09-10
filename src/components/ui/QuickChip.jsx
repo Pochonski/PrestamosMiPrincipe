@@ -14,7 +14,7 @@ export function QuickChip({ icon: Icon, label, badge, tone = 'neutral', onClick,
       type="button"
       onClick={onClick}
       className={clsx(
-        'group relative inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-sm font-semibold transition-all duration-150',
+        'group relative inline-flex shrink-0 min-h-[44px] sm:min-h-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-all duration-150',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black',
         active && 'ring-2 ring-gold-400 ring-offset-2 ring-offset-white dark:ring-offset-black',
         tones[tone],

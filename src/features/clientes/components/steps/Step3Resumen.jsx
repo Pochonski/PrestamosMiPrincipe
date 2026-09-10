@@ -31,7 +31,7 @@ export function Step3Resumen({ values }) {
         </div>
       </header>
 
-      <Card className="p-4 sm:p-5">
+      <Card>
         <div className="mb-3 flex items-center gap-3 border-b border-slate-100 pb-3 dark:border-white/10">
           <Avatar nombre={values.nombre} size="md" />
           <div className="min-w-0 flex-1">
