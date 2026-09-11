@@ -131,21 +131,32 @@ export function AppShell({ pages = {}, page: controlledPage, params: controlledP
 
         <MobileBottomNav page={page} onNavigate={handleNavigate} />
 
-        <div
-          aria-hidden="true"
-          className="glass hidden px-5 py-3 text-xs text-neutral-500 dark:text-navy-300 lg:block"
-        >
-          <div className="mx-auto flex max-w-6xl items-center justify-between">
-            <span>
-              Sesión activa:{' '}
-              <strong className="text-navy-700 dark:text-navy-100">
-                {profile?.full_name || '—'}
-              </strong>{' '}
-              · {currentOrg?.rol || 'miembro'}
+        <footer className="hidden justify-center px-3 pb-3 lg:flex">
+          <div className="glass-subtle glass-glare flex items-center gap-2.5 rounded-full py-2 pl-4 pr-5 text-xs text-neutral-500 dark:text-navy-300">
+            <span className="relative flex h-2 w-2 shrink-0">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
             </span>
-            <span>Préstamos Mi Príncipe · v1.0.0</span>
+            <span className="truncate">
+              Sesión activa:{' '}
+              <strong className="font-semibold text-navy-700 dark:text-navy-100">
+                {profile?.full_name || '—'}
+              </strong>
+            </span>
+            <span
+              aria-hidden="true"
+              className="h-3 w-px shrink-0 bg-navy-900/10 dark:bg-white/15"
+            />
+            <span className="shrink-0 font-display font-semibold uppercase tracking-wider text-gold-600 dark:text-gold-300">
+              {currentOrg?.rol || 'miembro'}
+            </span>
+            <span
+              aria-hidden="true"
+              className="h-3 w-px shrink-0 bg-navy-900/10 dark:bg-white/15"
+            />
+            <span className="shrink-0 tabular-nums">v1.0.0</span>
           </div>
-        </div>
+        </footer>
       </div>
     </div>
   );
