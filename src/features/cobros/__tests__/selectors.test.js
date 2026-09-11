@@ -130,12 +130,32 @@ describe('buildResumenCobro', () => {
     const r = buildResumenCobro({ prestamo: p, cuotaNumero: 1, monto: 5000, tipo: 'capital', incluirInteres: false });
     expect(r.willCancel).toBe(true);
   });
-  it('split acreedor/comisión con tasa_comision', () => {
+  it('sin split de comisión fuera de Mis comisiones (aunque haya tasa_comision)', () => {
     const p = makePrestamo({ monto: 100000, saldo_capital: 100000, tasa: 20, tasa_comision: 2, cuotas: [makeCuota({ numero: 1, monto: 22000 })] });
     const r = buildResumenCobro({ prestamo: p, cuotaNumero: 1, monto: 22000, tipo: 'interes', incluirInteres: false });
-    expect(r.tieneComision).toBe(true);
-    expect(r.comision).toBe(2000);
-    expect(r.interesAcreedor).toBe(20000);
+    expect(r.tieneComision).toBe(false);
+    expect(r.comision).toBe(0);
+    expect(r.comisionAlCompletar).toBe(0);
+    expect(r.interesAcreedor).toBe(22000);
+  });
+  it('abono parcial: interés íntegro sin split', () => {
+    const p = makePrestamo({ monto: 100000, saldo_capital: 100000, tasa: 20, tasa_comision: 2, cuotas: [makeCuota({ numero: 1, monto: 22000 })] });
+    const r = buildResumenCobro({ prestamo: p, cuotaNumero: 1, monto: 11000, tipo: 'capital', incluirInteres: true });
+    expect(r.interesPagado).toBe(11000);
+    expect(r.comision).toBe(0);
+    expect(r.cuotaCompleta).toBe(true);
+    expect(r.comisionAlCompletar).toBe(0);
+    expect(r.interesAcreedor).toBe(11000);
+  });
+  it('cobrosPrevios se aceptan pero no generan split', () => {
+    const p = makePrestamo({ monto: 100000, saldo_capital: 100000, tasa: 20, tasa_comision: 2, cuotas: [makeCuota({ numero: 1, monto: 22000 })] });
+    const r = buildResumenCobro({
+      prestamo: p, cuotaNumero: 1, monto: 11000, tipo: 'capital', incluirInteres: true,
+      cobrosPrevios: [{ cuota_numero: 1, interes_pagado: 11000 }],
+    });
+    expect(r.cuotaCompleta).toBe(true);
+    expect(r.comision).toBe(0);
+    expect(r.comisionAlCompletar).toBe(0);
   });
   it('sin tasa_comision no hay split', () => {
     const p = makePrestamo({ monto: 100000, saldo_capital: 100000, tasa: 20, cuotas: [makeCuota({ numero: 1, monto: 20000 })] });

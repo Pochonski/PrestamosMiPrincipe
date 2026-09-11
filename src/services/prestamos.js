@@ -240,8 +240,10 @@ export function getSaldoCapital(prestamo) {
   return Number(prestamo.saldo_capital ?? prestamo.monto ?? 0);
 }
 
-// Modelo aditivo: el cliente paga tasa base (acreedor) + comisión.
-// tasa = base del acreedor, tasa_comision = extra propio (0 si no hay).
+// Modelo base-only fuera de Mis comisiones: todos los montos (cuotas,
+// sugeridos, liquidación) usan solo la tasa base. La comisión
+// (tasa_comision) solo se suma dentro de Mis comisiones (proyección).
+// tasa = base, tasa_comision = extra propio (0 si no hay).
 export function tasaBase(prestamo) {
   return Number(prestamo?.tasa ?? 0);
 }
@@ -258,7 +260,7 @@ export function tasaTotal(prestamo) {
 
 export function cuotaDelPeriodo(prestamo) {
   if (!prestamo) return 0;
-  return Math.round((getSaldoCapital(prestamo) * tasaTotal(prestamo)) / 100);
+  return Math.round((getSaldoCapital(prestamo) * tasaBase(prestamo)) / 100);
 }
 
 export function totalIntereses(prestamo) {
@@ -295,7 +297,7 @@ export function cuotasAgotadas(prestamo) {
 }
 
 export async function create({ clienteId, ruta, periodo, monto, tasa, tasaComision, nCuotas, fechaInicio }) {
-  const cuotaMonto = Math.round((Number(monto) * (Number(tasa) + Number(tasaComision || 0))) / 100);
+  const cuotaMonto = Math.round((Number(monto) * Number(tasa)) / 100);
   const cuotas = buildCuotasPayload({
     fechaInicio,
     periodo,
@@ -329,7 +331,7 @@ export async function extenderCuotas(prestamoId, nCuotas) {
   const prestamo = await getById(prestamoId);
   if (!prestamo) throw new PrestamoNoEncontradoError(prestamoId);
 
-  const cuotaMonto = Math.round((getSaldoCapital(prestamo) * tasaTotal(prestamo)) / 100);
+  const cuotaMonto = Math.round((getSaldoCapital(prestamo) * tasaBase(prestamo)) / 100);
   const startDate = (prestamo.cuotas && prestamo.cuotas.length > 0)
     ? prestamo.cuotas[prestamo.cuotas.length - 1].fecha
     : prestamo.fecha_inicio;
@@ -439,7 +441,7 @@ export async function update(id, patch) {
     ? pagadas.reduce((max, c) => (Number(c.numero) > Number(max.numero) ? c : max), pagadas[0])
     : null;
   const pendingCount = Math.max(0, p_n_cuotas - pagadas.length);
-  const montoPorCuota = Math.round((p_monto * (p_tasa + (p_tasa_comision ?? 0))) / 100);
+  const montoPorCuota = Math.round((p_monto * p_tasa) / 100);
   // Si cambió la fecha de inicio y hay cuotas pagadas, las pendientes se
   // desplazan por el mismo delta (las pagadas/canceladas quedan intactas
   // como historial). Sin esto, en préstamos con cobros la nueva fecha se

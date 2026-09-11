@@ -10,6 +10,13 @@ export default {
         serif: ['Fraunces', 'Georgia', 'serif'],
       },
       colors: {
+        // Base cálida del modo claro. El vidrio claro refracta estos tonos.
+        cream: {
+          base: '#F7F1E5',
+          glass: '#FFFDF8',
+          sand: '#F0E4C8',
+          espresso: '#2E2010',
+        },
         // Acentos para glass en dark (regla: usar 300-400 sobre vidrio ahumado).
         // En claro, usar los tonos 600-800 existentes para contraste AA.
         glow: {
@@ -114,7 +121,7 @@ export default {
         'hero-surface':
           'radial-gradient(60rem 14rem at 100% 0%, rgb(212 175 55 / 0.10), transparent 70%), radial-gradient(40rem 20rem at -5% 100%, rgb(30 41 59 / 0.08), transparent 70%)',
         'app-aurora-light':
-          'radial-gradient(40rem 20rem at 85% -5%, rgb(212 175 55 / 0.28), transparent 70%), radial-gradient(36rem 22rem at -10% 25%, rgb(14 165 233 / 0.18), transparent 70%), radial-gradient(28rem 18rem at 15% 110%, rgb(16 185 129 / 0.14), transparent 70%), radial-gradient(30rem 18rem at 50% 110%, rgb(30 41 59 / 0.08), transparent 70%)',
+          'radial-gradient(40rem 20rem at 85% -5%, rgb(217 164 65 / 0.34), transparent 70%), radial-gradient(36rem 22rem at -10% 25%, rgb(217 164 65 / 0.18), transparent 70%), radial-gradient(28rem 18rem at 15% 110%, rgb(120 140 60 / 0.14), transparent 70%), radial-gradient(30rem 18rem at 50% 110%, rgb(150 112 31 / 0.10), transparent 70%)',
         'app-aurora-dark':
           'radial-gradient(40rem 20rem at 85% -5%, rgb(212 175 55 / 0.28), transparent 70%), radial-gradient(36rem 22rem at -10% 25%, rgb(14 165 233 / 0.20), transparent 70%), radial-gradient(28rem 18rem at 15% 110%, rgb(167 139 250 / 0.12), transparent 70%), radial-gradient(30rem 18rem at 50% 110%, rgb(0 0 0 / 0.4), transparent 70%)',
       },
@@ -147,6 +154,10 @@ export default {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
         },
+        'spin-once': {
+          '0%': { transform: 'rotate(-120deg) scale(0.6)', opacity: '0' },
+          '100%': { transform: 'rotate(0deg) scale(1)', opacity: '1' },
+        },
       },
       animation: {
         'fade-in': 'fade-in 0.3s ease-out',
@@ -156,6 +167,7 @@ export default {
         'mesh-2': 'mesh-2 22s ease-in-out infinite',
         'mesh-3': 'mesh-3 26s ease-in-out infinite',
         shimmer: 'shimmer 2s linear infinite',
+        'spin-once': 'spin-once 0.5s ease-out',
       },
       ringColor: {
         DEFAULT: 'rgb(212 175 55 / 0.6)',

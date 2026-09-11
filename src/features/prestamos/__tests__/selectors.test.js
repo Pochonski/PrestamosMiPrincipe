@@ -6,7 +6,6 @@ import {
   validateMonto,
   validateNCoutas,
   validateTasa,
-  validateTasaComision,
   validateFechaInicio,
   buildInitialPrestamo,
   getStatus,
@@ -64,19 +63,6 @@ describe('validateTasa', () => {
   it('>100 falla', () => expect(validateTasa(101)).toBe('La tasa parece muy alta'));
   it('0 ok', () => expect(validateTasa(0)).toBeNull());
   it('10 ok', () => expect(validateTasa(10)).toBeNull());
-});
-
-describe('validateTasaComision', () => {
-  it('vacía ok (sin comisión)', () => {
-    expect(validateTasaComision('', 20)).toBeNull();
-    expect(validateTasaComision(null, 20)).toBeNull();
-  });
-  it('suma <= 100 ok', () => {
-    expect(validateTasaComision(2, 20)).toBeNull();
-    expect(validateTasaComision(0, 20)).toBeNull();
-  });
-  it('suma > 100 falla', () => expect(validateTasaComision(5, 98)).toContain('100'));
-  it('negativa falla', () => expect(validateTasaComision(-1, 20)).toBe('La tasa no puede ser negativa'));
 });
 
 describe('validateFechaInicio', () => {

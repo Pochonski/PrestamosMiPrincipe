@@ -86,7 +86,7 @@ export function AppShell({ pages = {}, page: controlledPage, params: controlledP
   const PageComponent = pages[page];
 
   return (
-    <div className="relative flex min-h-screen bg-neutral-50 text-navy-800 dark:bg-black dark:text-navy-100">
+    <div className="relative flex min-h-screen bg-cream-base text-navy-800 dark:bg-black dark:text-navy-100">
       <div
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
@@ -105,7 +105,7 @@ export function AppShell({ pages = {}, page: controlledPage, params: controlledP
         rol={currentOrg?.rol}
       />
 
-      <div className="relative z-10 flex min-w-0 flex-1 flex-col lg:pl-[var(--sidebar-w)]">
+      <div className="relative z-10 flex min-w-0 flex-1 flex-col lg:pl-[calc(var(--sidebar-w)+1.5rem)] lg:pr-3">
         <TopBar
           page={page}
           onNavigate={handleNavigate}

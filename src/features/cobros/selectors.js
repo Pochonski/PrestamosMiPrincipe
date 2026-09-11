@@ -106,7 +106,7 @@ export function validateMontoCobro({ monto, tipo, prestamo, cuotaNumero, incluir
 
 export { formatMontoLive } from '../../lib/format';
 
-export function buildResumenCobro({ prestamo, cuotaNumero, monto, tipo, incluirInteres, cliente }) {
+export function buildResumenCobro({ prestamo, cuotaNumero, monto, tipo, incluirInteres, cliente, cobrosPrevios = [] }) {
   const cuota = (prestamo.cuotas || []).find((c) => c.numero === Number(cuotaNumero));
   const interes = cuota?.monto || 0;
   const saldo = prestamosService.getSaldoCapital(prestamo);
@@ -128,18 +128,10 @@ export function buildResumenCobro({ prestamo, cuotaNumero, monto, tipo, incluirI
 
   const willCancel = nuevoSaldo === 0 && tipo === 'capital';
 
-  // Split acreedor / comisión sobre el interés de este cobro (modelo aditivo:
-  // el cliente paga tasa base + comisión).
-  const tasaBase = Number(prestamo.tasa ?? 0);
-  const comisionPct =
-    prestamo.tasa_comision == null || prestamo.tasa_comision === ''
-      ? 0
-      : Number(prestamo.tasa_comision);
-  const tasaTotal = tasaBase + comisionPct;
-  let comision = 0;
-  if (comisionPct > 0 && tasaTotal > 0) {
-    comision = Math.round((interesPagado * comisionPct) / tasaTotal);
-  }
+  // Sin split de comisión fuera de Mis comisiones: todo el interés es del
+  // acreedor en esta vista.
+  const comision = 0;
+  const comisionAlCompletar = 0;
 
   return {
     cliente: cliente?.nombre,
@@ -149,9 +141,11 @@ export function buildResumenCobro({ prestamo, cuotaNumero, monto, tipo, incluirI
     interes,
     capitalPagado,
     interesPagado,
-    interesAcreedor: interesPagado - comision,
+    interesAcreedor: interesPagado,
     comision,
-    tieneComision: comisionPct > 0,
+    comisionAlCompletar,
+    cuotaCompleta: true,
+    tieneComision: false,
     willCancel,
     tipo,
     incluirInteres: Boolean(incluirInteres),

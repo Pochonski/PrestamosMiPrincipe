@@ -34,15 +34,18 @@ export function useCobroForm({ prestamoId }) {
   const [aceptaAtrasados, setAceptaAtrasados] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loadingPrestamo, setLoadingPrestamo] = useState(true);
+  const [cobrosPrevios, setCobrosPrevios] = useState([]);
 
   async function load() {
     try {
-      const [p, qa] = await Promise.all([
+      const [p, qa, cbs] = await Promise.all([
         prestamosService.refreshPrestamo(prestamoId),
         getCuotaActual(prestamoId),
+        cobrosService.delPrestamo(prestamoId).catch(() => []),
       ]);
       setPrestamo(p);
       setCuotaNumero(qa?.numero || 1);
+      setCobrosPrevios(cbs || []);
     } catch {
       setPrestamo(null);
     } finally {
@@ -104,8 +107,9 @@ export function useCobroForm({ prestamoId }) {
       tipo,
       incluirInteres,
       cliente: null,
+      cobrosPrevios,
     });
-  }, [prestamo, cuotaActual, monto, tipo, incluirInteres, cuotaNumero]);
+  }, [prestamo, cuotaActual, monto, tipo, incluirInteres, cuotaNumero, cobrosPrevios]);
 
   function setMonto(value) {
     setMontoState(formatMontoLive(value));

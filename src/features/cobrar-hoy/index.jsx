@@ -52,7 +52,7 @@ export function CobrarHoyPage({ onNavigate }) {
               className={clsx(
                 'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold transition-all',
                 tab === t.id
-                  ? 'bg-navy-900 text-white shadow-card dark:bg-gold-500 dark:text-navy-900'
+                  ? 'bg-cream-espresso text-cream-glass shadow-card dark:bg-gold-500 dark:text-navy-900'
                   : 'bg-white/50 backdrop-blur-md text-navy-700 hover:bg-white/80 dark:bg-white/[0.06] dark:text-navy-200 dark:hover:bg-white/10',
               )}
             >

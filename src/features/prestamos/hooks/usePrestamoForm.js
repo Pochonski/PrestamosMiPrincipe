@@ -5,7 +5,6 @@ import {
   validateMonto,
   validateNCoutas,
   validateTasa,
-  validateTasaComision,
   validateFechaInicio,
   buildInitialPrestamo,
 } from '../selectors';
@@ -15,7 +14,7 @@ import * as prestamosService from '../../../services/prestamos';
 const STEP_FIELDS = {
   1: ['ruta', 'periodo'],
   2: ['monto'],
-  3: ['nCuotas', 'tasa', 'comision'],
+  3: ['nCuotas', 'tasa'],
   4: ['fechaInicio'],
   5: [],
 };
@@ -28,7 +27,6 @@ function buildFromInitial(prestamo) {
     monto: prestamo.monto != null ? String(prestamo.monto) : '',
     nCuotas: prestamo.n_cuotas != null ? String(prestamo.n_cuotas) : '',
     tasa: prestamo.tasa != null ? String(prestamo.tasa) : '',
-    comision: prestamo.tasa_comision != null ? String(prestamo.tasa_comision) : '',
     fechaInicio: prestamo.fecha_inicio || '',
   };
 }
@@ -48,9 +46,8 @@ export function usePrestamoForm({ clienteId, initialPrestamo } = {}) {
     const monto = validateMonto(values.monto);
     const nCuotas = validateNCoutas(values.nCuotas);
     const tasa = validateTasa(values.tasa);
-    const comision = validateTasaComision(values.comision, values.tasa);
     const fechaInicio = validateFechaInicio(values.fechaInicio);
-    return { ruta, periodo, monto, nCuotas, tasa, comision, fechaInicio };
+    return { ruta, periodo, monto, nCuotas, tasa, fechaInicio };
   }, [values]);
 
   const stepErrors = useMemo(() => {
@@ -72,7 +69,7 @@ export function usePrestamoForm({ clienteId, initialPrestamo } = {}) {
         const digits = String(value).replace(/\D/g, '').slice(0, 3);
         return { ...v, nCuotas: digits };
       }
-      if (field === 'tasa' || field === 'comision') {
+      if (field === 'tasa') {
         let t = String(value).replace(/[^0-9.]/g, '');
         const parts = t.split('.');
         if (parts.length > 1) t = parts[0] + '.' + parts.slice(1).join('').slice(0, 2);
@@ -132,13 +129,10 @@ export function usePrestamoForm({ clienteId, initialPrestamo } = {}) {
         monto: true,
         nCuotas: true,
         tasa: true,
-        comision: true,
         fechaInicio: true,
       });
       return { ok: false, error: 'Datos inválidos', errors };
     }
-    const comisionNum =
-      values.comision === '' || values.comision == null ? null : Number(values.comision);
     setSubmitting(true);
     try {
       if (isEdit) {
@@ -147,7 +141,6 @@ export function usePrestamoForm({ clienteId, initialPrestamo } = {}) {
           periodo: values.periodo,
           monto: Number(String(values.monto).replace(/\D/g, '')),
           tasa: Number(values.tasa),
-          tasa_comision: comisionNum,
           n_cuotas: Number(values.nCuotas),
           fecha_inicio: values.fechaInicio,
         });
@@ -159,7 +152,7 @@ export function usePrestamoForm({ clienteId, initialPrestamo } = {}) {
         periodo: values.periodo,
         monto: Number(String(values.monto).replace(/\D/g, '')),
         tasa: Number(values.tasa),
-        tasaComision: comisionNum,
+        tasaComision: null,
         nCuotas: Number(values.nCuotas),
         fechaInicio: values.fechaInicio,
       });

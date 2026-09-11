@@ -37,6 +37,9 @@ describe('cuotaDelPeriodo', () => {
   it('null -> 0', () => expect(cuotaDelPeriodo(null)).toBe(0));
   it('saldo 100000 tasa 10 -> 10000', () => expect(cuotaDelPeriodo(makePrestamo({ saldo_capital: 100000, tasa: 10 }))).toBe(10000));
   it('redondea', () => expect(cuotaDelPeriodo(makePrestamo({ saldo_capital: 33333, tasa: 10 }))).toBe(3333));
+  it('ignora tasa_comision (base-only fuera de Mis comisiones)', () => {
+    expect(cuotaDelPeriodo(makePrestamo({ saldo_capital: 100000, tasa: 20, tasa_comision: 2 }))).toBe(20000);
+  });
 });
 
 describe('totalIntereses / totalAPagar / liquidarTotal', () => {

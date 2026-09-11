@@ -7,16 +7,12 @@ import { formatCRC } from '../../../../lib/format';
 export function Step3CuotasTasa({ values, errors, showError, set, touch }) {
   const capital = Number(String(values.monto).replace(/\D/g, ''));
   const tasa = Number(values.tasa);
-  const comision = values.comision === '' || values.comision == null ? 0 : Number(values.comision);
   const nCuotas = Number(values.nCuotas);
 
-  const cuotaTotal = capital > 0 && tasa + comision > 0 ? Math.round((capital * (tasa + comision)) / 100) : 0;
-  const cuotaBase = capital > 0 && tasa > 0 ? Math.round((capital * tasa) / 100) : 0;
-  const comisionCuota = cuotaTotal - cuotaBase;
+  const cuotaTotal = capital > 0 && tasa > 0 ? Math.round((capital * tasa) / 100) : 0;
   const totalIntereses = cuotaTotal * (nCuotas || 0);
   const totalAPagar = capital + totalIntereses;
-  const showPreview = capital > 0 && tasa + comision > 0 && nCuotas > 0;
-  const tieneComision = comision > 0;
+  const showPreview = capital > 0 && tasa > 0 && nCuotas > 0;
 
   return (
     <div className="space-y-5">
@@ -50,41 +46,25 @@ export function Step3CuotasTasa({ values, errors, showError, set, touch }) {
           error={showError('nCuotas') && errors.nCuotas}
         />
 
-        <Input
-          type="text"
-          name="tasa"
-          size="lg"
-          label={
-            <>
-              Tasa acreedor (% por cuota) <span className="text-danger-500">*</span>
-            </>
-          }
-          icon={Percent}
-          trailing={<Percent className="h-4 w-4 text-neutral-400 dark:text-navy-300" aria-hidden="true" />}
-          inputMode="decimal"
-          value={values.tasa}
-          onChange={(e) => set('tasa', e.target.value)}
-          onBlur={() => touch('tasa')}
-          placeholder="8"
-          error={showError('tasa') && errors.tasa}
-        />
-      </div>
-
       <Input
         type="text"
-        name="comision"
+        name="tasa"
         size="lg"
-        label="Tu comisión (% extra, opcional)"
-        hint="Se suma a la tasa: el cliente paga ambas y esa diferencia es tuya"
+        label={
+          <>
+            Tasa (% por cuota) <span className="text-danger-500">*</span>
+          </>
+        }
         icon={Percent}
         trailing={<Percent className="h-4 w-4 text-neutral-400 dark:text-navy-300" aria-hidden="true" />}
         inputMode="decimal"
-        value={values.comision ?? ''}
-        onChange={(e) => set('comision', e.target.value)}
-        onBlur={() => touch('comision')}
-        placeholder="0 = sin comisión"
-        error={showError('comision') && errors.comision}
+        value={values.tasa}
+        onChange={(e) => set('tasa', e.target.value)}
+        onBlur={() => touch('tasa')}
+        placeholder="8"
+        error={showError('tasa') && errors.tasa}
       />
+      </div>
 
       <div className="glass-subtle rounded-card p-4">
         <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-navy-300">
@@ -100,12 +80,6 @@ export function Step3CuotasTasa({ values, errors, showError, set, touch }) {
         ) : (
           <p className="text-sm text-neutral-500 dark:text-navy-300">
             Completá los campos para ver el cálculo.
-          </p>
-        )}
-        {showPreview && tieneComision && (
-          <p className="mt-3 text-xs font-semibold text-gold-600 dark:text-gold-300">
-            El cliente paga {formatCRC(cuotaTotal)} por cuota: {formatCRC(cuotaBase)} acreedor +{' '}
-            {formatCRC(comisionCuota)} tuyo
           </p>
         )}
       </div>

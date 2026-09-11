@@ -17,7 +17,7 @@ export function OnboardingPage() {
   }
 
   return (
-    <div className="grid min-h-screen grid-cols-1 bg-neutral-50 dark:bg-black lg:grid-cols-2">
+    <div className="grid min-h-screen grid-cols-1 bg-cream-base dark:bg-black lg:grid-cols-2">
       <div className="relative hidden flex-col justify-between overflow-hidden bg-navy-radial p-12 text-white lg:flex">
         <MeshGradient />
 
@@ -61,7 +61,7 @@ export function OnboardingPage() {
       </div>
 
       <div className="relative flex items-center justify-center overflow-hidden p-6 sm:p-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-white via-neutral-50 to-gold-50/30 dark:hidden" />
+        <div className="absolute inset-0 bg-gradient-to-br from-cream-glass via-cream-base to-gold-100/40 dark:hidden" />
         <div className="absolute inset-0 hidden bg-black/70 backdrop-blur-xl dark:block" />
 
         <div className="relative w-full max-w-md">

@@ -51,7 +51,7 @@ export function UserMenu({ className }) {
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
         className={clsx(
-          'flex min-h-[44px] items-center gap-2 rounded-input py-1 pl-1 pr-2 transition-colors',
+          'flex min-h-[44px] items-center gap-2 rounded-full py-1 pl-1 pr-3 transition-colors',
           'border border-transparent hover:border-white/50 hover:bg-white/60 hover:backdrop-blur-md',
           'dark:hover:border-white/10 dark:hover:bg-white/[0.06]',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black',

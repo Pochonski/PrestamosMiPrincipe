@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   buildResumenCobro,
   validateMontoCobro,
@@ -6,9 +6,7 @@ import {
   getCuotasAtrasadas,
   getCuotasQueImpidenCapital,
 } from '../../cobros/selectors';
-import { validateTasaComision } from '../selectors';
 import * as cobrosService from '../../../services/cobros';
-import * as prestamosService from '../../../services/prestamos';
 
 /**
  * Form para EDITAR el último cobro.
@@ -25,12 +23,23 @@ export function useCobroEditForm({ cobro, prestamo }) {
   );
   const [nota, setNota] = useState(cobro?.nota || '');
   const [aceptaAtrasados, setAceptaAtrasados] = useState(false);
-  // Tasa del acreedor: se guarda en el préstamo (permite agregarla a
-  // préstamos viejos desde la edición del último cobro).
-  const [comision, setComisionState] = useState(
-    prestamo?.tasa_comision != null ? String(prestamo.tasa_comision) : '',
-  );
   const [submitting, setSubmitting] = useState(false);
+  // Cobros previos (sin el que se edita) para saber si el pago completa la cuota.
+  const [cobrosPrevios, setCobrosPrevios] = useState([]);
+  useEffect(() => {
+    let vivo = true;
+    const pid = prestamo?.id;
+    if (!pid) return undefined;
+    cobrosService
+      .delPrestamo(pid)
+      .then((cbs) => {
+        if (vivo) setCobrosPrevios((cbs || []).filter((c) => c.id !== cobro?.id));
+      })
+      .catch(() => {});
+    return () => {
+      vivo = false;
+    };
+  }, [prestamo?.id, cobro?.id]);
 
   // Préstamo en estado base: revierte los efectos del cobro que se edita.
   const basePrestamo = useMemo(() => {
@@ -69,14 +78,8 @@ export function useCobroEditForm({ cobro, prestamo }) {
     [basePrestamo, cuotaNumero, incluirInteres],
   );
 
-  const comisionError = useMemo(
-    () => validateTasaComision(comision, basePrestamo?.tasa),
-    [comision, basePrestamo],
-  );
-
   const error = useMemo(() => {
     if (!basePrestamo) return 'Préstamo no disponible';
-    if (comisionError) return comisionError;
     return validateMontoCobro({
       monto,
       tipo,
@@ -85,37 +88,24 @@ export function useCobroEditForm({ cobro, prestamo }) {
       incluirInteres,
       aceptaAtrasados,
     });
-  }, [monto, tipo, basePrestamo, cuotaNumero, incluirInteres, aceptaAtrasados, comisionError]);
+  }, [monto, tipo, basePrestamo, cuotaNumero, incluirInteres, aceptaAtrasados]);
 
   const resumen = useMemo(() => {
     if (!basePrestamo || !cuotaActual) return null;
     const n = Number(String(monto).replace(/\D/g, '')) || 0;
-    // El split se previsualiza con la tasa editada (se guarda al confirmar).
-    const tasaEditada = comision === '' || comision == null ? null : Number(comision);
     return buildResumenCobro({
-      prestamo: { ...basePrestamo, tasa_comision: tasaEditada },
+      prestamo: basePrestamo,
       cuotaNumero,
       monto: n,
       tipo,
       incluirInteres,
       cliente: null,
+      cobrosPrevios,
     });
-  }, [basePrestamo, cuotaActual, monto, tipo, incluirInteres, cuotaNumero, comision]);
+  }, [basePrestamo, cuotaActual, monto, tipo, incluirInteres, cuotaNumero, cobrosPrevios]);
 
   function setMonto(value) {
     setMontoState(formatMontoLive(value));
-  }
-
-  function setComision(value) {
-    let t = String(value ?? '').replace(/[^0-9.]/g, '');
-    const parts = t.split('.');
-    if (parts.length > 1) t = parts[0] + '.' + parts.slice(1).join('').slice(0, 2);
-    setComisionState(t);
-  }
-
-  function comisionChanged() {
-    const norm = (v) => (v == null || v === '' ? null : Number(v));
-    return norm(comision) !== norm(prestamo?.tasa_comision);
   }
 
   async function submit() {
@@ -131,11 +121,6 @@ export function useCobroEditForm({ cobro, prestamo }) {
         incluirInteres: tipo === 'capital' ? incluirInteres : false,
         nota: nota || null,
       });
-      if (comisionChanged()) {
-        await prestamosService.update(prestamo.id, {
-          tasa_comision: comision === '' ? null : Number(comision),
-        });
-      }
       return { ok: true, cobro: updated };
     } catch (err) {
       const msg = String(err.message || '').toLowerCase();
@@ -166,8 +151,6 @@ export function useCobroEditForm({ cobro, prestamo }) {
     setIncluirInteres,
     aceptaAtrasados,
     setAceptaAtrasados,
-    comision,
-    setComision,
     nota,
     setNota,
     cuotaActual,

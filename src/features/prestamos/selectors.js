@@ -89,18 +89,6 @@ export function validateTasa(v) {
   return null;
 }
 
-export function validateTasaComision(v, tasaBase) {
-  if (v === '' || v == null) return null;
-  const err = validateTasa(v);
-  if (err) return err;
-  const comision = Number(v);
-  const base = Number(tasaBase);
-  if (Number.isFinite(base) && base >= 0 && base + comision > 100) {
-    return 'La suma de tasas no puede superar 100%';
-  }
-  return null;
-}
-
 export function validateFechaInicio(v) {
   if (!v) return 'La fecha inicial es obligatoria';
   const d = new Date(v);
@@ -117,7 +105,6 @@ export function buildInitialPrestamo(clienteId) {
     periodo: null,
     monto: '',
     tasa: '',
-    comision: '',
     nCuotas: '',
     fechaInicio: new Date().toISOString().slice(0, 10),
   };
