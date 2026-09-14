@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './index.css';
 import App from './App.jsx';
+import RouteReporter from './components/RouteReporter.jsx';
 import { applyTheme, getTheme } from './services/theme';
 import { ToastViewport } from './components/ui/Toast';
 import { AuthProvider } from './features/auth/AuthContext';
@@ -32,6 +33,7 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <RouteReporter />
         <AuthProvider>
           <App />
           <ToastViewport />
