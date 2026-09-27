@@ -254,3 +254,36 @@ describe('useResumenData', () => {
     expect(result.current.data.kpis.totalClientes).toBe(1);
   });
 });
+
+describe('computeResumen ramas borde', () => {
+  it('cuotas ausentes, montos ausentes, fallbacks de cuotaNumero y filtros', () => {
+    const clientes = [{ id: 'c1', nombre: 'Ana' }];
+    const prestamos = [
+      { id: 'p1', cliente_id: 'c1', ruta: 'A', estado: 'vigente', saldo_capital: 1000, monto: 1000 },
+      {
+        id: 'p2', cliente_id: 'c1', ruta: 'A', estado: 'cancelado', saldo_capital: 0, monto: 500,
+        cuotas: [{ estado: 'pagada', fecha: '2024-01-01', monto: 100 }],
+      },
+      {
+        id: 'p3', cliente_id: 'c1', ruta: 'A', estado: 'vigente', saldo_capital: 2000, monto: 2000,
+        cuotas: [
+          { estado: 'pendiente', fecha: '2024-06-15', monto: 500 },
+          { estado: 'pendiente', fecha: '2024-06-15' },
+        ],
+      },
+    ];
+    const cobros = [
+      { id: '1', fecha: hoy.toISOString(), cliente_id: 'c1', prestamoId: 'p1', cuotaNumero: 3 },
+      { id: '2', fecha: hoy.toISOString(), monto: 250, cliente_id: 'c1', prestamo_id: 'p3', cuota: 7 },
+      { id: '3', fecha: '2024-01-05T12:00:00.000Z', monto: 100, cliente_id: 'c1', prestamo_id: 'p1' },
+    ];
+    const r = computeResumen({ clientes, prestamos, cobros, hoy, filters: { ruta: 'A' } });
+    expect(r.kpis.totalCobradoHoy).toBe(250);
+    expect(r.kpis.cantidadCobrarHoy).toBe(2);
+    expect(r.kpis.totalPorCobrarHoy).toBe(500);
+    expect(r.kpis.cancelados30).toBe(0);
+    expect(r.ultimosCobros.find((c) => c.id === '1').cuotaNumero).toBe(3);
+    expect(r.ultimosCobros.find((c) => c.id === '2').cuotaNumero).toBe(7);
+    expect(r.porEstado.cancelado).toBe(1);
+  });
+});

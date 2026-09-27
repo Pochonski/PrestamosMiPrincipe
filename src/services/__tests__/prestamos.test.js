@@ -21,7 +21,7 @@ beforeEach(() => vi.clearAllMocks());
 
 describe('prestamos.remove bloquea con cobros', () => {
   it('lanza si tiene cobros', async () => {
-    const prestamo = { id: 'p1', n_cuotas: 10 };
+  const prestamo = { id: 'p1', n_cuotas: 10 };
     const loadSingle = vi.fn().mockResolvedValue({ data: prestamo, error: null });
     const loadChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), single: loadSingle, maybeSingle: loadSingle };
     loadChain.eq.mockReturnValue(loadChain); loadChain.select.mockReturnValue(loadChain);
@@ -62,7 +62,7 @@ describe('prestamos.create', () => {
 
 describe('prestamos.extenderCuotas', () => {
   it('PrestamoNoEncontradoError si no existe', async () => {
-    const maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
+  const maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
     const chain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle };
     chain.select.mockReturnValue(chain); chain.eq.mockReturnValue(chain);
     const cuotasChain = { select: vi.fn().mockReturnThis(), in: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis(), range: vi.fn().mockReturnThis() };
@@ -71,7 +71,7 @@ describe('prestamos.extenderCuotas', () => {
     await expect(prestamosService.extenderCuotas('nope', 2)).rejects.toHaveProperty('name', 'PrestamoNoEncontradoError');
   });
   it('extiende cuotas ok', async () => {
-    const prestamo = { id: 'p1', n_cuotas: 5, tasa: 10, saldo_capital: 10000, periodo: { tipo: 'quincenal' }, cuotas: [{ fecha: '2024-01-15' }], org_id: 'org-1' };
+  const prestamo = { id: 'p1', n_cuotas: 5, tasa: 10, saldo_capital: 10000, periodo: { tipo: 'quincenal' }, cuotas: [{ fecha: '2024-01-15' }], org_id: 'org-1' };
     const maybeSingle = vi.fn().mockResolvedValue({ data: prestamo, error: null });
     const getChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle };
     getChain.select.mockReturnValue(getChain); getChain.eq.mockReturnValue(getChain);
@@ -91,11 +91,22 @@ describe('prestamos.extenderCuotas', () => {
     const r = await prestamosService.extenderCuotas('p1', 2);
     expect(vi.mocked(supabase.rpc)).toHaveBeenCalledWith('extender_prestamo_cuotas', expect.objectContaining({ p_prestamo_id: 'p1' }));
   });
+  it('bloquea extender préstamo liquidado', async () => {
+  const prestamo = { id: 'p1', n_cuotas: 5, tasa: 10, saldo_capital: 0, estado: 'cancelado', periodo: { tipo: 'quincenal' }, org_id: 'org-1' };
+    const maybeSingle = vi.fn().mockResolvedValue({ data: prestamo, error: null });
+    const getChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle };
+    getChain.select.mockReturnValue(getChain); getChain.eq.mockReturnValue(getChain);
+    const cuotasChain = { select: vi.fn().mockReturnThis(), in: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis(), range: vi.fn().mockReturnThis() };
+    cuotasChain.then = (res) => Promise.resolve({ data: [], error: null }).then(res);
+    vi.mocked(supabase.from).mockImplementation((t) => t === 'cuotas' ? cuotasChain : getChain);
+    await expect(prestamosService.extenderCuotas('p1', 2)).rejects.toThrow('liquidado');
+    expect(vi.mocked(supabase.rpc)).not.toHaveBeenCalled();
+  });
 });
 
 describe('prestamos.remove success', () => {
   it('elimina si no tiene cobros', async () => {
-    const prestamo = { id: 'p1', n_cuotas: 5 };
+  const prestamo = { id: 'p1', n_cuotas: 5 };
     const loadSingle = vi.fn().mockResolvedValue({ data: prestamo, error: null });
     const loadChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), single: loadSingle, maybeSingle: loadSingle };
     loadChain.select.mockReturnValue(loadChain); loadChain.eq.mockReturnValue(loadChain);
@@ -119,5 +130,49 @@ describe('prestamos.remove success', () => {
     });
     const r = await prestamosService.remove('p1');
     expect(r).toBe(true);
+  });
+});
+
+describe('prestamos tasas puras', () => {
+  it('tasaComision variantes', () => {
+  expect(prestamosService.tasaComision(null)).toBe(0);
+    expect(prestamosService.tasaComision({})).toBe(0);
+    expect(prestamosService.tasaComision({ tasa_comision: '' })).toBe(0);
+    expect(prestamosService.tasaComision({ tasa_comision: 0 })).toBe(0);
+    expect(prestamosService.tasaComision({ tasa_comision: 3 })).toBe(3);
+  });
+  it('tasaTotal suma base + comisión', () => {
+  expect(prestamosService.tasaTotal({ tasa: 10, tasa_comision: 2 })).toBe(12);
+  });
+});
+
+describe('prestamos.extenderCuotas valida cantidad', () => {
+  it.each([0, -2, 61, 'abc'])('rechaza %s sin tocar DB', async (n) => {
+    await expect(prestamosService.extenderCuotas('p1', n)).rejects.toThrow('inválida');
+    expect(vi.mocked(supabase.from)).not.toHaveBeenCalled();
+  });
+});
+
+describe('prestamos.update valida tasas', () => {
+  function mockGetById() {
+  const prestamo = {
+      id: 'p1', ruta: 'R', periodo: { tipo: 'mensual' }, monto: 10000, tasa: 10,
+      tasa_comision: null, n_cuotas: 5, fecha_inicio: '2024-01-01', cuotas: [],
+      saldo_capital: 10000, org_id: 'org-1',
+    };
+    const maybeSingle = vi.fn().mockResolvedValue({ data: prestamo, error: null });
+    const getChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle };
+    getChain.select.mockReturnValue(getChain); getChain.eq.mockReturnValue(getChain);
+    const cuotasChain = { select: vi.fn().mockReturnThis(), in: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis() };
+    cuotasChain.then = (res) => Promise.resolve({ data: [], error: null }).then(res);
+    vi.mocked(supabase.from).mockImplementation((t) => t === 'cuotas' ? cuotasChain : getChain);
+  }
+  it('tasa negativa -> error', async () => {
+    mockGetById();
+    await expect(prestamosService.update('p1', { tasa: -5 })).rejects.toThrow('negativas');
+  });
+  it('suma > 100 -> error', async () => {
+    mockGetById();
+    await expect(prestamosService.update('p1', { tasa: 60, tasa_comision: 50 })).rejects.toThrow('muy alta');
   });
 });

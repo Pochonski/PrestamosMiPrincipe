@@ -59,6 +59,12 @@ describe('getQuickBadges', () => {
     expect(r.atrasados).toBe(2);
     expect(r.cobrarHoy).toBe(1);
   });
+  it('si falla totales usa ceros', async () => {
+    vi.mocked(notifService.countNoLeidas).mockResolvedValue(1);
+    vi.mocked(totalesService.resumenTotales).mockRejectedValue(new Error('down'));
+    const r = await getQuickBadges();
+    expect(r).toEqual({ notificaciones: 1, atrasados: 0, cobrarHoy: 0 });
+  });
 });
 
 describe('buildRecentActivity', () => {

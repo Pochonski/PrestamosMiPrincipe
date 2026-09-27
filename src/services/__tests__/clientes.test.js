@@ -46,14 +46,14 @@ beforeEach(() => {
 
 describe('clientes.buscar sanitiza', () => {
   it('sin query retorna todos', async () => {
-    const data = [{ id: '1', nombre: 'Ana' }];
+  const data = [{ id: '1', nombre: 'Ana' }];
     vi.mocked(supabase.from).mockReturnValue(chain(data));
     const r = await clientesService.buscar('');
     expect(r).toEqual(data);
     expect(supabase.from).toHaveBeenCalledWith('clientes');
   });
   it('query con %_,\\ sanitiza antes de or', async () => {
-    const m = chain([]);
+  const m = chain([]);
     vi.mocked(supabase.from).mockReturnValue(m);
     await clientesService.buscar('a%b_c\\d');
     expect(m.or).toHaveBeenCalledWith(expect.stringContaining('abcd'));
@@ -65,19 +65,19 @@ describe('clientes.buscar sanitiza', () => {
 
 describe('clientes.list / getById', () => {
   it('list retorna data', async () => {
-    const data = [{ id: '1' }];
+  const data = [{ id: '1' }];
     const c = chain(data);
     vi.mocked(supabase.from).mockReturnValue(c);
     expect(await clientesService.list()).toEqual(data);
   });
   it('getById retorna data', async () => {
-    const data = { id: '1', nombre: 'Ana' };
+  const data = { id: '1', nombre: 'Ana' };
     const c = chain(data);
     vi.mocked(supabase.from).mockReturnValue(c);
     expect(await clientesService.getById('1')).toEqual(data);
   });
   it('list throw si error', async () => {
-    const c = chain(null, new Error('fail'));
+  const c = chain(null, new Error('fail'));
     vi.mocked(supabase.from).mockReturnValue(c);
     await expect(clientesService.list()).rejects.toThrow('fail');
   });
@@ -85,7 +85,7 @@ describe('clientes.list / getById', () => {
 
 describe('clientes.remove bloquea con préstamos activos', () => {
   it('lanza ClienteTienePrestamosError si tiene activos', async () => {
-    const prestamos = [{ id: 'p1', estado: 'vigente' }];
+  const prestamos = [{ id: 'p1', estado: 'vigente' }];
     const emptyChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis() };
     emptyChain.then = (res) => Promise.resolve({ data: prestamos, error: null }).then(res);
     emptyChain.select.mockReturnValue(emptyChain); emptyChain.eq.mockReturnValue(emptyChain); emptyChain.order.mockReturnValue(emptyChain);
@@ -93,7 +93,7 @@ describe('clientes.remove bloquea con préstamos activos', () => {
     await expect(clientesService.remove('cli-1')).rejects.toHaveProperty('name', 'ClienteTienePrestamosError');
   });
   it('permite borrar si no tiene activos', async () => {
-    const emptyPrestamos = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis() };
+  const emptyPrestamos = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis() };
     emptyPrestamos.then = (res) => Promise.resolve({ data: [], error: null }).then(res);
     emptyPrestamos.select.mockReturnValue(emptyPrestamos); emptyPrestamos.eq.mockReturnValue(emptyPrestamos); emptyPrestamos.order.mockReturnValue(emptyPrestamos);
     const deleteChain = { delete: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis() };
@@ -112,7 +112,7 @@ describe('clientes.remove bloquea con préstamos activos', () => {
 
 describe('clientes.create emite evento', () => {
   it('create inserta y emite', async () => {
-    const inserted = { id: 'new', nombre: 'Juan' };
+  const inserted = { id: 'new', nombre: 'Juan' };
     const insertChain = {
       select: vi.fn().mockReturnThis(),
       single: vi.fn().mockResolvedValue({ data: inserted, error: null }),
@@ -124,5 +124,15 @@ describe('clientes.create emite evento', () => {
     const r = await clientesService.create({ nombre: ' Juan ', cedula: '1-1', telefono: '8888', direccion: 'dir' });
     expect(r).toEqual(inserted);
     expect(vi.mocked(emitDataChanged)).toHaveBeenCalled();
+  });
+});
+
+describe('clientes.remove bloquea historial', () => {
+  it('lanza error si solo tiene préstamos cancelados', async () => {
+    const chain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis() };
+    chain.then = (res) => Promise.resolve({ data: [{ id: 'p1', estado: 'cancelado' }], error: null }).then(res);
+    chain.select.mockReturnValue(chain); chain.eq.mockReturnValue(chain); chain.order.mockReturnValue(chain);
+    vi.mocked(supabase.from).mockReturnValue(chain);
+    await expect(clientesService.remove('cli-1')).rejects.toThrow('no perder datos');
   });
 });

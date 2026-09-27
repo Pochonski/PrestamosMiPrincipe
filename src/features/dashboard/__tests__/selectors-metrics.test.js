@@ -111,4 +111,45 @@ describe('getMetrics', () => {
 
     await expect(getMetrics()).resolves.toHaveProperty('cobros6m');
   });
+
+  it('usa snapshot del mes anterior e historial de hoy/ayer', async () => {
+    const now = new Date();
+    const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const prev15 = new Date(now.getFullYear(), now.getMonth() - 1, 15);
+    const history = [
+      { fecha: iso(prev15), cartera_total: 900 },
+      { fecha: iso(new Date(now.getFullYear(), now.getMonth() - 1, 5)), cartera_total: 800 },
+      { fecha: iso(now), cartera_total: 1000, total_atrasado: 50, total_por_cobrar: 200 },
+    ];
+    vi.mocked(carteraHistoryService.snapshot).mockResolvedValue({ cartera_total: 1000 });
+    vi.mocked(carteraHistoryService.history).mockResolvedValue(history);
+    vi.mocked(totalesService.cobrosSerieDiaria).mockResolvedValue([{ fecha: iso(now), total: 70 }]);
+    vi.mocked(totalesService.cobrosSerieMensual).mockResolvedValue([{ mes: '2020-01', total: 10 }]);
+
+    const m = await getMetrics();
+    expect(m.snapshotMesAnterior?.cartera_total).toBe(800);
+  });
+
+  it('sin filas del mes anterior el snapshot es null', async () => {
+    vi.mocked(carteraHistoryService.snapshot).mockResolvedValue(null);
+    vi.mocked(carteraHistoryService.history).mockResolvedValue([]);
+    vi.mocked(totalesService.cobrosSerieDiaria).mockResolvedValue([]);
+    vi.mocked(totalesService.cobrosSerieMensual).mockResolvedValue([]);
+
+    const m = await getMetrics();
+    expect(m.snapshotMesAnterior).toBeNull();
+    expect(m.snapshotHoy).toBeNull();
+  });
+
+  it('si fallan history y series usa vacíos', async () => {
+    vi.mocked(carteraHistoryService.snapshot).mockResolvedValue(null);
+    vi.mocked(carteraHistoryService.history).mockRejectedValue(new Error('x'));
+    vi.mocked(totalesService.cobrosSerieDiaria).mockRejectedValue(new Error('x'));
+    vi.mocked(totalesService.cobrosSerieMensual).mockRejectedValue(new Error('x'));
+
+    const m = await getMetrics();
+    expect(m.cobros6m).toEqual([]);
+    expect(m.spark7).toEqual([]);
+    expect(m.snapshotMesAnterior).toBeNull();
+  });
 });
