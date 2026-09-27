@@ -24,6 +24,14 @@ function suggestedMonto(prestamo, cuota, tipo, incluirInteres) {
   return 0;
 }
 
+function toLocalDateString(d) {
+  const x = d instanceof Date ? d : new Date(d);
+  const y = x.getFullYear();
+  const m = String(x.getMonth() + 1).padStart(2, '0');
+  const day = String(x.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 export function useCobroForm({ prestamoId }) {
   const [prestamo, setPrestamo] = useState(null);
   const [cuotaNumero, setCuotaNumero] = useState(1);
@@ -31,6 +39,7 @@ export function useCobroForm({ prestamoId }) {
   const [monto, setMontoState] = useState('');
   const [incluirInteres, setIncluirInteres] = useState(true);
   const [nota, setNota] = useState('');
+  const [fechaPago, setFechaPago] = useState(() => toLocalDateString(new Date()));
   const [aceptaAtrasados, setAceptaAtrasados] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loadingPrestamo, setLoadingPrestamo] = useState(true);
@@ -94,8 +103,9 @@ export function useCobroForm({ prestamoId }) {
       cuotaNumero,
       incluirInteres,
       aceptaAtrasados,
+      fechaPago,
     });
-  }, [monto, tipo, prestamo, cuotaNumero, incluirInteres, aceptaAtrasados]);
+  }, [monto, tipo, prestamo, cuotaNumero, incluirInteres, aceptaAtrasados, fechaPago]);
 
   const resumen = useMemo(() => {
     if (!prestamo || !cuotaActual) return null;
@@ -143,10 +153,14 @@ export function useCobroForm({ prestamoId }) {
         incluirInteres: tipo === 'capital' ? incluirInteres : false,
         cobradorId,
         nota: nota || null,
+        fechaPago,
       });
       return { ok: true, cobro, cliente, prestamoId };
     } catch (err) {
       const msg = String(err.message || '').toLowerCase();
+      if (msg.includes('futura')) {
+        return { ok: false, error: 'La fecha de pago no puede ser futura' };
+      }
       if (msg.includes('monto es menor')) {
         return { ok: false, error: 'El monto no cubre el interés del período' };
       }
@@ -176,6 +190,9 @@ export function useCobroForm({ prestamoId }) {
     setAceptaAtrasados,
     nota,
     setNota,
+    fechaPago,
+    setFechaPago,
+    hoy: toLocalDateString(new Date()),
     showError,
     cuotaActual,
     montoSugerido,

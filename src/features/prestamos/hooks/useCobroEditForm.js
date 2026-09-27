@@ -8,6 +8,21 @@ import {
 } from '../../cobros/selectors';
 import * as cobrosService from '../../../services/cobros';
 
+function toLocalDateString(d) {
+  const x = d instanceof Date ? d : new Date(d);
+  if (Number.isNaN(x.getTime())) return new Date().toISOString().slice(0, 10);
+  const y = x.getFullYear();
+  const m = String(x.getMonth() + 1).padStart(2, '0');
+  const day = String(x.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function fechaInicialCobro(cobro) {
+  const raw = cobro?.fecha || cobro?.fechaPago || null;
+  if (!raw) return toLocalDateString(new Date());
+  if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
+  return toLocalDateString(raw);
+}
 /**
  * Form para EDITAR el último cobro.
  * Trabaja sobre el préstamo REVERTIDO (como si el cobro a editar nunca
@@ -22,6 +37,7 @@ export function useCobroEditForm({ cobro, prestamo }) {
     cobro?.incluir_interes ?? cobro?.incluirInteres ?? true,
   );
   const [nota, setNota] = useState(cobro?.nota || '');
+  const [fechaPago, setFechaPago] = useState(() => fechaInicialCobro(cobro));
   const [aceptaAtrasados, setAceptaAtrasados] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   // Cobros previos (sin el que se edita) para saber si el pago completa la cuota.
@@ -87,8 +103,9 @@ export function useCobroEditForm({ cobro, prestamo }) {
       cuotaNumero,
       incluirInteres,
       aceptaAtrasados,
+      fechaPago,
     });
-  }, [monto, tipo, basePrestamo, cuotaNumero, incluirInteres, aceptaAtrasados]);
+  }, [monto, tipo, basePrestamo, cuotaNumero, incluirInteres, aceptaAtrasados, fechaPago]);
 
   const resumen = useMemo(() => {
     if (!basePrestamo || !cuotaActual) return null;
@@ -120,10 +137,14 @@ export function useCobroEditForm({ cobro, prestamo }) {
         tipo,
         incluirInteres: tipo === 'capital' ? incluirInteres : false,
         nota: nota || null,
+        fechaPago,
       });
       return { ok: true, cobro: updated };
     } catch (err) {
       const msg = String(err.message || '').toLowerCase();
+      if (msg.includes('futura')) {
+        return { ok: false, error: 'La fecha de pago no puede ser futura' };
+      }
       if (msg.includes('monto es menor')) {
         return { ok: false, error: 'El monto no cubre el interés del período' };
       }
@@ -153,6 +174,9 @@ export function useCobroEditForm({ cobro, prestamo }) {
     setAceptaAtrasados,
     nota,
     setNota,
+    fechaPago,
+    setFechaPago,
+    hoy: toLocalDateString(new Date()),
     cuotaActual,
     atrasadas,
     cuotasQueImpidenCapital,

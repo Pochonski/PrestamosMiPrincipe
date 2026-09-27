@@ -167,8 +167,19 @@ export function PrestamoDetalle({ onNavigate, params }) {
     }
   }
 
-  // Los cobros llegan ordenados por fecha desc: el primero es el último.
-  const ultimoCobroId = cobros.length > 0 ? cobros[0].id : null;
+  // El "último" es el último REGISTRADO (created_at), no el de fecha de pago
+  // más reciente: un cobro retroactivo no debe bloquear la edición.
+  const ultimoCobroId =
+    cobros.length > 0
+      ? [...cobros].sort((a, b) => {
+          const ca = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const cb = b.created_at ? new Date(b.created_at).getTime() : 0;
+          if (cb !== ca) return cb - ca;
+          const fa = a.fecha ? new Date(a.fecha).getTime() : 0;
+          const fb = b.fecha ? new Date(b.fecha).getTime() : 0;
+          return fb - fa;
+        })[0].id
+      : null;
 
   async function handleDeleteCobro() {
     if (!deleteCobro) return;

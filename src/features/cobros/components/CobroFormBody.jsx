@@ -22,11 +22,15 @@ export function CobroFormBody({ form }) {
     setAceptaAtrasados,
     nota,
     setNota,
+    fechaPago,
+    setFechaPago,
     prestamo,
     cuotaActual,
     cuotaNumero,
     setCuotaNumero,
   } = form || {};
+  const hoy = form?.hoy || new Date().toISOString().slice(0, 10);
+  const esRetroactivo = Boolean(fechaPago) && String(fechaPago).slice(0, 10) < String(hoy).slice(0, 10);
   const atrasadas = form?.atrasadas || [];
   const cuotasQueImpidenCapital = form?.cuotasQueImpidenCapital || [];
   const error = form?.error;
@@ -56,6 +60,25 @@ export function CobroFormBody({ form }) {
 
   return (
     <div className="space-y-5">
+      {setFechaPago && (
+        <div>
+          <Input
+            type="date"
+            name="fechaPago"
+            label="Fecha de pago *"
+            value={fechaPago || hoy}
+            max={hoy}
+            onChange={(e) => setFechaPago(e.target.value)}
+            hint="Día en que se hizo el pago"
+          />
+          {esRetroactivo && (
+            <p className="mt-1.5 text-xs font-medium text-navy-600 dark:text-navy-200">
+              Pago del {formatDate(fechaPago)}. Aparecerá en los reportes de ese día, no en los de hoy.
+            </p>
+          )}
+        </div>
+      )}
+
       {showCuotaSelector && (
         <label className="block">
           <span className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-navy-700 dark:text-navy-200">
@@ -149,6 +172,9 @@ export function CobroFormBody({ form }) {
             </div>
             <p className="mt-2 text-[11px] text-neutral-500 dark:text-navy-300">
               Al abonar a capital, las cuotas futuras se recalculan con el saldo restante.
+              {resumen?.willCancel
+                ? ' Con este monto el préstamo queda liquidado y las cuotas de adelante se cancelan.'
+                : ''}
             </p>
           </div>
 

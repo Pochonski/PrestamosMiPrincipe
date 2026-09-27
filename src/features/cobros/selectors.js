@@ -70,7 +70,30 @@ export function getCuotasQueImpidenCapital(prestamo, { cuotaNumero, incluirInter
   return atrasadas;
 }
 
-export function validateMontoCobro({ monto, tipo, prestamo, cuotaNumero, incluirInteres, aceptaAtrasados }) {
+export function validateFechaPago(fechaPago) {
+  if (!fechaPago) return 'Elegí la fecha de pago';
+  if (typeof fechaPago === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fechaPago)) {
+    const [y, m, d] = fechaPago.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    if (Number.isNaN(dt.getTime())) return 'Fecha inválida';
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const dia = new Date(y, m - 1, d);
+    dia.setHours(0, 0, 0, 0);
+    if (dia > hoy) return 'La fecha de pago no puede ser futura';
+    return null;
+  }
+  const dt = new Date(fechaPago);
+  if (Number.isNaN(dt.getTime())) return 'Fecha inválida';
+  const hoy = new Date();
+  hoy.setHours(23, 59, 59, 999);
+  if (dt > hoy) return 'La fecha de pago no puede ser futura';
+  return null;
+}
+
+export function validateMontoCobro({ monto, tipo, prestamo, cuotaNumero, incluirInteres, aceptaAtrasados, fechaPago }) {
+  const errFecha = fechaPago !== undefined ? validateFechaPago(fechaPago) : null;
+  if (errFecha) return errFecha;
   if (tipo === 'interes') return null;
 
   const n = Number(String(monto).replace(/\D/g, ''));

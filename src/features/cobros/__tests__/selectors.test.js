@@ -3,6 +3,7 @@ import {
   getCuotasAtrasadas,
   getCuotasQueImpidenCapital,
   validateMontoCobro,
+  validateFechaPago,
   buildResumenCobro,
   getResumenPrestamo,
   getCuotasPendientes,
@@ -101,6 +102,38 @@ describe('validateMontoCobro', () => {
   it('interes ok sin validar saldo', () => {
     const p = makePrestamo({ monto: 10000, saldo_capital: 10000, tasa: 10, cuotas: [] });
     expect(validateMontoCobro({ monto: '500', tipo: 'interes', prestamo: p })).toBeNull();
+  });
+  it('fecha futura bloquea', () => {
+    const f = new Date();
+    f.setDate(f.getDate() + 1);
+    const fechaPago = f.toISOString().slice(0, 10);
+    const p = makePrestamo({ monto: 10000, saldo_capital: 10000, tasa: 10, cuotas: [] });
+    expect(validateMontoCobro({ monto: '500', tipo: 'interes', prestamo: p, fechaPago })).toContain('futura');
+  });
+  it('fecha pasada valida', () => {
+    const f = new Date();
+    f.setDate(f.getDate() - 10);
+    const fechaPago = f.toISOString().slice(0, 10);
+    const p = makePrestamo({ monto: 10000, saldo_capital: 10000, tasa: 10, cuotas: [] });
+    expect(validateMontoCobro({ monto: '500', tipo: 'interes', prestamo: p, fechaPago })).toBeNull();
+  });
+});
+
+describe('validateFechaPago', () => {
+  it('vacía -> error', () => expect(validateFechaPago('')).toContain('fecha'));
+  it('hoy -> ok', () => {
+    const hoy = new Date().toISOString().slice(0, 10);
+    expect(validateFechaPago(hoy)).toBeNull();
+  });
+  it('pasada -> ok', () => {
+    const f = new Date();
+    f.setDate(f.getDate() - 15);
+    expect(validateFechaPago(f.toISOString().slice(0, 10))).toBeNull();
+  });
+  it('futura -> error', () => {
+    const f = new Date();
+    f.setDate(f.getDate() + 2);
+    expect(validateFechaPago(f.toISOString().slice(0, 10))).toContain('futura');
   });
 });
 

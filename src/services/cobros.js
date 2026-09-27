@@ -18,6 +18,7 @@ function normalizeCobro(c) {
     prestamo_id: c.prestamo_id ?? c.prestamoId,
     incluirInteres: c.incluirInteres ?? c.incluir_interes,
     incluir_interes: c.incluir_interes ?? c.incluirInteres,
+    fechaPago: c.fechaPago ?? c.fecha,
   };
 }
 
@@ -45,12 +46,20 @@ export async function getById(id) {
   return normalizeCobro(data);
 }
 
-export async function delDia() {
+export async function delDia(fechaBase) {
   const orgId = await getOrgId();
   // Límites del día LOCAL convertidos a UTC (evita desfase de toISOString en UTC-6).
-  const now = new Date();
-  const inicio = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).toISOString();
-  const fin = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).toISOString();
+  // Si se pasa fechaBase (YYYY-MM-DD o Date), filtra ese día (útil para
+  // verificar cobros retroactivos); si no, filtra hoy.
+  const base = fechaBase ? new Date(fechaBase) : new Date();
+  // parseLocalDate-safe: si viene YYYY-MM-DD, construir en local.
+  let ref = base;
+  if (typeof fechaBase === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fechaBase)) {
+    const [y, m, d] = fechaBase.split('-').map(Number);
+    ref = new Date(y, m - 1, d);
+  }
+  const inicio = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate(), 0, 0, 0, 0).toISOString();
+  const fin = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate(), 23, 59, 59, 999).toISOString();
   const { data, error } = await supabase
     .from('cobros')
     .select('*')
@@ -199,10 +208,22 @@ function mapCobroRpcError(error, { cuotaNumero, prestamoId, monto, tipo, accion 
   throwIfError(error, `cobros.${accion}`, { prestamoId, cuotaNumero, monto, tipo });
 }
 
+function toFechaIso(fechaPago) {
+  if (!fechaPago) return null;
+  if (fechaPago instanceof Date) return fechaPago.toISOString();
+  if (typeof fechaPago === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fechaPago)) {
+    // Mediodía local para que el día no se corra por UTC-6.
+    const [y, m, d] = fechaPago.split('-').map(Number);
+    return new Date(y, m - 1, d, 12, 0, 0, 0).toISOString();
+  }
+  const d = new Date(fechaPago);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
 // Los cobros son un libro inmutable: no hay update/delete intencionalmente.
 // El cobrador se deriva de auth.uid() dentro del RPC (no se acepta por parámetro
 // para evitar suplantación).
-export async function create({ prestamoId, cuotaNumero, monto, tipo, incluirInteres = false, nota }) {
+export async function create({ prestamoId, cuotaNumero, monto, tipo, incluirInteres = false, nota, fechaPago }) {
   const { data, error } = await supabase.rpc('create_cobro_with_updates', {
     p_prestamo_id: prestamoId,
     p_cuota_numero: Number(cuotaNumero),
@@ -210,9 +231,13 @@ export async function create({ prestamoId, cuotaNumero, monto, tipo, incluirInte
     p_tipo: tipo,
     p_incluir_interes: Boolean(incluirInteres),
     p_nota: nota || null,
+    p_fecha: toFechaIso(fechaPago),
   });
   if (error) {
     const msg = String(error.message || '').toLowerCase();
+    if (msg.includes('futura')) {
+      throw new Error('La fecha de pago no puede ser futura');
+    }
     if (msg.includes('monto menor')) {
       throw new MontoInvalidoError('El monto es menor que el interés del período');
     }
@@ -249,7 +274,7 @@ export async function create({ prestamoId, cuotaNumero, monto, tipo, incluirInte
  * dejando préstamo y cuotas como si el cobro original nunca hubiera existido.
  * Requiere aplicar la migración 20260909000000_cobro_edit_delete.sql.
  */
-export async function updateLast(cobroId, { cuotaNumero, monto, tipo, incluirInteres = false, nota }) {
+export async function updateLast(cobroId, { cuotaNumero, monto, tipo, incluirInteres = false, nota, fechaPago }) {
   const { data, error } = await supabase.rpc('update_last_cobro', {
     p_cobro_id: cobroId,
     p_cuota_numero: Number(cuotaNumero),
@@ -257,8 +282,13 @@ export async function updateLast(cobroId, { cuotaNumero, monto, tipo, incluirInt
     p_tipo: tipo,
     p_incluir_interes: Boolean(incluirInteres),
     p_nota: nota || null,
+    p_fecha: toFechaIso(fechaPago),
   });
   if (error) {
+    const msg = String(error?.message || '').toLowerCase();
+    if (msg.includes('futura')) {
+      throw new Error('La fecha de pago no puede ser futura');
+    }
     mapCobroRpcError(error, { cuotaNumero, monto, tipo, accion: 'editar' });
   }
   if (!data) throw new Error('No se actualizó el cobro');
