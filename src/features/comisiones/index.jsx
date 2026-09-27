@@ -14,7 +14,7 @@ import { useDataChange } from '../../lib/hooks/useDataChange';
 import * as prestamosService from '../../services/prestamos';
 import * as cobrosService from '../../services/cobros';
 import * as clientesService from '../../services/clientes';
-import { resumenComisiones, resumenAtrasadosComision, tasaBase, tasaComision, validateTasaComision, tuyoDesdePct, pctDesdeTuyo } from './selectors';
+import { resumenComisiones, resumenAtrasadosComision, tasaBase, tasaComision, prestamoActivo, validateTasaComision, tuyoDesdePct, pctDesdeTuyo } from './selectors';
 
 export function ComisionesPage({ onNavigate }) {
   const [loading, setLoading] = useState(true);
@@ -209,6 +209,9 @@ function PrestamoRow({ prestamo, nombre, row, onNavigate, onSaved }) {
   const dirty = normNuevo !== normActual;
 
   const montoEditable = refMonto > 0 && base > 0;
+  // Sin préstamos activos (liquidado / sin pendientes): se muestra la fila
+  // como historial pero no se puede poner % ni monto.
+  const estaActivo = prestamoActivo(prestamo);
 
   function sanitizePct(v) {
     let t = String(v ?? '').replace(/[^0-9.]/g, '');
@@ -243,6 +246,7 @@ function PrestamoRow({ prestamo, nombre, row, onNavigate, onSaved }) {
   }
 
   async function guardar() {
+    if (!estaActivo) return;
     const aGuardar = validar();
     if (aGuardar === null && (pct !== '' || monto !== '')) return;
     if (!dirty) return;
@@ -299,6 +303,8 @@ function PrestamoRow({ prestamo, nombre, row, onNavigate, onSaved }) {
           }}
           placeholder="0"
           error={errorPct}
+          hint={!estaActivo ? 'Préstamo liquidado' : undefined}
+          disabled={!estaActivo}
           wrapperClassName="w-24"
         />
         <Input
@@ -318,14 +324,14 @@ function PrestamoRow({ prestamo, nombre, row, onNavigate, onSaved }) {
           }}
           placeholder="₡0"
           error={errorMonto}
-          hint={!montoEditable ? 'Sin cuota base' : undefined}
-          disabled={!montoEditable}
+          hint={!estaActivo ? 'Préstamo liquidado' : !montoEditable ? 'Sin cuota base' : undefined}
+          disabled={!estaActivo || !montoEditable}
           wrapperClassName="w-28"
         />
         <button
           type="button"
           onClick={guardar}
-          disabled={!dirty || saving}
+          disabled={!dirty || saving || !estaActivo}
           aria-label={`Guardar comisión de ${nombre}`}
           className="glass-subtle mt-5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-navy-700 transition-all hover:bg-white/80 disabled:opacity-40 dark:text-glow-gold dark:hover:bg-white/10"
         >

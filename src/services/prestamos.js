@@ -330,6 +330,9 @@ export async function extenderCuotas(prestamoId, nCuotas) {
   }
   const prestamo = await getById(prestamoId);
   if (!prestamo) throw new PrestamoNoEncontradoError(prestamoId);
+  if (prestamo.estado === 'cancelado' || getSaldoCapital(prestamo) <= 0) {
+    throw new Error('El préstamo está liquidado y no se puede extender');
+  }
 
   const cuotaMonto = Math.round((getSaldoCapital(prestamo) * tasaBase(prestamo)) / 100);
   const startDate = (prestamo.cuotas && prestamo.cuotas.length > 0)

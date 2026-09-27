@@ -5,6 +5,7 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Alert } from '../../../components/ui/Alert';
 import { formatCRC, formatDate } from '../../../lib/format';
+import { showToast } from '../../../components/ui/Toast';
 import { useExtenderCuotas } from '../hooks/useExtenderCuotas';
 
 export function ExtenderCuotasModal({ prestamo, onClose, onSaved }) {
@@ -13,7 +14,10 @@ export function ExtenderCuotasModal({ prestamo, onClose, onSaved }) {
   async function handleSave() {
     const res = await form.submit();
     if (res.ok) {
+      showToast('Cuotas agregadas sin registrar pago', 'success');
       onSaved?.(res.prestamo);
+    } else {
+      showToast(res.error || 'Error al extender cuotas', 'error');
     }
   }
 
@@ -39,7 +43,7 @@ export function ExtenderCuotasModal({ prestamo, onClose, onSaved }) {
       open
       onClose={onClose}
       title="Extender cuotas"
-      description="Agregá nuevas cuotas para continuar cobrando intereses sobre el saldo pendiente."
+      description="Agregá nuevas cuotas sin registrar ningún pago. Se calculan sobre el saldo pendiente actual."
       size="md"
       footer={
         <>

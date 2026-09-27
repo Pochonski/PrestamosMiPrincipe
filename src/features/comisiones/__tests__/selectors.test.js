@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   spreadRatio,
   tieneComision,
+  prestamoActivo,
   comisionDeInteres,
   comisionCobro,
   estadoComisionCuota,
@@ -29,6 +30,20 @@ describe('tieneComision', () => {
   it('false sin comisión', () => expect(tieneComision({ tasa: 20 })).toBe(false));
   it('false con 0', () => expect(tieneComision({ tasa: 20, tasa_comision: 0 })).toBe(false));
   it('true con comisión', () => expect(tieneComision({ tasa: 20, tasa_comision: 2 })).toBe(true));
+});
+
+describe('prestamoActivo', () => {
+  it('null -> false', () => expect(prestamoActivo(null)).toBe(false));
+  it('cancelado -> false aunque tenga pendientes', () => expect(
+    prestamoActivo({ estado: 'cancelado', cuotas: [{ estado: 'pendiente' }] }),
+  ).toBe(false));
+  it('sin pendientes -> false', () => expect(
+    prestamoActivo({ estado: 'vigente', cuotas: [{ estado: 'pagada' }, { estado: 'cancelada' }] }),
+  ).toBe(false));
+  it('sin cuotas -> false', () => expect(prestamoActivo({ estado: 'vigente', cuotas: [] })).toBe(false));
+  it('vigente con pendiente -> true', () => expect(
+    prestamoActivo({ estado: 'vigente', cuotas: [{ estado: 'pagada' }, { estado: 'pendiente' }] }),
+  ).toBe(true));
 });
 
 describe('comisionDeInteres / comisionCobro', () => {

@@ -296,17 +296,30 @@ export function PrestamoDetalle({ onNavigate, params }) {
       </div>
 
       {status !== 'cancelado' && (
-        <Button
-          variant="primary"
-          size="lg"
-          icon={Plus}
-          fullWidth
-          onClick={() =>
-            onNavigate?.('cobro', { prestamoId: prestamo.id, clienteId: prestamo.clienteId })
-          }
-        >
-          Registrar cobro
-        </Button>
+        <div className="flex flex-col gap-2">
+          <Button
+            variant="primary"
+            size="lg"
+            icon={Plus}
+            fullWidth
+            onClick={() =>
+              onNavigate?.('cobro', { prestamoId: prestamo.id, clienteId: prestamo.clienteId })
+            }
+          >
+            Registrar cobro
+          </Button>
+          {prestamosService.getSaldoCapital(prestamo) > 0 && (
+            <Button
+              variant="secondary"
+              size="md"
+              icon={Plus}
+              fullWidth
+              onClick={() => setExtenderOpen(true)}
+            >
+              Extender cuotas (sin registrar pago)
+            </Button>
+          )}
+        </div>
       )}
 
       {cuotasAgotadas(prestamo) && (

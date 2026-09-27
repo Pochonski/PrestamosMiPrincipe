@@ -22,6 +22,17 @@ export function tieneComision(prestamo) {
   return tasaComision(prestamo) > 0;
 }
 
+/**
+ * Préstamo activo para editar comisión: no cancelado/liquidado y con al
+ * menos una cuota pendiente. Los liquidados se muestran bloqueados
+ * (se conserva la comisión como historial, pero no se puede cambiar).
+ */
+export function prestamoActivo(prestamo) {
+  if (!prestamo) return false;
+  if (prestamo.estado === 'cancelado') return false;
+  return (prestamo.cuotas || []).some((c) => c.estado === 'pendiente');
+}
+
 export function comisionDeInteres(interesPagado, prestamo) {
   const interes = Number(interesPagado || 0);
   if (interes <= 0) return 0;
