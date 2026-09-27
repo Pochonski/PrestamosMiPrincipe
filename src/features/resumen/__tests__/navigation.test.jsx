@@ -9,18 +9,18 @@ import * as clientesService from '../../../services/clientes';
 import * as prestamosService from '../../../services/prestamos';
 import * as cobrosService from '../../../services/cobros';
 
-vi.mock('../../../services/clientes', () => ({ list: vi.fn() }));
-vi.mock('../../../services/prestamos', () => ({ list: vi.fn() }));
-vi.mock('../../../services/cobros', () => ({ list: vi.fn() }));
+vi.mock('../../../services/clientes', () => ({ list: vi.fn(), listAll: vi.fn() }));
+vi.mock('../../../services/prestamos', () => ({ list: vi.fn(), listAll: vi.fn() }));
+vi.mock('../../../services/cobros', () => ({ list: vi.fn(), listAll: vi.fn() }));
 vi.mock('../../../lib/hooks/useDataChange', () => ({ useDataChange: vi.fn() }));
 vi.mock('../../auth/useAuth', () => ({ useAuth: () => ({ currentOrg: { slug: 'test', nombre: 'Test' } }) }));
 
 function setup(onNavigate) {
-  vi.mocked(clientesService.list).mockResolvedValue([{ id: 'c1', nombre: 'Ana' }]);
-  vi.mocked(prestamosService.list).mockResolvedValue([
+  vi.mocked(clientesService.listAll).mockResolvedValue([{ id: 'c1', nombre: 'Ana' }]);
+  vi.mocked(prestamosService.listAll).mockResolvedValue([
     { id: 'p1', cliente_id: 'c1', estado: 'vigente', saldo_capital: 1000, monto: 1000, cuotas: [] },
   ]);
-  vi.mocked(cobrosService.list).mockResolvedValue([]);
+  vi.mocked(cobrosService.listAll).mockResolvedValue([]);
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <MemoryRouter>
@@ -57,14 +57,14 @@ describe('ResumenPage navigation (mobile-first)', () => {
   });
 
   it('Top morosos tiene Ver todos hacia atrasados', async () => {
-    vi.mocked(clientesService.list).mockResolvedValue([{ id: 'c1', nombre: 'Ana' }]);
-    vi.mocked(prestamosService.list).mockResolvedValue([
+    vi.mocked(clientesService.listAll).mockResolvedValue([{ id: 'c1', nombre: 'Ana' }]);
+    vi.mocked(prestamosService.listAll).mockResolvedValue([
       {
         id: 'p1', cliente_id: 'c1', estado: 'vigente', saldo_capital: 1000, monto: 1000,
         cuotas: [{ estado: 'pendiente', fecha: '2024-01-01', monto: 100 }],
       },
     ]);
-    vi.mocked(cobrosService.list).mockResolvedValue([]);
+    vi.mocked(cobrosService.listAll).mockResolvedValue([]);
     const nav = vi.fn();
     const user = userEvent.setup();
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -81,9 +81,9 @@ describe('ResumenPage navigation (mobile-first)', () => {
   });
 
   it('Últimos cobros Ver más va a exportar (no a cobro)', async () => {
-    vi.mocked(clientesService.list).mockResolvedValue([{ id: 'c1', nombre: 'Ana' }]);
-    vi.mocked(prestamosService.list).mockResolvedValue([]);
-    vi.mocked(cobrosService.list).mockResolvedValue([
+    vi.mocked(clientesService.listAll).mockResolvedValue([{ id: 'c1', nombre: 'Ana' }]);
+    vi.mocked(prestamosService.listAll).mockResolvedValue([]);
+    vi.mocked(cobrosService.listAll).mockResolvedValue([
       { id: 'cob1', fecha: new Date().toISOString(), monto: 100, cliente_id: 'c1', prestamo_id: 'p1', tipo: 'capital' },
     ]);
     const nav = vi.fn();

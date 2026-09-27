@@ -38,23 +38,61 @@ describe('parseBackupFile', () => {
 });
 
 describe('applyBackup', () => {
+  function mockSessionOrg() {
+    vi.mocked(supabase.auth.getSession).mockResolvedValue({ data: { session: { user: { id: 'u1' } } } });
+    const single = vi.fn().mockResolvedValue({ data: { org_id: 'org-1' }, error: null });
+    const orgChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), single };
+    orgChain.select.mockReturnValue(orgChain); orgChain.eq.mockReturnValue(orgChain);
+    return orgChain;
+  }
   it('upsert tablas y cuotas', async () => {
+    const orgChain = mockSessionOrg();
     const upsert = vi.fn().mockResolvedValue({ error: null });
-    vi.mocked(supabase.from).mockReturnValue({ upsert });
-    const parsed = { data: { clientes: [{ id: '1' }], prestamos: [], cobros: [], notificaciones: [], cuotas: [{ id: 'c1' }] } };
+    vi.mocked(supabase.from).mockImplementation((t) => t === 'org_members' ? orgChain : { upsert });
+    const parsed = { app: 'pmp', data: { clientes: [{ id: '1', nombre: 'Ana' }], prestamos: [], cobros: [], notificaciones: [], cuotas: [{ id: 'c1', prestamo_id: 'p1' }] } };
     await applyBackup(parsed);
     expect(supabase.from).toHaveBeenCalledWith('clientes');
     expect(supabase.from).toHaveBeenCalledWith('cuotas');
     expect(emitDataChanged).toHaveBeenCalled();
   });
   it('ignora tablas null/vacías', async () => {
-    vi.mocked(supabase.from).mockReturnValue({ upsert: vi.fn().mockResolvedValue({ error: null }) });
-    await applyBackup({ data: { clientes: null, prestamos: [], cobros: [], notificaciones: [], cuotas: [] } });
+    const orgChain = mockSessionOrg();
+    vi.mocked(supabase.from).mockImplementation((t) => t === 'org_members' ? orgChain : { upsert: vi.fn().mockResolvedValue({ error: null }) });
+    await applyBackup({ app: 'pmp', data: { clientes: null, prestamos: [], cobros: [], notificaciones: [], cuotas: [] } });
     expect(emitDataChanged).toHaveBeenCalled();
   });
   it('lanza si error upsert', async () => {
-    vi.mocked(supabase.from).mockReturnValue({ upsert: vi.fn().mockResolvedValue({ error: new Error('fail') }) });
-    await expect(applyBackup({ data: { clientes: [{ id: '1' }], cuotas: [] } })).rejects.toThrow('fail');
+    const orgChain = mockSessionOrg();
+    vi.mocked(supabase.from).mockImplementation((t) => t === 'org_members' ? orgChain : { upsert: vi.fn().mockResolvedValue({ error: new Error('fail') }) });
+    await expect(applyBackup({ app: 'pmp', data: { clientes: [{ id: '1', nombre: 'Ana' }], cuotas: [] } })).rejects.toThrow('fail');
+  });
+  it('fuerza org_id actual y rechaza cuotas huérfanas', async () => {
+    const orgChain = mockSessionOrg();
+    const upsert = vi.fn().mockResolvedValue({ error: null });
+    vi.mocked(supabase.from).mockImplementation((t) => t === 'org_members' ? orgChain : { upsert });
+    await expect(applyBackup({ app: 'pmp', data: { prestamos: [{ id: 'p1' }], cuotas: [{ id: 'c1', prestamo_id: 'otro' }] } })).rejects.toThrow('sin préstamo');
+    // org_id del archivo se ignora: se fuerza el actual
+    const parsed = { app: 'pmp', data: { clientes: [{ id: '1', nombre: 'Ana', org_id: 'org-ajeno' }] } };
+    await applyBackup(parsed);
+    expect(upsert).toHaveBeenCalledWith([{ id: '1', nombre: 'Ana', org_id: 'org-1' }], expect.anything());
+  });
+  it('filtra filas sin id y columnas no permitidas', async () => {
+    const orgChain = mockSessionOrg();
+    const upsert = vi.fn().mockResolvedValue({ error: null });
+    vi.mocked(supabase.from).mockImplementation((t) => t === 'org_members' ? orgChain : { upsert });
+    const parsed = { app: 'pmp', data: { clientes: [{ nombre: 'Sin id' }, { id: '2', nombre: 'Ok', hacker: 1 }] } };
+    await applyBackup(parsed);
+    expect(upsert).toHaveBeenCalledWith([{ id: '2', nombre: 'Ok', org_id: 'org-1' }], expect.anything());
+  });
+  it('restaura en chunks de 200', async () => {
+    const orgChain = mockSessionOrg();
+    const upsert = vi.fn().mockResolvedValue({ error: null });
+    vi.mocked(supabase.from).mockImplementation((t) => t === 'org_members' ? orgChain : { upsert });
+    const rows = Array.from({ length: 250 }, (_, i) => ({ id: `c${i}`, nombre: `N${i}` }));
+    await applyBackup({ app: 'pmp', data: { clientes: rows } });
+    expect(upsert).toHaveBeenCalledTimes(2);
+    expect(upsert.mock.calls[0][0]).toHaveLength(200);
+    expect(upsert.mock.calls[1][0]).toHaveLength(50);
   });
 });
 
@@ -85,6 +123,28 @@ describe('buildBackup', () => {
     const r = await buildBackup();
     expect(r.app).toBe('pmp');
     expect(r.data.cuotas).toHaveLength(1);
+  });
+  it('lanza si falla la query de cuotas', async () => {
+    vi.mocked(supabase.auth.getSession).mockResolvedValue({ data: { session: { user: { id: 'u1' } } } });
+    const single = vi.fn().mockResolvedValue({ data: { org_id: 'org-1' }, error: null });
+    const orgChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), single };
+    orgChain.select.mockReturnValue(orgChain); orgChain.eq.mockReturnValue(orgChain);
+    const errChain = {
+      select() { return this; }, eq() { return this; }, in() { return this; }, range() { return this; },
+      then(res) { return Promise.resolve({ data: null, error: new Error('db') }).then(res); },
+    };
+    const okChain = (rows) => {
+      const c = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), in: vi.fn().mockReturnThis(), range: vi.fn().mockReturnThis() };
+      c.then = (res) => Promise.resolve({ data: rows, error: null }).then(res);
+      c.select.mockReturnValue(c); c.eq.mockReturnValue(c); c.in.mockReturnValue(c); c.range.mockReturnValue(c);
+      return c;
+    };
+    vi.mocked(supabase.from).mockImplementation((t) => {
+      if (t === 'org_members') return orgChain;
+      if (t === 'cuotas') return errChain;
+      return okChain([{ id: 'p1' }]);
+    });
+    await expect(buildBackup()).rejects.toThrow('db');
   });
   it('downloadBackup crea blob', async () => {
     vi.useFakeTimers();

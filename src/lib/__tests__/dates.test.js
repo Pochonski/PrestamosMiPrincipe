@@ -76,6 +76,13 @@ describe('firstCuotaDate', () => {
   it('dia_mes 31 con baseDay<target mantiene mismo mes (31 Ene)', () => {
     expect(firstCuotaDate('2024-01-20', { tipo: 'dia_mes', diaDelMes: 31 }).toISOString().slice(0, 10)).toBe('2024-01-31');
   });
+  it('dia_mes 31 en Feb sin 31 se fija al último día (29 Feb bisiesto)', () => {
+    // Antes: setDate(31) desbordaba a Mar 02. Ahora clamp al mes base.
+    expect(firstCuotaDate('2024-02-15', { tipo: 'dia_mes', diaDelMes: 31 }).toISOString().slice(0, 10)).toBe('2024-02-29');
+  });
+  it('tipo desconocido -> mensual', () => {
+    expect(firstCuotaDate('2024-01-15', { tipo: 'raro' }).toISOString().slice(0, 10)).toBe('2024-02-15');
+  });
   it('dia_mes truncado cuando baseDay>target Feb sin 31', () => {
     // 20 Feb -> target 31 -> salto a Marzo y truncado a 31 Mar (existe)
     // Mejor: 20 Ene target 31 con addMonths Feb caso >target

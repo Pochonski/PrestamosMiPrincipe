@@ -326,9 +326,9 @@ export const EMPTY_RESUMEN = {
 export function useResumenData(filters = {}) {
   const results = useQueries({
     queries: [
-      { queryKey: ['clientes', 'all'], queryFn: () => clientesService.list({ limit: 500, offset: 0 }), staleTime: 10 * 60_000 },
-      { queryKey: ['prestamos', 'all'], queryFn: () => prestamosService.list({ limit: 500, offset: 0 }), staleTime: 5 * 60_000 },
-      { queryKey: ['cobros', 'all'], queryFn: () => cobrosService.list({ limit: 500, offset: 0 }), staleTime: 5 * 60_000 },
+      { queryKey: ['clientes', 'all'], queryFn: () => clientesService.listAll({ pageSize: 200 }), staleTime: 10 * 60_000 },
+      { queryKey: ['prestamos', 'all'], queryFn: () => prestamosService.listAll({ pageSize: 200 }), staleTime: 5 * 60_000 },
+      { queryKey: ['cobros', 'all'], queryFn: () => cobrosService.listAll({ pageSize: 500 }), staleTime: 5 * 60_000 },
     ],
   });
   const [clientesQ, prestamosQ, cobrosQ] = results;
@@ -338,7 +338,7 @@ export function useResumenData(filters = {}) {
   const loading = results.some((r) => r.isLoading);
   const isError = results.some((r) => r.isError);
   const error = results.find((r) => r.error)?.error || null;
-  const hasMore = [clientesQ.data, prestamosQ.data, cobrosQ.data].some((d) => Array.isArray(d) && d.length === 500);
+  const hasMore = false; // listAll pagina hasta el final: ya no hay truncamiento silencioso.
   const data = useMemo(
     () => (clientesQ.data && prestamosQ.data && cobrosQ.data ? computeResumen({ clientes, prestamos, cobros, filters }) : EMPTY_RESUMEN),
     [clientes, prestamos, cobros, clientesQ.data, prestamosQ.data, cobrosQ.data, filters],

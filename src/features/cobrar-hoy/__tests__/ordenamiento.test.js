@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('../../../services/prestamos', () => ({ listAll: vi.fn() }));
-vi.mock('../../../services/clientes', () => ({ list: vi.fn() }));
+vi.mock('../../../services/clientes', () => ({ list: vi.fn(), listAll: vi.fn() }));
 vi.mock('../../../services/cobros', () => ({ listAll: vi.fn() }));
 
 import { sortGrupos, getCobrosMesDetallado } from '../selectors';
@@ -41,10 +41,10 @@ describe('sortGrupos', () => {
 describe('getCobrosMesDetallado', () => {
   it('agrega cobros, clientes y préstamos', async () => {
     vi.mocked(cobrosService.listAll).mockResolvedValue([{ id: 'c1' }]);
-    vi.mocked(clientesService.list).mockResolvedValue([{ id: 'cli' }]);
+    vi.mocked(clientesService.listAll).mockResolvedValue([{ id: 'cli' }]);
     vi.mocked(prestamosService.listAll).mockResolvedValue([{ id: 'p1' }]);
     const r = await getCobrosMesDetallado();
     expect(r).toEqual({ cobros: [{ id: 'c1' }], clientes: [{ id: 'cli' }], prestamos: [{ id: 'p1' }] });
-    expect(clientesService.list).toHaveBeenCalledWith({ limit: 500, offset: 0 });
+    expect(clientesService.listAll).toHaveBeenCalled();
   });
 });

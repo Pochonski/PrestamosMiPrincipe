@@ -7,9 +7,20 @@ const TABLE_QUERY_KEYS = {
   notificaciones: ['notificaciones'],
 };
 
+function getQueryClient() {
+  if (typeof globalThis !== 'undefined' && globalThis.__pmpQueryClientRef?.current) {
+    return globalThis.__pmpQueryClientRef.current;
+  }
+  // Fallback legacy (dev): main.jsx expone window.__pmpQueryClient solo en DEV.
+  if (typeof window !== 'undefined' && window.__pmpQueryClient) {
+    return window.__pmpQueryClient;
+  }
+  return null;
+}
+
 export function emitDataChanged(table) {
   if (table && TABLE_QUERY_KEYS[table]) {
-    const qc = typeof window !== 'undefined' ? window.__pmpQueryClient : null;
+    const qc = getQueryClient();
     if (qc) {
       qc.invalidateQueries({ queryKey: TABLE_QUERY_KEYS[table] });
     }

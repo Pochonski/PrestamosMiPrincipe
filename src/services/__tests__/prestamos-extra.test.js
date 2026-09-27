@@ -87,6 +87,23 @@ describe('prestamos.update', () => {
     expect(r.clienteId).toBe('c1');
     expect(supabase.rpc).not.toHaveBeenCalled();
   });
+  it('bloquea reducir cuotas bajo pagadas', async () => {
+    const prestamo = { id: 'p1', cliente_id: 'c1', monto: 10000, n_cuotas: 5, periodo: { tipo: 'mensual' }, saldo_capital: 8000, tasa: 10, fecha_inicio: '2024-01-01', ruta: 'A', cuotas: [] };
+    const maybeSingle = vi.fn().mockResolvedValue({ data: prestamo, error: null });
+    const getChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle };
+    getChain.select.mockReturnValue(getChain); getChain.eq.mockReturnValue(getChain);
+    const cuotasChain = { select: vi.fn().mockReturnThis(), in: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis(), range: vi.fn().mockReturnThis() };
+    cuotasChain.then = (res) => Promise.resolve({ data: [
+      { prestamo_id: 'p1', numero: 1, estado: 'pagada', fecha: '2024-02-01', monto: 1000 },
+      { prestamo_id: 'p1', numero: 2, estado: 'pagada', fecha: '2024-03-01', monto: 1000 },
+    ], error: null }).then(res);
+    cuotasChain.select.mockReturnValue(cuotasChain); cuotasChain.in.mockReturnValue(cuotasChain); cuotasChain.order.mockReturnValue(cuotasChain);
+    cuotasChain.range = cuotasChain.range || require("vitest").vi.fn().mockReturnThis();
+    cuotasChain.range.mockReturnValue(cuotasChain);
+    vi.mocked(supabase.from).mockImplementation((t) => t === 'cuotas' ? cuotasChain : getChain);
+    await expect(prestamosService.update('p1', { n_cuotas: 1 })).rejects.toThrow('reducir');
+    expect(supabase.rpc).not.toHaveBeenCalled();
+  });
   it('update monto cambia saldo_capital', async () => {
     const prestamo = { id: 'p1', cliente_id: 'c1', monto: 1000, n_cuotas: 10, saldo_capital: 1000, cuotas: [], periodo: { tipo: 'mensual' }, fecha_inicio: '2024-01-01', tasa: 10, ruta: 'A' };
     const prestamoUpdated = { id: 'p1', cliente_id: 'c1', monto: 2000, n_cuotas: 10, saldo_capital: 2000, cuotas: [], periodo: { tipo: 'mensual' }, fecha_inicio: '2024-01-01', tasa: 10, ruta: 'A' };

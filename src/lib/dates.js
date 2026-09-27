@@ -49,7 +49,10 @@ export function firstCuotaDate(fechaInicio, periodo) {
       const baseDay = base.getDate();
       if (baseDay < target) {
         const r = new Date(base);
-        r.setDate(target);
+        // Clamp: si el mes no tiene `target` días (ej. Feb + día 31),
+        // setDate desborda al mes siguiente. Fijar al último día del mes base.
+        const lastDayBase = new Date(r.getFullYear(), r.getMonth() + 1, 0).getDate();
+        r.setDate(Math.min(target, lastDayBase));
         return r;
       }
       if (baseDay > target) {

@@ -243,8 +243,8 @@ function RestorePreview({ fileName, preview, onCancel, onConfirm }) {
       </div>
 
       <Alert tone="warning" title="Atención">
-        Restaurar reemplazará TODOS los datos actuales por los del archivo. Esta acción no se puede
-        deshacer.
+        Restaurar fusiona los datos del archivo con los actuales (no borra lo que el archivo no
+        trae). Revisá el resumen antes de confirmar.
       </Alert>
 
       <div className="flex gap-2">

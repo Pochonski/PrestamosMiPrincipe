@@ -4,15 +4,23 @@ import * as clientesService from '../../../services/clientes';
 import * as prestamosService from '../../../services/prestamos';
 import * as cobrosService from '../../../services/cobros';
 
-vi.mock('../../../services/clientes', () => ({ list: vi.fn() }));
-vi.mock('../../../services/prestamos', () => ({ list: vi.fn() }));
-vi.mock('../../../services/cobros', () => ({ list: vi.fn() }));
+vi.mock('../../../services/clientes', () => ({ list: vi.fn(), listAll: vi.fn(), count: vi.fn() }));
+vi.mock('../../../services/prestamos', () => ({ list: vi.fn(), listAll: vi.fn() }));
+vi.mock('../../../services/cobros', () => ({ list: vi.fn(), listAll: vi.fn() }));
 
 describe('escapeCSV', () => {
   it('null -> ""', () => expect(escapeCSV(null)).toBe(''));
   it('sin especiales -> raw', () => expect(escapeCSV('hola')).toBe('hola'));
   it('coma -> quoted', () => expect(escapeCSV('a,b')).toBe('"a,b"'));
   it('comilla duplica', () => expect(escapeCSV('a"b')).toBe('"a""b"'));
+  it('fórmula Excel se neutraliza', () => {
+    expect(escapeCSV('=cmd|xx')).toBe("'=cmd|xx");
+    expect(escapeCSV('+123')).toBe("'+123");
+    expect(escapeCSV('-5')).toBe("'-5");
+    expect(escapeCSV('@x')).toBe("'@x");
+    expect(escapeCSV('\tcmd')).toBe("'\tcmd");
+    expect(escapeCSV('normal')).toBe('normal');
+  });
   it('salto línea -> quoted', () => expect(escapeCSV('a\nb')).toBe('"a\nb"'));
   it('número', () => expect(escapeCSV(123)).toBe('123'));
 });
@@ -59,12 +67,12 @@ describe('downloadCSV', () => {
 
 describe('getDataFor / exportCSV / getCounts', () => {
   it('getDataFor clientes', async () => {
-    vi.mocked(clientesService.list).mockResolvedValue([{ id: '1' }]);
+    vi.mocked(clientesService.listAll).mockResolvedValue([{ id: '1' }]);
     expect(await getDataFor('clientes')).toEqual([{ id: '1' }]);
   });
   it('exportCSV retorna count', async () => {
     vi.useFakeTimers();
-    vi.mocked(prestamosService.list).mockResolvedValue([{ id: '1', nombre: 'A' }]);
+    vi.mocked(prestamosService.listAll).mockResolvedValue([{ id: '1', nombre: 'A' }]);
     const createObjectURL = vi.fn(() => 'blob:url');
     const revokeObjectURL = vi.fn();
     global.URL.createObjectURL = createObjectURL;
@@ -80,7 +88,7 @@ describe('getDataFor / exportCSV / getCounts', () => {
   it('exportCSV >500 usa chunked', async () => {
     vi.useFakeTimers();
     const many = Array.from({ length: 600 }, (_, i) => ({ id: String(i), prestamo_id: 'p1', cliente_id: 'c1', cuota_numero: 1, monto: 100, tipo: 'cuota', fecha: new Date().toISOString() }));
-    vi.mocked(cobrosService.list).mockResolvedValue(many);
+    vi.mocked(cobrosService.listAll).mockResolvedValue(many);
     global.URL.createObjectURL = vi.fn(() => 'blob:url');
     global.URL.revokeObjectURL = vi.fn();
     vi.spyOn(document.body, 'appendChild').mockImplementation((el) => { el.click = vi.fn(); return el; });
@@ -108,11 +116,12 @@ describe('getDataFor / exportCSV / getCounts', () => {
     vi.useRealTimers();
   });
   it('getCounts', async () => {
-    vi.mocked(clientesService.list).mockResolvedValue([{}, {}]);
-    vi.mocked(prestamosService.list).mockResolvedValue([{}]);
-    vi.mocked(cobrosService.list).mockResolvedValue([{}, {}, {}]);
+    vi.mocked(clientesService.count).mockResolvedValue(2);
+    vi.mocked(prestamosService.listAll).mockResolvedValue([{}]);
+    vi.mocked(cobrosService.listAll).mockResolvedValue([{}, {}, {}]);
     const r = await getCounts();
     expect(r.clientes).toBe(2);
+    expect(r.prestamos).toBe(1);
     expect(r.cobros).toBe(3);
   });
 });

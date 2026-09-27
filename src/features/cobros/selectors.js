@@ -55,10 +55,13 @@ export async function getCobrosDelPrestamo(prestamoId) {
 
 export function getCuotasAtrasadas(prestamo) {
   if (!prestamo) return [];
+  // Comparación lexicográfica YYYY-MM-DD: `new Date('YYYY-MM-DD')` parsea
+  // como UTC y en CR (UTC-6) marca "atrasada" un día antes. Misma regla que
+  // prestamosService.getStatus / cuotasAtrasadas.
   const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
+  const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
   return (prestamo.cuotas || []).filter(
-    (c) => c.estado === 'pendiente' && new Date(c.fecha) < hoy,
+    (c) => c.estado === 'pendiente' && String(c.fecha).slice(0, 10) < hoyStr,
   );
 }
 
@@ -94,11 +97,22 @@ export function validateFechaPago(fechaPago) {
 export function validateMontoCobro({ monto, tipo, prestamo, cuotaNumero, incluirInteres, aceptaAtrasados, fechaPago }) {
   const errFecha = fechaPago !== undefined ? validateFechaPago(fechaPago) : null;
   if (errFecha) return errFecha;
-  if (tipo === 'interes') return null;
-
   const n = Number(String(monto).replace(/\D/g, ''));
   if (!n) return 'Ingresa un monto';
   if (n <= 0) return 'El monto debe ser mayor a 0';
+  if (!Number.isFinite(n)) return 'Monto inválido';
+
+  if (tipo === 'interes') {
+    // El backend exige monto >= interés del período ("monto menor...").
+    // Validar temprano en vez de devolver null y fallar en el servidor.
+    if (prestamo) {
+      const interes = prestamosService.cuotaDelPeriodo(prestamo);
+      if (Number.isFinite(interes) && interes > 0 && n < interes) {
+        return `El monto no cubre el interés del período (${interes.toLocaleString('es-CR')})`;
+      }
+    }
+    return null;
+  }
 
   if (tipo === 'capital' && prestamo) {
     if (prestamosService.cuotasAgotadas(prestamo)) {

@@ -43,20 +43,28 @@ export function useCobroForm({ prestamoId }) {
   const [aceptaAtrasados, setAceptaAtrasados] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loadingPrestamo, setLoadingPrestamo] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [cobrosPrevios, setCobrosPrevios] = useState([]);
 
   async function load() {
+    setLoadError(null);
     try {
       const [p, qa, cbs] = await Promise.all([
         prestamosService.refreshPrestamo(prestamoId),
         getCuotaActual(prestamoId),
         cobrosService.delPrestamo(prestamoId).catch(() => []),
       ]);
-      setPrestamo(p);
+      if (!p) {
+        setPrestamo(null);
+        setLoadError('Préstamo no encontrado');
+      } else {
+        setPrestamo(p);
+      }
       setCuotaNumero(qa?.numero || 1);
       setCobrosPrevios(cbs || []);
-    } catch {
+    } catch (err) {
       setPrestamo(null);
+      setLoadError(err?.message || 'No se pudo cargar el préstamo');
     } finally {
       setLoadingPrestamo(false);
     }
@@ -95,6 +103,8 @@ export function useCobroForm({ prestamoId }) {
   );
 
   const error = useMemo(() => {
+    if (loadingPrestamo) return null;
+    if (loadError) return loadError;
     if (!prestamo) return 'Préstamo no disponible';
     return validateMontoCobro({
       monto,
@@ -105,7 +115,7 @@ export function useCobroForm({ prestamoId }) {
       aceptaAtrasados,
       fechaPago,
     });
-  }, [monto, tipo, prestamo, cuotaNumero, incluirInteres, aceptaAtrasados, fechaPago]);
+  }, [monto, tipo, prestamo, cuotaNumero, incluirInteres, aceptaAtrasados, fechaPago, loadingPrestamo, loadError]);
 
   const resumen = useMemo(() => {
     if (!prestamo || !cuotaActual) return null;
@@ -173,10 +183,14 @@ export function useCobroForm({ prestamoId }) {
     }
   }
 
-  const showError = (field) => Boolean(touched[field] && errors[field]);
+  // showError(field) con firma compatible: el formulario actual expone un
+  // único `error` global, así que se reporta ese error sin importar el campo.
+  // (Antes referenciaba `touched/errors` inexistentes → ReferenceError.)
+  const showError = () => error || null;
 
   return {
     loadingPrestamo,
+    loadError,
     prestamo,
     cuotaNumero,
     setCuotaNumero,

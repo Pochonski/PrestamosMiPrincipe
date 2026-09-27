@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validateBackup, isArrayOfObjects, previewBackup } from '../selectors';
+import { validateBackup, isArrayOfObjects, previewBackup, BACKUP_MAX_ROWS_PER_TABLE } from '../selectors';
 
 describe('isArrayOfObjects', () => {
   it('true', () => expect(isArrayOfObjects([{ a: 1 }])).toBe(true));
@@ -16,6 +16,20 @@ describe('validateBackup', () => {
   it('campo corrupto', () => expect(validateBackup({ app: 'pmp', data: { clientes: [1] } })).toContain('corrupto'));
   it('ok mínimo', () => expect(validateBackup({ app: 'pmp', data: { clientes: [], prestamos: [], cuotas: [], cobros: [], notificaciones: [] } })).toBeNull());
   it('ok con datos', () => expect(validateBackup({ app: 'pmp', data: { clientes: [{ id: 1 }] } })).toBeNull());
+  it('versión no soportada', () => expect(validateBackup({ app: 'pmp', version: 99, data: {} })).toContain('no soportada'));
+  it('tabla excede límite', () => {
+    const big = Array.from({ length: BACKUP_MAX_ROWS_PER_TABLE + 1 }, (_, i) => ({ id: i }));
+    expect(validateBackup({ app: 'pmp', data: { clientes: big } })).toContain('límite');
+  });
+  it('cuotas huérfanas', () => expect(
+    validateBackup({ app: 'pmp', data: { prestamos: [{ id: 'p1' }], cuotas: [{ id: 'c1', prestamo_id: 'otro' }] } }),
+  ).toContain('sin préstamo'));
+  it('cuotas con préstamo incluido ok', () => expect(
+    validateBackup({ app: 'pmp', data: { prestamos: [{ id: 'p1' }], cuotas: [{ id: 'c1', prestamo_id: 'p1' }] } }),
+  ).toBeNull());
+  it('sin préstamos no se chequean huérfanas', () => expect(
+    validateBackup({ app: 'pmp', data: { prestamos: [], cuotas: [{ id: 'c1', prestamo_id: 'x' }] } }),
+  ).toBeNull());
 });
 
 describe('previewBackup', () => {

@@ -91,13 +91,11 @@ export function CobroFormBody({ form }) {
             className="min-h-[56px] w-full appearance-none rounded-input border border-white/50 bg-white/70 backdrop-blur-md px-3.5 py-3 pr-10 text-base text-navy-900 outline-none transition-colors focus:border-gold-400 focus:ring-2 focus:ring-gold-400/25 dark:border-white/10 dark:bg-white/[0.06] dark:text-white"
           >
             {cuotasPendientes.map((c) => {
-              const isAtrasada =
-                new Date(c.fecha) <
-                (() => {
-                  const d = new Date();
-                  d.setHours(0, 0, 0, 0);
-                  return d;
-                })();
+              // Comparación lexicográfica: new Date('YYYY-MM-DD') es UTC y
+              // adelanta el "atraso" un día en CR (UTC-6).
+              const hoyD = new Date();
+              const hoyStr = `${hoyD.getFullYear()}-${String(hoyD.getMonth() + 1).padStart(2, '0')}-${String(hoyD.getDate()).padStart(2, '0')}`;
+              const isAtrasada = String(c.fecha).slice(0, 10) < hoyStr;
               return (
                 <option key={c.numero} value={c.numero}>
                   #{c.numero} · {formatDate(c.fecha)} · {formatCRC(c.monto)}

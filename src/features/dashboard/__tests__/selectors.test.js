@@ -12,6 +12,7 @@ vi.mock('../../../services/cobros', () => ({
 vi.mock('../../../services/clientes', () => ({
   count: vi.fn(),
   list: vi.fn(),
+  listAll: vi.fn(),
 }));
 vi.mock('../../../services/notificaciones', () => ({
   countNoLeidas: vi.fn(),
@@ -87,7 +88,7 @@ describe('buildRecentActivity', () => {
 describe('getRecentActivity integración', () => {
   it('llama supabase si hay cobradorIds', async () => {
     vi.mocked(cobrosService.recientes).mockResolvedValue([{ id: '1', clienteId: 'c1', cobradorId: 'u1', cuotaNumero: 1, monto: 100, fecha: '2024-01-01' }]);
-    vi.mocked(clientesService.list).mockResolvedValue([{ id: 'c1', nombre: 'Ana' }]);
+    vi.mocked(clientesService.listAll).mockResolvedValue([{ id: 'c1', nombre: 'Ana' }]);
     const fromMock = { select: vi.fn().mockReturnThis(), in: vi.fn().mockResolvedValue({ data: [{ user_id: 'u1', full_name: 'X' }] }) };
     fromMock.select.mockReturnValue(fromMock);
     vi.mocked(supabase.from).mockReturnValue(fromMock);

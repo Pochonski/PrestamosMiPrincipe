@@ -4,7 +4,7 @@ vi.mock('../../../services/prestamos', async (importOriginal) => {
   const actual = await importOriginal();
   return { ...actual, cobrarHoy: vi.fn(), cuotasAtrasadas: vi.fn() };
 });
-vi.mock('../../../services/clientes', () => ({ list: vi.fn() }));
+vi.mock('../../../services/clientes', () => ({ list: vi.fn(), listAll: vi.fn() }));
 
 import { getAtrasadasDetalle, getCobrarHoyDetalle, getResumenCobrarHoy, useCobrarHoy } from '../selectors';
 import * as prestamosService from '../../../services/prestamos';
@@ -48,7 +48,7 @@ describe('useCobrarHoy', () => {
       { prestamo: { id: 'p2', clienteId: 'cX' }, cuota: { numero: 2 } },
     ]);
     vi.mocked(prestamosService.cuotasAtrasadas).mockResolvedValue([]);
-    vi.mocked(clientesService.list).mockResolvedValue([{ id: 'c1', nombre: 'Ana' }]);
+    vi.mocked(clientesService.listAll).mockResolvedValue([{ id: 'c1', nombre: 'Ana' }]);
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const wrapper = ({ children }) => React.createElement(QueryClientProvider, { client: qc }, children);
     const { result } = renderHook(() => useCobrarHoy(), { wrapper });
@@ -67,7 +67,7 @@ describe('useCobrarHoy', () => {
       { prestamo: { id: 'p2', clienteId: 'c1' }, cuota: { numero: 1, monto: 200, fecha: '2000-01-01' } },
       { prestamo: { id: 'p3', clienteId: 'cX' }, cuota: { numero: 1, monto: 300, fecha: '2000-01-01' } },
     ]);
-    vi.mocked(clientesService.list).mockResolvedValue([{ id: 'c1', nombre: 'Ana' }]);
+    vi.mocked(clientesService.listAll).mockResolvedValue([{ id: 'c1', nombre: 'Ana' }]);
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const wrapper = ({ children }) => React.createElement(QueryClientProvider, { client: qc }, children);
     const { result } = renderHook(() => useCobrarHoy(), { wrapper });
@@ -97,7 +97,7 @@ describe('useCobrarHoy', () => {
       { prestamo: { id: 'p2', clienteId: 'c1' }, cuota: { numero: 1, monto: 50, fecha: '2000-01-02' } },
       { prestamo: { id: 'p3', clienteId: 'c1' }, cuota: { numero: 1, monto: 50, fecha: '2000-01-01' } },
     ]);
-    vi.mocked(clientesService.list).mockResolvedValue([{ id: 'c1', nombre: 'Ana' }]);
+    vi.mocked(clientesService.listAll).mockResolvedValue([{ id: 'c1', nombre: 'Ana' }]);
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const wrapper = ({ children }) => React.createElement(QueryClientProvider, { client: qc }, children);
     const { result } = renderHook(() => useCobrarHoy(), { wrapper });

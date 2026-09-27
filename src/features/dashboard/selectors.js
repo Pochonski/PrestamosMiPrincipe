@@ -63,8 +63,9 @@ export function buildRecentActivity({ cobros, clientes, profiles = [], limit = 6
 export async function getRecentActivity(limit = 6) {
   const cobros = await cobrosService.recientes(limit);
   const cobradorIds = [...new Set(cobros.map((c) => c.cobradorId ?? c.cobrador_id).filter(Boolean))];
+  // Join de clientes sin truncar: list() limita a 50 y dejaba "Cliente" genérico.
   const [clientes, profilesRows] = await Promise.all([
-    clientesService.list({ limit: 200, offset: 0 }),
+    clientesService.listAll({ pageSize: 200 }),
     cobradorIds.length > 0
       ? supabase
           .from('profiles')

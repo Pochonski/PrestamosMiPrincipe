@@ -29,11 +29,14 @@ export default function RouteReporter() {
   const location = useLocation();
 
   useEffect(() => {
+    // Solo pathname: el href completo filtraba ?invite=<token>, ids de
+    // préstamo/cliente vía postMessage('*') a cualquier iframe padre.
+    const url = new URL(window.location.href);
     window.parent.postMessage(
-      { source: 'porto-site-route', href: window.location.href },
+      { source: 'porto-site-route', href: url.origin + url.pathname },
       '*',
     );
-  }, [location.pathname, location.search, location.hash]);
+  }, [location.pathname]);
 
   useEffect(() => {
     const onMessage = (event) => {

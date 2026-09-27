@@ -246,16 +246,20 @@ export function SettingsPage() {
                         </p>
                       </div>
                       <Badge tone={tone}>{label}</Badge>
-                      <span className="font-mono text-xs text-neutral-500">{iv.token.slice(0, 8)}…</span>
+                      <span className="font-mono text-xs text-neutral-500">
+                        {iv.token ? `${iv.token.slice(0, 8)}…` : '••••'}
+                      </span>
                       {isPending && (
                         <div className="flex gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => navigator.clipboard.writeText(invitesService.buildInviteLink(iv.token, currentOrg?.slug))}
-                          >
-                            Copiar link
-                          </Button>
+                          {iv.token && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => navigator.clipboard.writeText(invitesService.buildInviteLink(iv.token, currentOrg?.slug))}
+                            >
+                              Copiar link
+                            </Button>
+                          )}
                           {(isAdmin || isOwner) && (
                             <Button size="sm" variant="ghost" icon={Trash2} onClick={() => handleRevokeInvite(iv.id)} className="text-danger-600" />
                           )}

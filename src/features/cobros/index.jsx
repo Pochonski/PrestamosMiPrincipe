@@ -91,7 +91,7 @@ function CobroForm({ prestamoId, onNavigate, clienteId }) {
             variant="primary"
             icon={Save}
             onClick={handleSave}
-            disabled={Boolean(form.error) || form.submitting}
+            disabled={Boolean(form.error) || form.submitting || form.loadingPrestamo}
             loading={form.submitting}
           >
             Registrar cobro

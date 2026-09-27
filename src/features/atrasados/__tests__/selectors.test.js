@@ -4,7 +4,7 @@ vi.mock('../../../services/prestamos', async (importOriginal) => {
   const actual = await importOriginal();
   return { ...actual, cuotasAtrasadas: vi.fn() };
 });
-vi.mock('../../../services/clientes', () => ({ list: vi.fn() }));
+vi.mock('../../../services/clientes', () => ({ list: vi.fn(), listAll: vi.fn() }));
 vi.mock('../../../lib/hooks/useAsyncResource', () => ({ useTickOnDataChange: vi.fn().mockReturnValue(0) }));
 
 import { getAtrasadosDetallado, getResumenAtrasados, useAtrasados } from '../selectors';
@@ -26,7 +26,7 @@ describe('getAtrasadosDetallado', () => {
       { prestamo: { clienteId: 'c2' }, cuota: cuotaReciente },
       { prestamo: { clienteId: 'c3' }, cuota: cuotaVieja }, // sin cliente -> filtrado
     ]);
-    vi.mocked(clientesService.list).mockResolvedValue([
+    vi.mocked(clientesService.listAll).mockResolvedValue([
       { id: 'c1', nombre: 'Ana' },
       { id: 'c2', nombre: 'Bob' },
     ]);
@@ -59,7 +59,7 @@ describe('getResumenAtrasados', () => {
 describe('useAtrasados', () => {
   it('carga items y resumen', async () => {
     vi.mocked(prestamosService.cuotasAtrasadas).mockResolvedValue([{ prestamo: { clienteId: 'c1' }, cuota: { fecha: new Date().toISOString(), monto: 100 } }]);
-    vi.mocked(clientesService.list).mockResolvedValue([{ id: 'c1', nombre: 'Ana' }]);
+    vi.mocked(clientesService.listAll).mockResolvedValue([{ id: 'c1', nombre: 'Ana' }]);
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const wrapper = ({ children }) => React.createElement(QueryClientProvider, { client: qc }, children);
     const { result } = renderHook(() => useAtrasados(), { wrapper });

@@ -7,9 +7,9 @@ import * as clientesService from '../../../services/clientes';
 import * as prestamosService from '../../../services/prestamos';
 import * as cobrosService from '../../../services/cobros';
 
-vi.mock('../../../services/clientes', () => ({ list: vi.fn() }));
-vi.mock('../../../services/prestamos', () => ({ list: vi.fn() }));
-vi.mock('../../../services/cobros', () => ({ list: vi.fn() }));
+vi.mock('../../../services/clientes', () => ({ list: vi.fn(), listAll: vi.fn() }));
+vi.mock('../../../services/prestamos', () => ({ list: vi.fn(), listAll: vi.fn() }));
+vi.mock('../../../services/cobros', () => ({ list: vi.fn(), listAll: vi.fn() }));
 vi.mock('../../../lib/hooks/useDataChange', () => ({ useDataChange: vi.fn() }));
 
 const hoy = new Date('2024-06-15T12:00:00.000Z');
@@ -244,9 +244,9 @@ describe('computeResumen', () => {
 
 describe('useResumenData', () => {
   it('carga y expone data', async () => {
-    vi.mocked(clientesService.list).mockResolvedValue([{ id: 'c1' }]);
-    vi.mocked(prestamosService.list).mockResolvedValue([{ id: 'p1', cliente_id: 'c1', monto: 1000, saldo_capital: 500, estado: 'vigente', cuotas: [] }]);
-    vi.mocked(cobrosService.list).mockResolvedValue([]);
+    vi.mocked(clientesService.listAll).mockResolvedValue([{ id: 'c1' }]);
+    vi.mocked(prestamosService.listAll).mockResolvedValue([{ id: 'p1', cliente_id: 'c1', monto: 1000, saldo_capital: 500, estado: 'vigente', cuotas: [] }]);
+    vi.mocked(cobrosService.listAll).mockResolvedValue([]);
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const wrapper = ({ children }) => React.createElement(QueryClientProvider, { client: qc }, children);
     const { result } = renderHook(() => useResumenData(), { wrapper });

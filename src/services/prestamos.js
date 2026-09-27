@@ -56,7 +56,7 @@ function buildCuotasPayload({ fechaInicio, periodo, nCuotas, montoPorCuota }) {
   for (let i = 0; i < Number(nCuotas); i++) {
     out.push({
       numero: i + 1,
-      fecha: cursor.toISOString().slice(0, 10),
+      fecha: toLocalDateString(cursor),
       monto: montoPorCuota,
     });
     cursor = nextCuotaDate(cursor, periodo);
@@ -201,19 +201,49 @@ export async function totalCobrarHoy() {
 }
 
 export async function resumen() {
-  const [carteraTotalV, totalAtrasadoV, totalCobrarHoyV, activosCount] = await Promise.all([
-    carteraTotal(),
-    totalAtrasado(),
-    totalCobrarHoy(),
-    cantidadActivos(),
-  ]);
-  const [atrasadosList, cobrarHoyList] = await Promise.all([cuotasAtrasadas(), cobrarHoy()]);
+  // Un solo listAll + agregación en memoria (antes: 6 full-scans de
+  // prestamos + 2 queries de cuotas → cascada en cada pmp:data-changed).
+  const items = await listAll();
+  const hoyStr = toLocalDateString(startOfDay(new Date()));
+  let carteraTotalV = 0;
+  let totalAtrasadoV = 0;
+  let cantidadAtrasados = 0;
+  let totalCobrarHoyV = 0;
+  let cantidadCobrarHoy = 0;
+  let activosCount = 0;
+  for (const p of items) {
+    if (p.estado !== 'cancelado') carteraTotalV += Number(p.saldo_capital ?? 0);
+    const status = getStatus(p);
+    if (status === 'vigente' || status === 'atrasado') activosCount += 1;
+    for (const c of p.cuotas || []) {
+      if (c.estado === 'pagada' || c.estado === 'cancelada') continue;
+      const f = String(c.fecha).slice(0, 10);
+      if (f < hoyStr) {
+        totalAtrasadoV += Number(c.monto ?? 0);
+      } else if (f === hoyStr) {
+        totalCobrarHoyV += Number(c.monto ?? 0);
+        cantidadCobrarHoy += 1;
+      }
+    }
+  }
+  // cantidadAtrasados cuenta cuotas (igual que antes: atrasadosList.length).
+  // Se deriva de totalAtrasado por cuota para no duplicar queries.
+  const atrasadasCount = items.reduce(
+    (n, p) =>
+      n +
+      (p.cuotas || []).filter(
+        (c) =>
+          c.estado === 'pendiente' && String(c.fecha).slice(0, 10) < hoyStr,
+      ).length,
+    0,
+  );
+  cantidadAtrasados = atrasadasCount;
   return {
     carteraTotal: carteraTotalV,
     totalAtrasado: totalAtrasadoV,
     cantidadActivos: activosCount,
-    cantidadAtrasados: atrasadosList.length,
-    cantidadCobrarHoy: cobrarHoyList.length,
+    cantidadAtrasados,
+    cantidadCobrarHoy,
     totalCobrarHoy: totalCobrarHoyV,
   };
 }
@@ -340,12 +370,23 @@ export async function extenderCuotas(prestamoId, nCuotas) {
     : prestamo.fecha_inicio;
   const start = parseLocalDate(startDate);
   const nuevasCuotas = [];
+  // Usar max(numero) como base: n_cuotas puede estar desincronizado de
+  // cuotas.length en DBs viejas; max evita choques unique(prestamo_id, numero).
+  const maxNumero = (prestamo.cuotas || []).reduce(
+    (m, c) => Math.max(m, Number(c.numero) || 0),
+    Number(prestamo.n_cuotas) || 0,
+  );
+  const baseNumero = Math.max(
+    Number(prestamo.n_cuotas) || 0,
+    prestamo.cuotas?.length || 0,
+    maxNumero,
+  );
   let cursor = start;
   for (let i = 0; i < Number(nCuotas); i++) {
     cursor = nextCuotaDate(cursor, prestamo.periodo);
     nuevasCuotas.push({
-      numero: prestamo.n_cuotas + i + 1,
-      fecha: cursor.toISOString().slice(0, 10),
+      numero: baseNumero + i + 1,
+      fecha: toLocalDateString(cursor),
       monto: cuotaMonto,
     });
   }
@@ -356,20 +397,20 @@ export async function extenderCuotas(prestamoId, nCuotas) {
   });
   if (error) throw error;
 
-  // Sincronizar n_cuotas en la DB: el RPC antiguo solo insertaba cuotas sin
-  // actualizar prestamos.n_cuotas (dejaba la DB inconsistente y provocaba
-  // choques de unique(prestamo_id, numero) en la próxima extensión).
-  // El RPC nuevo ya lo incrementa; este update es auto-reparador e idempotente.
-  const esperado = Number(prestamo.n_cuotas) + n;
+  // Sincronizar n_cuotas en la DB: el RPC nuevo (>=2026-09-08) ya lo
+  // incrementa; este update es auto-reparador e idempotente para RPCs viejos.
+  // No falla el flujo si diverge: el getById siguiente expone el estado real.
+  const esperado = baseNumero + n;
   try {
     const orgId = await getOrgId();
-    await supabase
+    const { error: syncError } = await supabase
       .from('prestamos')
       .update({ n_cuotas: esperado, updated_at: new Date().toISOString() })
       .eq('id', prestamoId)
       .eq('org_id', orgId);
-  } catch {
-    // No bloquear: el getById siguiente expone el estado real.
+    if (syncError) console.warn('[prestamos.extenderCuotas.sync]', syncError.message);
+  } catch (err) {
+    console.warn('[prestamos.extenderCuotas.sync]', err?.message || err);
   }
 
   emitDataChanged('prestamos');
@@ -392,7 +433,7 @@ export async function update(id, patch) {
       ? (patch.tasa_comision == null || patch.tasa_comision === '' ? null : Number(patch.tasa_comision))
       : (prestamo.tasa_comision ?? null);
   const p_n_cuotas = patch.n_cuotas !== undefined ? Number(patch.n_cuotas) : Number(prestamo.n_cuotas);
-  const p_fecha_inicio = patch.fecha_inicio !== undefined ? patch.fecha_inicio : prestamo.fecha_inicio || new Date().toISOString().slice(0, 10);
+  const p_fecha_inicio = patch.fecha_inicio !== undefined ? patch.fecha_inicio : prestamo.fecha_inicio || toLocalDateString(new Date());
 
   const rutaChanged = patch.ruta !== undefined && p_ruta !== prestamo.ruta;
   const periodoChanged = patch.periodo !== undefined && JSON.stringify(p_periodo) !== JSON.stringify(prestamo.periodo);
@@ -470,7 +511,7 @@ export async function update(id, patch) {
       const f = deltaDias !== 0 ? addDays(c, deltaDias) : c;
       pendingCuotas.push({
         numero: startNumero + i,
-        fecha: f.toISOString().slice(0, 10),
+        fecha: toLocalDateString(f),
         monto: montoPorCuota,
       });
       c = nextCuotaDate(c, p_periodo);
@@ -497,6 +538,28 @@ export async function update(id, patch) {
 
 export async function remove(id) {
   const orgId = await getOrgId();
+  // Borrado atómico vía RPC (nueva migración delete_prestamo_seguro): valida
+  // que no haya cobros y borra cuotas+préstamo en una transacción. Si el RPC
+  // aún no está aplicado en prod, fallback al flujo cliente (con ventana de
+  // carrera documentada).
+  const rpcRes = (await supabase.rpc('delete_prestamo_seguro', {
+    p_prestamo_id: id,
+  })) ?? null;
+  if (rpcRes && !rpcRes.error) {
+    emitDataChanged('prestamos');
+    emitDataChanged('cuotas');
+    return true;
+  }
+  const rpcError = rpcRes?.error;
+  const rpcMsg = String(rpcError?.message || '');
+  if (/tiene cobros|cobros registrados/i.test(rpcMsg)) {
+    throw new Error(
+      'No se puede eliminar un préstamo con cobros registrados. Si necesitas borrarlo, eliminá los cobros primero.',
+    );
+  }
+  if (!/does not exist|function.*not exist|schema cache|404/i.test(rpcMsg)) {
+    throwIfError(rpcError, 'prestamos.remove.rpc', { id });
+  }
   const { data: prestamo, error: e1 } = await supabase
     .from('prestamos')
     .select('id, n_cuotas')

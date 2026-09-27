@@ -2,20 +2,22 @@ import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { useDataChange } from '../../lib/hooks/useDataChange';
 import * as prestamosService from '../../services/prestamos';
 import * as clientesService from '../../services/clientes';
+import { parseLocalDate, startOfDay } from '../../lib/format';
 
 const EMPTY_RESUMEN = { cantidad: 0, total: 0 };
 
 export async function getAtrasadosDetallado() {
   const [items, clientes] = await Promise.all([
     prestamosService.cuotasAtrasadas(),
-    clientesService.list({ limit: 500, offset: 0 }),
+    clientesService.listAll({ pageSize: 200 }),
   ]);
   const clienteById = new Map(clientes.map((c) => [c.id, c]));
+  const hoy = startOfDay(new Date());
   const rows = items
     .map(({ prestamo, cuota }) => {
       const cliente = clienteById.get(prestamo.clienteId) || null;
-      const diffMs = Date.now() - new Date(cuota.fecha).getTime();
-      const diffDay = Math.floor(diffMs / 86400000);
+      const diffMs = hoy.getTime() - startOfDay(parseLocalDate(cuota.fecha)).getTime();
+      const diffDay = Math.max(0, Math.floor(diffMs / 86400000));
       return { prestamo, cuota, cliente, diasAtraso: diffDay };
     })
     .filter((x) => x.cliente)

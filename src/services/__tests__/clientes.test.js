@@ -127,6 +127,22 @@ describe('clientes.create emite evento', () => {
   });
 });
 
+describe('clientes.update parcial', () => {
+  it('solo envía campos presentes', async () => {
+    const updated = { id: '1', nombre: 'Ana' };
+    const m = chain(updated);
+    vi.mocked(supabase.from).mockReturnValue(m);
+    const r = await clientesService.update('1', { nombre: ' Ana ' });
+    expect(r).toEqual(updated);
+    const payload = vi.mocked(m.update).mock.calls[0][0];
+    expect(payload.nombre).toBe('Ana');
+    expect(payload.cedula).toBeUndefined();
+    expect(payload.telefono).toBeUndefined();
+    expect(payload.direccion).toBeUndefined();
+    expect(vi.mocked(emitDataChanged)).toHaveBeenCalled();
+  });
+});
+
 describe('clientes.remove bloquea historial', () => {
   it('lanza error si solo tiene préstamos cancelados', async () => {
     const chain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis() };

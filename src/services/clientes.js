@@ -38,6 +38,19 @@ export async function count() {
   return total ?? 0;
 }
 
+/** Lista TODOS los clientes paginando (export/resumen no deben truncar en 50). */
+export async function listAll({ pageSize = 200 } = {}) {
+  const all = [];
+  let offset = 0;
+  for (;;) {
+    const page = await list({ limit: pageSize, offset });
+    all.push(...page);
+    if (page.length < pageSize) break;
+    offset += pageSize;
+  }
+  return all;
+}
+
 export async function buscar(query, { limit = DEFAULT_LIMIT, offset = 0 } = {}) {
   const orgId = await getOrgId();
   const raw = String(query || '').trim();
@@ -46,8 +59,13 @@ export async function buscar(query, { limit = DEFAULT_LIMIT, offset = 0 } = {}) 
     .select('*')
     .eq('org_id', orgId);
   if (raw) {
-    const safe = raw.replace(/[%_,\\]/g, '');
-    qb = qb.or(`nombre.ilike.%${safe}%,cedula.ilike.%${safe}%,telefono.ilike.%${safe}%,direccion.ilike.%${safe}%`);
+    // Escapar todo lo que rompe la sintaxis or() de PostgREST: la coma y los
+    // paréntesis separan filtros, las comillas/dobles y el punto alteran el
+    // operador. Sin esto `query="a,cedula.eq.x"` inyecta filtros extra.
+    const safe = raw.replace(/[%_,\\,()"'*.:;!]/g, '');
+    if (safe) {
+      qb = qb.or(`nombre.ilike.%${safe}%,cedula.ilike.%${safe}%,telefono.ilike.%${safe}%,direccion.ilike.%${safe}%`);
+    }
   }
   const { data, error } = await qb
     .order('nombre')

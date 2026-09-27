@@ -99,23 +99,28 @@ describe('validateMontoCobro', () => {
     const err = validateMontoCobro({ monto: '1000', tipo: 'capital', prestamo: p, cuotaNumero: 1, incluirInteres: false });
     expect(err).toContain('Cuotas agotadas');
   });
-  it('interes ok sin validar saldo', () => {
+  it('interes ok si cubre el período', () => {
   const p = makePrestamo({ monto: 10000, saldo_capital: 10000, tasa: 10, cuotas: [] });
-    expect(validateMontoCobro({ monto: '500', tipo: 'interes', prestamo: p })).toBeNull();
+    // interés del período = 1000: 1000 ok, 500 bloquea (igual que el backend)
+    expect(validateMontoCobro({ monto: '1000', tipo: 'interes', prestamo: p })).toBeNull();
+  });
+  it('interes menor al período bloquea', () => {
+  const p = makePrestamo({ monto: 10000, saldo_capital: 10000, tasa: 10, cuotas: [] });
+    expect(validateMontoCobro({ monto: '500', tipo: 'interes', prestamo: p })).toContain('no cubre');
   });
   it('fecha futura bloquea', () => {
   const f = new Date();
     f.setDate(f.getDate() + 1);
     const fechaPago = f.toISOString().slice(0, 10);
     const p = makePrestamo({ monto: 10000, saldo_capital: 10000, tasa: 10, cuotas: [] });
-    expect(validateMontoCobro({ monto: '500', tipo: 'interes', prestamo: p, fechaPago })).toContain('futura');
+    expect(validateMontoCobro({ monto: '1000', tipo: 'interes', prestamo: p, fechaPago })).toContain('futura');
   });
   it('fecha pasada valida', () => {
   const f = new Date();
     f.setDate(f.getDate() - 10);
     const fechaPago = f.toISOString().slice(0, 10);
     const p = makePrestamo({ monto: 10000, saldo_capital: 10000, tasa: 10, cuotas: [] });
-    expect(validateMontoCobro({ monto: '500', tipo: 'interes', prestamo: p, fechaPago })).toBeNull();
+    expect(validateMontoCobro({ monto: '1000', tipo: 'interes', prestamo: p, fechaPago })).toBeNull();
   });
 });
 

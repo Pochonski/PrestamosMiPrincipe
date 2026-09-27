@@ -28,7 +28,10 @@ export function getAtrasadasDetalle() {
     (items || [])
       .map(({ prestamo, cuota }) => {
         if (!prestamo || !cuota) return null;
-        const diffMs = Date.now() - new Date(cuota.fecha).getTime();
+        // Días de atraso en fecha local (no Date UTC): evita off-by-one en CR.
+        const hoy = startOfDay(new Date());
+        const f = startOfDay(parseLocalDate(cuota.fecha));
+        const diffMs = hoy.getTime() - f.getTime();
         return {
           prestamo,
           prestamoId: prestamo.id,
@@ -46,7 +49,7 @@ export function useCobrarHoy() {
     queries: [
       { queryKey: ['cobrarHoy', 'detalle'], queryFn: getCobrarHoyDetalle, staleTime: 30_000 },
       { queryKey: ['cobrarHoy', 'atrasadas'], queryFn: getAtrasadasDetalle, staleTime: 30_000 },
-      { queryKey: ['clientes', 'all'], queryFn: () => clientesService.list({ limit: 500, offset: 0 }), staleTime: 60_000 },
+      { queryKey: ['clientes', 'all'], queryFn: () => clientesService.listAll({ pageSize: 200 }), staleTime: 60_000 },
     ],
   });
   const [itemsQ, atrasadasQ, clientesQ] = results;
@@ -275,7 +278,7 @@ export function validarConciliacion({ cobros = [], grupos = [], totales = null, 
 export async function getCobrosMesDetallado() {
   const [cobros, clientes, prestamos] = await Promise.all([
     cobrosService.listAll(),
-    clientesService.list({ limit: 500, offset: 0 }),
+    clientesService.listAll({ pageSize: 200 }),
     prestamosService.listAll(),
   ]);
   return { cobros, clientes, prestamos };
@@ -288,7 +291,7 @@ export function useCobrosMes(monthKey) {
   const results = useQueries({
     queries: [
       { queryKey: ['cobros', 'all'], queryFn: () => cobrosService.listAll(), staleTime: 5 * 60_000 },
-      { queryKey: ['clientes', 'all'], queryFn: () => clientesService.list({ limit: 500, offset: 0 }), staleTime: 10 * 60_000 },
+      { queryKey: ['clientes', 'all'], queryFn: () => clientesService.listAll({ pageSize: 200 }), staleTime: 10 * 60_000 },
       { queryKey: ['prestamos', 'all'], queryFn: () => prestamosService.listAll(), staleTime: 5 * 60_000 },
     ],
   });

@@ -40,7 +40,10 @@ const COLUMNS = {
 };
 
 export function escapeCSV(value) {
-  const str = value == null ? '' : String(value);
+  let str = value == null ? '' : String(value);
+  // OWASP CSV Injection: si empieza con = + - @ TAB CR, Excel lo interpreta
+  // como fórmula. Prefijar con ' para neutralizar.
+  if (/^[=+\-@\t\r]/.test(str)) str = `'${str}`;
   if (/[",\n]/.test(str)) {
     return `"${str.replace(/"/g, '""')}"`;
   }
@@ -124,9 +127,10 @@ export function getColumns(tipo) {
 }
 
 async function fetchForTipo(tipo) {
-  if (tipo === 'clientes') return clientesService.list();
-  if (tipo === 'prestamos') return prestamosService.list();
-  if (tipo === 'cobros') return cobrosService.list();
+  // list() trunca en DEFAULT_LIMIT=50: exportar debe traer TODO paginando.
+  if (tipo === 'clientes') return clientesService.listAll();
+  if (tipo === 'prestamos') return prestamosService.listAll();
+  if (tipo === 'cobros') return cobrosService.listAll();
   return [];
 }
 
@@ -150,14 +154,21 @@ export async function exportCSV(tipo) {
 }
 
 export async function getCounts() {
+  // count exacto: list() trunca en 50 y mentía en los contadores.
   const [clientes, prestamos, cobros] = await Promise.all([
-    clientesService.list(),
-    prestamosService.list(),
-    cobrosService.list(),
+    clientesService.count(),
+    (async () => {
+      const items = await prestamosService.listAll({ pageSize: 500 });
+      return items.length;
+    })(),
+    (async () => {
+      const items = await cobrosService.listAll({ pageSize: 500 });
+      return items.length;
+    })(),
   ]);
   return {
-    clientes: clientes.length,
-    prestamos: prestamos.length,
-    cobros: cobros.length,
+    clientes,
+    prestamos,
+    cobros,
   };
 }

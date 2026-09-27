@@ -23,8 +23,24 @@ const queryClient = new QueryClient({
   },
 });
 
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
+  // Solo en dev: exponer el cliente para debug manual en consola.
   window.__pmpQueryClient = queryClient;
+}
+
+// Registro interno para emitDataChanged (no depende de window en prod).
+// Se guarda en globalThis con clave no enumerable para no exponer PII en consola.
+if (typeof globalThis !== 'undefined') {
+  try {
+    Object.defineProperty(globalThis, '__pmpQueryClientRef', {
+      value: { current: queryClient },
+      writable: true,
+      configurable: true,
+      enumerable: false,
+    });
+  } catch {
+    globalThis.__pmpQueryClientRef = { current: queryClient };
+  }
 }
 
 applyTheme(getTheme());
