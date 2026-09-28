@@ -95,7 +95,7 @@ Cliente abona 50.000 → saldo = 0 → préstamo LIQUIDADO 🎉
 | **Respaldo** | Backup JSON con validación de integridad y restauración guiada por fusión. |
 | **Notificaciones** | Avisos automáticos de atrasos y cobros del día. Lectura con un tap. |
 | **Organizaciones** | Multi-tenant real: invitaciones por link con expiración, roles owner/admin/cobrador/viewer y RLS a nivel de fila. |
-| **Auth premium** | Login con glass morphism + mesh gradient. Email + Google. Onboarding con creación de organización. |
+| **Auth premium** | Login con glass morphism + mesh gradient. Email + contraseña. Onboarding con creación de organización. |
 
 <br/>
 
