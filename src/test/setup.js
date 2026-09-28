@@ -36,5 +36,8 @@ vi.spyOn(console, 'error').mockImplementation((...args) => {
   origError(...args);
 });
 
-// TZ fija para tests deterministas (no podemos setear TZ real, pero documentamos)
+// TZ fija a Costa Rica: la app compara fechas en hora local (ver lib/format
+// parseLocalDate y cobros/selectors). Sin esto, en CI (UTC) los tests de
+// "hoy" flakean en la ventana 00:00-06:00 UTC. Los tests igual deben construir
+// fechas con partes locales, nunca con toISOString() (que es UTC).
 process.env.TZ = 'America/Costa_Rica';

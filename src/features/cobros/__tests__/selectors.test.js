@@ -19,7 +19,14 @@ function withDates({ pastDays = 5, futureDays = 5 } = {}) {
   past.setDate(past.getDate() - pastDays);
   const future = new Date();
   future.setDate(future.getDate() + futureDays);
-  return { past: past.toISOString().slice(0, 10), future: future.toISOString().slice(0, 10) };
+  // Formato LOCAL (no toISOString/UTC): la app compara fechas en hora local
+  // y en la ventana 18:00-24:00 CR difieren del día UTC (flake en CI).
+  return { past: localDayStr(past), future: localDayStr(future) };
+}
+
+// YYYY-MM-DD en hora local (el input date y la app trabajan en local).
+function localDayStr(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 describe('getCuotasAtrasadas', () => {
@@ -111,14 +118,14 @@ describe('validateMontoCobro', () => {
   it('fecha futura bloquea', () => {
   const f = new Date();
     f.setDate(f.getDate() + 1);
-    const fechaPago = f.toISOString().slice(0, 10);
+    const fechaPago = localDayStr(f);
     const p = makePrestamo({ monto: 10000, saldo_capital: 10000, tasa: 10, cuotas: [] });
     expect(validateMontoCobro({ monto: '1000', tipo: 'interes', prestamo: p, fechaPago })).toContain('futura');
   });
   it('fecha pasada valida', () => {
   const f = new Date();
     f.setDate(f.getDate() - 10);
-    const fechaPago = f.toISOString().slice(0, 10);
+    const fechaPago = localDayStr(f);
     const p = makePrestamo({ monto: 10000, saldo_capital: 10000, tasa: 10, cuotas: [] });
     expect(validateMontoCobro({ monto: '1000', tipo: 'interes', prestamo: p, fechaPago })).toBeNull();
   });
@@ -127,18 +134,17 @@ describe('validateMontoCobro', () => {
 describe('validateFechaPago', () => {
   it('vacía -> error', () => expect(validateFechaPago('')).toContain('fecha'));
   it('hoy -> ok', () => {
-  const hoy = new Date().toISOString().slice(0, 10);
-    expect(validateFechaPago(hoy)).toBeNull();
+    expect(validateFechaPago(localDayStr())).toBeNull();
   });
   it('pasada -> ok', () => {
   const f = new Date();
     f.setDate(f.getDate() - 15);
-    expect(validateFechaPago(f.toISOString().slice(0, 10))).toBeNull();
+    expect(validateFechaPago(localDayStr(f))).toBeNull();
   });
   it('futura -> error', () => {
   const f = new Date();
     f.setDate(f.getDate() + 2);
-    expect(validateFechaPago(f.toISOString().slice(0, 10))).toContain('futura');
+    expect(validateFechaPago(localDayStr(f))).toContain('futura');
   });
   it('Date pasado -> ok', () => {
   const f = new Date();
