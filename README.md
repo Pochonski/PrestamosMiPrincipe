@@ -1,42 +1,54 @@
 <div align="center">
-  <img src="https://img.shields.io/badge/Vite-5-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"/>
+  <img src="https://img.shields.io/badge/Vite-8-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"/>
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React"/>
+  <img src="https://img.shields.io/badge/React_Router-7-CA4245?style=for-the-badge&logo=react-router&logoColor=white" alt="React Router"/>
   <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase"/>
   <img src="https://img.shields.io/badge/Tailwind_CSS-3-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind"/>
-  <img src="https://img.shields.io/badge/React_Router-6-CA4245?style=for-the-badge&logo=react-router&logoColor=white" alt="React Router"/>
+  <img src="https://img.shields.io/badge/Vitest-3-6E9F18?style=for-the-badge&logo=vitest&logoColor=white" alt="Vitest"/>
+  <img src="https://img.shields.io/badge/Playwright-1-2EAD33?style=for-the-badge&logo=playwright&logoColor=white" alt="Playwright"/>
 </div>
 
 <br/>
 
-# Préstamos Mi Príncipe
+<div align="center">
 
-> **La app premium para gestión de cobros de préstamos en Costa Rica.**
-> Multi-tenant · Solo-intereses · En la nube · Mobile-first
+# Préstamos Mi Príncipe 👑
 
-<br/>
+**La plataforma premium para gestionar cobros de préstamos en Costa Rica.**
 
-Una plataforma de cobros diseñada para el mercado costarricense, con un modelo de negocio de **"solo intereses" + abonos a capital**. Tus clientes pagan intereses periódicamente y abonan capital cuando pueden. Cuando el saldo llega a cero, el préstamo se liquida automáticamente.
+*Tus cobradores en la calle. Tu cartera bajo control. Tus datos a salvo.*
 
-<br/>
+Multi-tenant · Solo-intereses · Mobile-first · En la nube
 
-## Features
+[Cómo funciona](#-modelo-solo-intereses--abonos-a-capital) · [Features](#-features) · [Quickstart](#-quickstart-dev)
 
-| | |
-|---|---|
-| **Clientes** | CRUD completo con validaciones de cédula y teléfono costarricenses. Multi-step form optimizado para mobile. |
-| **Préstamos** | Wizard de 5 pasos: ruta, período, monto, cuotas, fechas. Calendario visual de pagos. |
-| **Cobros** | Registrar pagos de interés o capital. Validación "intereses al día". Extensión automática de cuotas. |
-| **Multi-tenant** | Cada organización ve solo sus datos. RLS a nivel de fila en Supabase. |
-| **Reportes** | Charts SVG: cobros por mes, estado de préstamos, top rutas. |
-| **Notificaciones** | Auto-generadas al haber atrasos o cobros del día. Marcar como leídas con un tap. |
-| **Exportar / Respaldar** | CSV por dataset. Backup JSON con schema validation y restore. |
-| **Auth Premium** | Login con glass morphism + mesh gradient. Email + Google. Multi-organización. |
+</div>
 
 <br/>
 
-## Modelo de negocio
+## 💼 Propuesta de valor
 
-El corazón de la app es el modelo de **"solo intereses + abonos a capital"**:
+Si prestás dinero con cobro por rutas, sabés que el negocio se gana **en la calle**: cobrar a tiempo, no perder un solo pago y saber cada día cuánto entró, cuánto falta y quién está atrasado.
+
+Préstamos Mi Príncipe pone esa operación completa en el bolsillo de cada cobrador:
+
+```
+┌─────────────┐     ┌──────────────┐     ┌───────────────┐
+│  COBRAR HOY │ ──▶ │ ABONAR/INTERÉS│ ──▶ │  LIQUIDADO 🎉 │
+│  lista del  │     │ recalcula las │     │  saldo en 0,  │
+│  día + mora │     │ cuotas solas  │     │  cierre auto  │
+└─────────────┘     └──────────────┘     └───────────────┘
+```
+
+- **Para el cobrador**: lista de cobros del día, atrasados con días de mora, registro de pagos en segundos desde el celular — incluso con fecha retroactiva si cobró ayer y lo registra hoy.
+- **Para el dueño**: dashboard con cartera total, morosidad, cobrado hoy vs ayer, top clientes y morosos, reportes por mes y por ruta, exportación a Excel y respaldo completo en JSON.
+- **Para el equipo**: organizaciones con roles (owner, admin, cobrador, viewer), invitaciones por link y cada quien ve solo los datos de su organización.
+
+<br/>
+
+## 🧮 Modelo: solo-intereses + abonos a capital
+
+El corazón del producto. Tus clientes pagan **intereses periódicamente** y **abonan capital cuando pueden**. Cuando el saldo llega a cero, el préstamo se liquida solo.
 
 ```
 Cliente: Juan Pérez
@@ -54,116 +66,122 @@ Cuota #1: 8.000 interés       Cliente abona 50.000
 Cuota #2: 4.000 interés (recalculado)
 (saldo sigue 50.000)
 
-Cliente abona 50.000 → saldo = 0 → préstamo LIQUIDADO
+Cliente abona 50.000 → saldo = 0 → préstamo LIQUIDADO 🎉
 ```
 
 **Reglas clave:**
-- Cada cuota tiene un monto = `saldoCapital × tasa%`
-- Al pagar capital, se recalculan las cuotas restantes
-- Si el saldo llega a 0, el préstamo se marca como `cancelado` automáticamente
-- Si las cuotas se agotan pero queda saldo, hay que **extender** manualmente
-- No se puede abonar capital sin tener las cuotas de interés al día
+- Cada cuota vale `saldoCapital × tasa%` — se **recalcula sola** después de cada abono
+- El abono a capital con intereses atrasados muestra un **aviso + confirmación explícita** (decisión de producto: no bloquea, informa)
+- Si las cuotas se agotan pero queda saldo, se **extienden** con un tap
+- Los cobros aceptan **fecha de pago retroactiva** (lo cobrado ayer se reporta ayer)
+- Solo se puede editar/eliminar el **último cobro** — el libro es inmutable por diseño
 
 <br/>
 
-## Stack técnico
+## ✨ Features
 
-| Capa | Tecnología | Rol |
-|---|---|---|
-| Build | Vite 8 | Bundler y dev server |
-| UI | React 19 | Componentes, hooks, context |
-| Styling | Tailwind CSS 3 | Utility-first con paleta gold/navy |
-| Routing | React Router 7 | Client-side SPA |
-| Auth + DB | Supabase | Auth, RLS, Postgres, Realtime-ready |
-| State | localStorage (theme) | Persistencia liviana de UI |
+| Módulo | Qué hace |
+|---|---|
+| **Clientes** | CRUD con validación de cédula y teléfono costarricenses (auto-formato en vivo). Formulario multi-paso optimizado para mobile. |
+| **Préstamos** | Wizard de 5 pasos: ruta, período (diario → mensual / día del mes), monto, cuotas, fechas. Calendario visual y detalle con cronograma. |
+| **Cobros** | Pago de interés o abono a capital, con o sin interés incluido. Vista previa del nuevo saldo antes de confirmar. |
+| **Cobrar hoy** | La pantalla del cobrador: lo que vence hoy + atrasos, con totales del día y conciliación del mes. |
+| **Atrasados** | Mora ordenada por días de atraso, con totales para accionar. |
+| **Dashboard** | Cartera, morosidad, cobrado hoy vs ayer, actividad reciente y accesos rápidos. |
+| **Resumen** | KPIs con filtros por fecha y ruta, top clientes, top morosos, saldos por ruta y sparklines. |
+| **Reportes** | Charts SVG puros (cero librerías): cobros 6 meses, dona por estado, series diarias. |
+| **Comisiones** | Proyección de ganancia del acreedor separada del interés base. |
+| **Exportar** | CSV compatible con Excel (con BOM y protección anti-fórmulas) de clientes, préstamos y cobros — siempre completo, sin truncar. |
+| **Respaldo** | Backup JSON con validación de integridad y restauración guiada por fusión. |
+| **Notificaciones** | Avisos automáticos de atrasos y cobros del día. Lectura con un tap. |
+| **Organizaciones** | Multi-tenant real: invitaciones por link con expiración, roles owner/admin/cobrador/viewer y RLS a nivel de fila. |
+| **Auth premium** | Login con glass morphism + mesh gradient. Email + Google. Onboarding con creación de organización. |
 
 <br/>
 
-## Arquitectura
+## 🔒 Seguridad y confianza
+
+- **Tus datos son solo tuyos**: cada organización vive aislada con políticas de acceso a nivel de fila en Postgres.
+- **Roles con mínimo privilegio**: el viewer solo mira; el cobrador cobra pero no administra.
+- **Respaldo descargable**: tu información sale en JSON cuando quieras — sin vendor lock-in.
+- **Defensa en profundidad**: validación en UI + reglas en base de datos + auditoría de seguridad P0 aplicada.
+
+<br/>
+
+## 🚀 Quickstart dev
+
+**Requisitos:** Node 22+ · cuenta de Supabase (o CLI local para e2e).
+
+```bash
+# 1. Instalar
+npm install
+
+# 2. Configurar entorno
+cp .env.example .env
+# Completar con tu proyecto: Supabase Dashboard → Settings → API
+#   VITE_SUPABASE_URL=https://TU-PROYECTO.supabase.co
+#   VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
+
+# 3. Aplicar esquema en Supabase
+#    Dashboard → SQL Editor → pegar y correr, en orden:
+#    supabase/migrations/*.sql  (o src/features/auth/sql/migrations/*)
+#    ⚠️ IMPORTANTE en prod: aplicar también
+#    supabase/migrations/20260928000000_prod_hardening_p0.sql
+
+# 4. Desarrollo
+npm run dev        # app en http://localhost:5173
+
+# 5. Calidad
+npm run lint           # oxlint
+npm test               # vitest (708 tests)
+npm run test:coverage  # exige 95/83/92/95 (líneas/ramas/funcs/stmts)
+npm run test:e2e       # playwright (requiere `supabase start` local)
+
+# 6. Producción
+npm run build      # → dist/ (desplegado en Vercel)
+```
+
+**Estructura:**
 
 ```
 src/
-├── main.jsx                    ← BrowserRouter + AuthProvider
-├── App.jsx                     ← React Router (rutas)
-│
-├── lib/                        ← utils compartidos
-│   ├── supabase.js             ← cliente singleton
-│   ├── format.js               ← CRC, fechas, parseLocalDate
-│   ├── dates.js                ← addDays, addMonths, firstCuotaDate
-│   ├── events.js               ← emitDataChanged
-│   ├── color.js                ← colorFor(id)
-│   ├── number.js               ← parseMontoNumber
-│   ├── id.js                   ← uid
-│   └── resumen.js              ← statsCliente, getResumenPrestamo
-│
-├── services/                   ← infraestructura + dominio
-│
-├── components/
-│   ├── ui/                     ← primitivas: Card, Badge, StatCard
-│   └── layout/                 ← AppShell, TopBar, Sidebar, BottomNav
-│
-└── features/                   ← cada feature autocontenida
-    ├── auth/                   ← AuthContext, Login, Signup, Onboarding
-    ├── dashboard/              ← KPIs, acciones rápidas, actividad
-    ├── clientes/               ← CRUD + multi-step form + detalle
-    ├── prestamos/              ← wizard 5 pasos + detalle + calendario
-    ├── cobros/                 ← form de pago (interés/capital)
-    ├── cobrar-hoy/             ← lista filtrada por fecha
-    ├── atrasados/              ← lista filtrada por atrasos
-    ├── notificaciones/         ← bandeja con auto-gen
-    ├── resumen/                ← KPIs + top clientes + últimos cobros
-    ├── reportes/               ← charts SVG puros
-    ├── exportar/               ← CSV download
-    └── respaldo/               ← JSON backup/restore
+├── main.jsx                 ← BrowserRouter + React Query + AuthProvider
+├── App.jsx                  ← rutas lazy (code-splitting por feature)
+├── lib/                     ← utils puros (fechas CR, formato ₡, eventos)
+├── services/                ← acceso a datos (Supabase + RPCs transaccionales)
+├── components/ui|layout/    ← primitivas + AppShell/Sidebar/BottomNav
+└── features/                ← 14 features autocontenidas
+    ├── auth/ clientes/ prestamos/ cobros/ cobrar-hoy/ atrasados/
+    ├── dashboard/ resumen/ reportes/ comisiones/
+    ├── notificaciones/ exportar/ respaldo/ organizations/ prestamos-lista/
+supabase/migrations/         ← esquema + RLS + RPCs (aplicar en orden)
 ```
 
-**Reglas de import** (resumen):
+<br/>
 
-| Capa | Puede importar |
+## 🛠 Stack
+
+| Capa | Tecnología |
 |---|---|
-| `lib/` | nada del proyecto |
-| `services/` | `lib/` |
-| `components/ui` | `lib/` |
-| `components/layout` | `components/ui`, `lib/`, `services/` |
-| `features/X/selectors` | `services/`, `lib/` |
-| `features/X/hooks` | `features/X/selectors`, `services/`, `lib/` |
-| `features/X/components` | `components/`, `features/X/hooks`, `lib/` |
+| Build | Vite 8 (chunks por vendor: react, supabase, router, query) |
+| UI | React 19 + Tailwind CSS 3 (paleta gold/navy) + Lucide |
+| Routing | React Router 7 (SPA con rewrites en Vercel) |
+| Auth + DB | Supabase (Auth, RLS, Postgres, RPCs `security definer`) |
+| Data | TanStack Query (stale 5 min, invalidación por eventos) |
+| Testing | Vitest + Testing Library + MSW · Playwright e2e |
+
+**Bundle:** JS ~868 KB raw / ~269 KB gzip · CSS ~69 KB raw / ~12 KB gzip · 10 tablas · 30+ políticas RLS.
 
 <br/>
 
-## Métricas del proyecto
+## 🎨 Visual
 
-| | |
-|---|---|
-| Tablas en Supabase | **8** (organizations, org_members, profiles, clientes, prestamos, cuotas, cobros, notificaciones) |
-| Features completas | **11** (auth, dashboard, clientes, prestamos, cobros, cobrar-hoy, atrasados, notificaciones, resumen, reportes, exportar, respaldo) |
-| RLS policies | **30+** con `to authenticated` y `security definer` para casos edge |
-| Bundle JS | ~700 kB (gzip 180 kB) |
-| Bundle CSS | ~47 kB (gzip 8 kB) |
-| Componentes UI | ~15 primitivas reutilizables |
-| Hooks custom | ~10 |
-| Lint warnings | solo pre-existentes del scaffold original |
+- **Gold** `#D4AF37` · **Navy** `#0F172A` · **Emerald** `#10b981` · **Rose** `#f43f5e` · **Sky** `#0ea5e9`
+- Login premium split-screen con mesh gradient animado + glass morphism
+- Dashboard con KPIs, charts SVG responsive y bottom-nav mobile de 5 items
 
 <br/>
 
-## Visual
+## 📄 Licencia
 
-La UI usa una paleta consistente:
-- **Gold** `#D4AF37` como acento principal
-- **Navy** `#0F172A` como color de texto y fondos oscuros
-- **Emerald** `#10b981` para éxito
-- **Rose** `#f43f5e` para alertas
-- **Sky** `#0ea5e9` para información
-
-Componentes destacados:
-- **Login premium**: split screen con mesh gradient animado + glass morphism
-- **Dashboard**: KPIs en grid, acciones rápidas, actividad reciente
-- **Charts**: SVG puros (sin librerías), responsive en mobile
-- **Bottom nav mobile**: 6 items, swipe-friendly
-
-<br/>
-
-## Licencia
-
-MIT — Hecho con cariño en Costa Rica
-</content>
+MIT — Hecho con cariño en Costa Rica 🇨🇷
