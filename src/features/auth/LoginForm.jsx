@@ -192,7 +192,7 @@ export function LoginForm({ mode = 'signin', onAuth, redirectTo = '/' }) {
         autoComplete={isSignUp ? 'new-password' : 'current-password'}
         icon={Lock}
         required
-        minLength={10}
+        minLength={isSignUp ? 10 : undefined}
       />
 
       {!isSignUp && (
